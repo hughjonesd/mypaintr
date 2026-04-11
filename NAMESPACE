@@ -1,0 +1,6 @@
+useDynLib(mypaintr, .registration = TRUE)
+
+export(sketch_device)
+export(sketch_brush_presets)
+export(sketch_brush_settings)
+export(sketch_brush_inputs)

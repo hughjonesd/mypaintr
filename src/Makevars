@@ -1,0 +1,3 @@
+PKG_CPPFLAGS = $(shell pkg-config --cflags libmypaint cairo)
+PKG_LIBS = $(shell pkg-config --libs libmypaint cairo)
+PKG_CFLAGS = -std=c99

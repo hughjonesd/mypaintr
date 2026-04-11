@@ -1,0 +1,15 @@
+Package: mypaintr
+Type: Package
+Title: Artistic Graphics Device Backed by libmypaint
+Version: 0.0.1
+Authors@R: person("David", "Hugh-Jones", email = "david@example.com", role = c("aut", "cre"))
+Description: Raster graphics device for base R graphics that renders
+    stroked primitives with libmypaint and uses Cairo for text and
+    solid fills on the same backing surface.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+SystemRequirements: libmypaint, cairo
+Imports:
+    grDevices
+NeedsCompilation: yes
