@@ -41,6 +41,62 @@ brush_preset_table <- list(
   )
 )
 
+default_mypaint_brush_dirs <- function() {
+  env <- strsplit(Sys.getenv("MYPAINT_BRUSH_PATH", ""), .Platform$path.sep, fixed = TRUE)[[1L]]
+  env <- env[nzchar(env)]
+
+  pkg_config <- character()
+  pkg_config_bin <- Sys.which("pkg-config")
+  if (nzchar(pkg_config_bin)) {
+    pkg_config <- tryCatch(
+      system2(
+        pkg_config_bin,
+        c("--variable=brushesdir", "mypaint-brushes-2.0"),
+        stdout = TRUE,
+        stderr = FALSE
+      ),
+      error = function(...) character()
+    )
+  }
+
+  dirs <- unique(c(
+    env,
+    pkg_config,
+    "/opt/homebrew/opt/mypaint-brushes/share/mypaint-data/2.0/brushes",
+    "/usr/local/opt/mypaint-brushes/share/mypaint-data/2.0/brushes",
+    "/usr/local/share/mypaint-data/2.0/brushes",
+    "/usr/share/mypaint-data/2.0/brushes"
+  ))
+
+  dirs[dir.exists(dirs)]
+}
+
+resolve_mypaint_brush_file <- function(brush, paths = default_mypaint_brush_dirs()) {
+  candidates <- unique(c(
+    brush,
+    if (endsWith(brush, ".myb")) character() else paste0(brush, ".myb")
+  ))
+
+  direct <- candidates[file.exists(candidates)]
+  if (length(direct)) {
+    return(normalizePath(direct[[1L]], winslash = "/", mustWork = TRUE))
+  }
+
+  for (path in paths) {
+    matches <- file.path(path, candidates)
+    hit <- matches[file.exists(matches)]
+    if (length(hit)) {
+      return(normalizePath(hit[[1L]], winslash = "/", mustWork = TRUE))
+    }
+  }
+
+  NULL
+}
+
+read_mypaint_brush <- function(path) {
+  paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+}
+
 normalize_settings <- function(settings) {
   if (is.null(settings)) {
     return(setNames(numeric(), character()))
@@ -67,7 +123,11 @@ normalize_brush_spec <- function(brush, settings = NULL) {
     } else if (startsWith(trimws(brush), "{")) {
       json <- brush
     } else {
-      stop("unknown brush preset: ", brush, call. = FALSE)
+      brush_file <- resolve_mypaint_brush_file(brush)
+      if (is.null(brush_file)) {
+        stop("unknown brush preset or brush file: ", brush, call. = FALSE)
+      }
+      json <- read_mypaint_brush(brush_file)
     }
   } else if (is.numeric(brush) || is.list(brush)) {
     base_settings <- normalize_settings(brush)
@@ -106,7 +166,8 @@ rgba_int <- function(col) {
 #' @param res Resolution in pixels per inch.
 #' @param pointsize Base pointsize.
 #' @param bg Background colour.
-#' @param brush Stroke brush preset, JSON brush string, or named settings.
+#' @param brush Stroke brush preset, installed mypaint brush name,
+#'   `.myb` file path, JSON brush string, or named settings.
 #' @param brush_settings Named settings overriding `brush`.
 #' @param stroke_style Either `"brush"` or `"solid"`.
 #' @param fill_style Either `"solid"` or `"brush"`.
@@ -258,6 +319,60 @@ mypaint_style <- function(brush = NULL,
 #' @export
 mypaint_brush_presets <- function() {
   brush_preset_table
+}
+
+#' Discover installed mypaint brush directories
+#'
+#' @return A character vector of directories containing `.myb` brushes.
+#' @examples
+#' mypaint_brush_dirs()
+#' @export
+mypaint_brush_dirs <- function() {
+  default_mypaint_brush_dirs()
+}
+
+#' List installed mypaint brushes
+#'
+#' @param paths Optional brush directories. Defaults to locally discovered
+#'   `mypaint-brushes` locations.
+#' @return A character vector of brush names, relative to the brush root.
+#' @examples
+#' head(mypaint_brushes())
+#' @export
+mypaint_brushes <- function(paths = default_mypaint_brush_dirs()) {
+  out <- character()
+
+  for (path in paths) {
+    files <- list.files(path, pattern = "[.]myb$", recursive = TRUE, full.names = FALSE)
+    if (length(files)) {
+      out <- c(out, sub("[.]myb$", "", files))
+    }
+  }
+
+  sort(unique(out))
+}
+
+#' Load an installed mypaint brush
+#'
+#' @param brush Brush name like `"classic/pencil"` or a path to a `.myb` file.
+#' @param paths Optional brush directories. Defaults to locally discovered
+#'   `mypaint-brushes` locations.
+#' @return A JSON brush string suitable for `mypaint_device(brush = ...)`.
+#' @examples
+#' if (length(mypaint_brushes())) {
+#'   x <- mypaint_load_brush(mypaint_brushes()[[1]])
+#'   stopifnot(is.character(x), length(x) == 1L)
+#' }
+#' @export
+mypaint_load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
+  stopifnot(is.character(brush), length(brush) == 1L, nzchar(brush))
+
+  path <- resolve_mypaint_brush_file(brush, paths = paths)
+  if (is.null(path)) {
+    stop("could not find brush: ", brush, call. = FALSE)
+  }
+
+  read_mypaint_brush(path)
 }
 
 #' libmypaint brush setting metadata

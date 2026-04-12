@@ -31,7 +31,8 @@ mypaint_device(
 
 \item{bg}{Background colour.}
 
-\item{brush}{Stroke brush preset, JSON brush string, or named settings.}
+\item{brush}{Stroke brush preset, installed mypaint brush name,
+`.myb` file path, JSON brush string, or named settings.}
 
 \item{brush_settings}{Named settings overriding `brush`.}
 
