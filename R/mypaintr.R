@@ -317,7 +317,7 @@ mypaint_style <- function(brush = NULL,
 #' Built-in brush presets
 #'
 #' @export
-mypaint_brush_presets <- function() {
+brush_presets <- function() {
   brush_preset_table
 }
 
@@ -325,9 +325,9 @@ mypaint_brush_presets <- function() {
 #'
 #' @return A character vector of directories containing `.myb` brushes.
 #' @examples
-#' mypaint_brush_dirs()
+#' brush_dirs()
 #' @export
-mypaint_brush_dirs <- function() {
+brush_dirs <- function() {
   default_mypaint_brush_dirs()
 }
 
@@ -337,9 +337,9 @@ mypaint_brush_dirs <- function() {
 #'   `mypaint-brushes` locations.
 #' @return A character vector of brush names, relative to the brush root.
 #' @examples
-#' head(mypaint_brushes())
+#' head(brushes())
 #' @export
-mypaint_brushes <- function(paths = default_mypaint_brush_dirs()) {
+brushes <- function(paths = default_mypaint_brush_dirs()) {
   out <- character()
 
   for (path in paths) {
@@ -359,12 +359,12 @@ mypaint_brushes <- function(paths = default_mypaint_brush_dirs()) {
 #'   `mypaint-brushes` locations.
 #' @return A JSON brush string suitable for `mypaint_device(brush = ...)`.
 #' @examples
-#' if (length(mypaint_brushes())) {
-#'   x <- mypaint_load_brush(mypaint_brushes()[[1]])
+#' if (length(brushes())) {
+#'   x <- load_brush(brushes()[[1]])
 #'   stopifnot(is.character(x), length(x) == 1L)
 #' }
 #' @export
-mypaint_load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
+load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
   stopifnot(is.character(brush), length(brush) == 1L, nzchar(brush))
 
   path <- resolve_mypaint_brush_file(brush, paths = paths)
@@ -378,13 +378,13 @@ mypaint_load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
 #' libmypaint brush setting metadata
 #'
 #' @export
-mypaint_brush_settings <- function() {
+brush_settings <- function() {
   as.data.frame(.Call(mypaintr_brush_settings_info), stringsAsFactors = FALSE)
 }
 
 #' libmypaint brush input metadata
 #'
 #' @export
-mypaint_brush_inputs <- function() {
+brush_inputs <- function() {
   as.data.frame(.Call(mypaintr_brush_inputs_info), stringsAsFactors = FALSE)
 }
