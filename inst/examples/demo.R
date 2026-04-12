@@ -1,6 +1,6 @@
 library(mypaintr)
 
-sketch_device(
+mypaint_device(
   "demo-%d.png",
   width = 5,
   height = 4,

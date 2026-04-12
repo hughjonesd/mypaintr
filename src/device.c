@@ -19,18 +19,28 @@
 #endif
 
 enum {
-  SKETCHR_FILL_SOLID = 0,
-  SKETCHR_FILL_BRUSH = 1
+  MYPAINTR_RENDER_SOLID = 0,
+  MYPAINTR_RENDER_BRUSH = 1,
+  MYPAINTR_FILL_SOLID = 0,
+  MYPAINTR_FILL_BRUSH = 1
 };
+
+#define MYPAINTR_MAGIC 0x6d797074U
 
 typedef struct {
   MyPaintBrush *brush;
   double base_radius_log;
   double base_opaque;
-} SketchBrush;
+} MypaintrBrush;
+
+typedef struct {
+  double x;
+  int delta;
+} HatchIntersection;
 
 typedef struct {
   MyPaintSurface surface;
+  unsigned int magic;
   cairo_surface_t *image_surface;
   cairo_t *cr;
   unsigned char *data;
@@ -41,15 +51,19 @@ typedef struct {
   double pointsize;
   int bg;
   int page;
+  int stroke_style;
   int fill_style;
+  int auto_solid_bg;
   char *filename;
   double clip_left;
   double clip_right;
   double clip_bottom;
   double clip_top;
-  SketchBrush stroke;
-  SketchBrush fill;
-} SketchDevice;
+  MypaintrBrush stroke;
+  MypaintrBrush fill;
+} MypaintrDevice;
+
+static void configure_brush(MyPaintBrush *brush, SEXP spec);
 
 static inline double clamp01(double x) {
   if (x < 0.0) return 0.0;
@@ -64,7 +78,14 @@ static inline unsigned char unit_to_byte(double x) {
   return (unsigned char) (y + 0.5);
 }
 
-static char *sketchr_strdup(const char *src) {
+static inline int colors_close(int lhs, int rhs, int tol) {
+  return abs(R_RED(lhs) - R_RED(rhs)) <= tol &&
+         abs(R_GREEN(lhs) - R_GREEN(rhs)) <= tol &&
+         abs(R_BLUE(lhs) - R_BLUE(rhs)) <= tol &&
+         abs(R_ALPHA(lhs) - R_ALPHA(rhs)) <= tol;
+}
+
+static char *mypaintr_strdup(const char *src) {
   size_t n = strlen(src) + 1;
   char *out = (char *) malloc(n);
   if (!out) return NULL;
@@ -136,11 +157,11 @@ static void set_cairo_source(cairo_t *cr, int col) {
   );
 }
 
-static double flip_y(const SketchDevice *dev, double y) {
+static double flip_y(const MypaintrDevice *dev, double y) {
   return (double) dev->height - y;
 }
 
-static void set_font_face(const SketchDevice *dev, const pGEcontext gc) {
+static void set_font_face_for_context(cairo_t *cr, double res, const pGEcontext gc) {
   cairo_font_slant_t slant = CAIRO_FONT_SLANT_NORMAL;
   cairo_font_weight_t weight = CAIRO_FONT_WEIGHT_NORMAL;
 
@@ -152,15 +173,19 @@ static void set_font_face(const SketchDevice *dev, const pGEcontext gc) {
   }
 
   cairo_select_font_face(
-    dev->cr,
+    cr,
     gc->fontfamily[0] ? gc->fontfamily : "sans",
     slant,
     weight
   );
-  cairo_set_font_size(dev->cr, gc->cex * gc->ps * dev->res / 72.0);
+  cairo_set_font_size(cr, gc->cex * gc->ps * res / 72.0);
 }
 
-static void apply_cairo_clip(SketchDevice *dev) {
+static void set_font_face(const MypaintrDevice *dev, const pGEcontext gc) {
+  set_font_face_for_context(dev->cr, dev->res, gc);
+}
+
+static void apply_cairo_clip(MypaintrDevice *dev) {
   cairo_reset_clip(dev->cr);
   cairo_rectangle(
     dev->cr,
@@ -172,7 +197,7 @@ static void apply_cairo_clip(SketchDevice *dev) {
   cairo_clip(dev->cr);
 }
 
-static void clear_device(SketchDevice *dev, int col) {
+static void clear_device(MypaintrDevice *dev, int col) {
   cairo_save(dev->cr);
   cairo_set_operator(dev->cr, CAIRO_OPERATOR_SOURCE);
   set_cairo_source(dev->cr, col);
@@ -180,7 +205,7 @@ static void clear_device(SketchDevice *dev, int col) {
   cairo_restore(dev->cr);
 }
 
-static char *page_filename(const SketchDevice *dev, int page) {
+static char *page_filename(const MypaintrDevice *dev, int page) {
   size_t need;
   char *out;
   const char *dot;
@@ -195,7 +220,7 @@ static char *page_filename(const SketchDevice *dev, int page) {
   }
 
   if (page == 1) {
-    return sketchr_strdup(dev->filename);
+    return mypaintr_strdup(dev->filename);
   }
 
   dot = strrchr(dev->filename, '.');
@@ -215,7 +240,7 @@ static char *page_filename(const SketchDevice *dev, int page) {
   return out;
 }
 
-static void save_page(SketchDevice *dev) {
+static void save_page(MypaintrDevice *dev) {
   cairo_status_t status;
   char *filename;
 
@@ -237,7 +262,7 @@ static void save_page(SketchDevice *dev) {
   }
 }
 
-static void brush_apply_gc(SketchBrush *brush, int col, double lwd) {
+static void brush_apply_gc(MypaintrBrush *brush, int col, double lwd) {
   double h, s, v;
   double alpha = R_ALPHA(col) / 255.0;
   double width_factor = fmax(lwd, 1e-3);
@@ -264,6 +289,12 @@ static void brush_apply_gc(SketchBrush *brush, int col, double lwd) {
   );
 }
 
+static void brush_apply_spec(MypaintrBrush *slot, SEXP spec) {
+  configure_brush(slot->brush, spec);
+  slot->base_radius_log = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC);
+  slot->base_opaque = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_OPAQUE);
+}
+
 static int surface_draw_dab(
   MyPaintSurface *surface,
   float x,
@@ -280,7 +311,7 @@ static int surface_draw_dab(
   float lock_alpha,
   float colorize
 ) {
-  SketchDevice *dev = (SketchDevice *) surface;
+  MypaintrDevice *dev = (MypaintrDevice *) surface;
   int x0, x1, y0, y1;
   int ix, iy;
   double c = cos(angle);
@@ -388,7 +419,7 @@ static void surface_get_color(
   float *color_b,
   float *color_a
 ) {
-  SketchDevice *dev = (SketchDevice *) surface;
+  MypaintrDevice *dev = (MypaintrDevice *) surface;
   int x0 = (int) floor(x - radius);
   int x1 = (int) ceil(x + radius);
   int y0 = (int) floor(flip_y(dev, y) - radius);
@@ -440,12 +471,12 @@ static void surface_get_color(
 }
 
 static void surface_begin_atomic(MyPaintSurface *surface) {
-  SketchDevice *dev = (SketchDevice *) surface;
+  MypaintrDevice *dev = (MypaintrDevice *) surface;
   cairo_surface_flush(dev->image_surface);
 }
 
 static void surface_end_atomic(MyPaintSurface *surface, MyPaintRectangle *roi) {
-  SketchDevice *dev = (SketchDevice *) surface;
+  MypaintrDevice *dev = (MypaintrDevice *) surface;
   (void) roi;
   cairo_surface_mark_dirty(dev->image_surface);
 }
@@ -454,7 +485,7 @@ static void surface_destroy(MyPaintSurface *surface) {
   (void) surface;
 }
 
-static void init_surface(SketchDevice *dev) {
+static void init_surface(MypaintrDevice *dev) {
   mypaint_surface_init(&dev->surface);
   dev->surface.draw_dab = surface_draw_dab;
   dev->surface.get_color = surface_get_color;
@@ -463,7 +494,7 @@ static void init_surface(SketchDevice *dev) {
   dev->surface.destroy = surface_destroy;
 }
 
-static void render_polyline(SketchDevice *dev, SketchBrush *brush, const double *x, const double *y, int n, int col, double lwd) {
+static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd) {
   int i;
 
   if (n < 2 || R_ALPHA(col) == 0) {
@@ -488,7 +519,119 @@ static void render_polyline(SketchDevice *dev, SketchBrush *brush, const double 
   mypaint_surface_end_atomic(&dev->surface, NULL);
 }
 
-static void cairo_polygon_path(SketchDevice *dev, int n, const double *x, const double *y) {
+static int decode_lty(int lty, double lwd, double *pattern, int max_pattern) {
+  int count = 0;
+  double unit = fmax(2.0, 4.0 * lwd);
+
+  if (lty == LTY_SOLID || lty == 0) {
+    return 0;
+  }
+  if (lty == LTY_BLANK) {
+    pattern[0] = 0.0;
+    return -1;
+  }
+
+  while (lty != 0 && count < max_pattern) {
+    int nibble = lty & 15;
+    pattern[count++] = unit * (double) (nibble > 0 ? nibble : 1);
+    lty >>= 4;
+  }
+
+  return count > 0 ? count : 0;
+}
+
+static void cairo_set_lty(cairo_t *cr, int lty, double lwd) {
+  double pattern[8];
+  int pattern_n = decode_lty(lty, lwd, pattern, 8);
+
+  if (pattern_n > 0) {
+    cairo_set_dash(cr, pattern, pattern_n, 0.0);
+  } else {
+    cairo_set_dash(cr, NULL, 0, 0.0);
+  }
+}
+
+static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const double *y, int n, int col, double lwd, int lty, int closed) {
+  int i;
+
+  if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
+    return;
+  }
+
+  cairo_save(dev->cr);
+  cairo_new_path(dev->cr);
+  cairo_move_to(dev->cr, x[0], flip_y(dev, y[0]));
+  for (i = 1; i < n; ++i) {
+    cairo_line_to(dev->cr, x[i], flip_y(dev, y[i]));
+  }
+  if (closed) {
+    cairo_close_path(dev->cr);
+  }
+  set_cairo_source(dev->cr, col);
+  cairo_set_line_width(dev->cr, fmax(lwd, 1e-3));
+  cairo_set_line_cap(dev->cr, CAIRO_LINE_CAP_ROUND);
+  cairo_set_line_join(dev->cr, CAIRO_LINE_JOIN_ROUND);
+  cairo_set_lty(dev->cr, lty, lwd);
+  cairo_stroke(dev->cr);
+  cairo_restore(dev->cr);
+}
+
+static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty) {
+  double pattern[8];
+  int pattern_n = decode_lty(lty, lwd, pattern, 8);
+  int pattern_i = 0;
+  double remaining;
+  int draw_on = 1;
+  int i;
+
+  if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
+    return;
+  }
+
+  if (pattern_n <= 0) {
+    render_polyline_solid(dev, brush, x, y, n, col, lwd);
+    return;
+  }
+
+  remaining = pattern[0];
+
+  for (i = 1; i < n; ++i) {
+    double sx = x[i - 1];
+    double sy = y[i - 1];
+    double ex = x[i];
+    double ey = y[i];
+    double dx = ex - sx;
+    double dy = ey - sy;
+    double seg_len = sqrt(dx * dx + dy * dy);
+
+    while (seg_len > 1e-9) {
+      double step = fmin(remaining, seg_len);
+      double ux = (ex - sx) / seg_len;
+      double uy = (ey - sy) / seg_len;
+      double nx = sx + ux * step;
+      double ny = sy + uy * step;
+
+      if (draw_on && step > 1e-9) {
+        double segx[2] = {sx, nx};
+        double segy[2] = {sy, ny};
+        render_polyline_solid(dev, brush, segx, segy, 2, col, lwd);
+      }
+
+      sx = nx;
+      sy = ny;
+      seg_len -= step;
+      remaining -= step;
+
+      if (remaining <= 1e-9) {
+        pattern_i = (pattern_i + 1) % pattern_n;
+        remaining = pattern[pattern_i];
+        draw_on = !draw_on;
+      }
+    }
+  }
+}
+
+static void cairo_polygon_path(MypaintrDevice *dev, int n, const double *x, const double *y) {
   int i;
   cairo_new_path(dev->cr);
   cairo_move_to(dev->cr, x[0], flip_y(dev, y[0]));
@@ -498,7 +641,7 @@ static void cairo_polygon_path(SketchDevice *dev, int n, const double *x, const 
   cairo_close_path(dev->cr);
 }
 
-static void solid_fill_polygon(SketchDevice *dev, int n, const double *x, const double *y, int fill, int rule) {
+static void solid_fill_polygon(MypaintrDevice *dev, int n, const double *x, const double *y, int fill, int rule) {
   if (R_ALPHA(fill) == 0) {
     return;
   }
@@ -508,56 +651,94 @@ static void solid_fill_polygon(SketchDevice *dev, int n, const double *x, const 
   cairo_fill(dev->cr);
 }
 
-static int cmp_double(const void *lhs, const void *rhs) {
-  double a = *(const double *) lhs;
-  double b = *(const double *) rhs;
+static int cmp_intersection(const void *lhs, const void *rhs) {
+  double a = ((const HatchIntersection *) lhs)->x;
+  double b = ((const HatchIntersection *) rhs)->x;
   return (a > b) - (a < b);
 }
 
-static void hatch_fill_polygon(SketchDevice *dev, SketchBrush *brush, int n, const double *x, const double *y, int fill) {
+static void hatch_fill_path(MypaintrDevice *dev, MypaintrBrush *brush, int npoly, const int *nper, const double *x, const double *y, int fill, int rule) {
   double radius = exp(brush->base_radius_log);
   double spacing = fmax(2.0, radius * 1.5);
   double min_y = y[0];
   double max_y = y[0];
+  int total_points = 0;
+  int offset = 0;
   int i;
-  double *cuts;
+  HatchIntersection *cuts;
 
-  if (n < 3 || R_ALPHA(fill) == 0) {
+  if (R_ALPHA(fill) == 0) {
     return;
   }
 
-  cuts = (double *) malloc((size_t) n * sizeof(double));
+  for (i = 0; i < npoly; ++i) {
+    total_points += nper[i];
+  }
+  if (total_points < 3) {
+    return;
+  }
+
+  cuts = (HatchIntersection *) malloc((size_t) total_points * sizeof(HatchIntersection));
   if (!cuts) {
     error("failed to allocate polygon fill buffer");
   }
 
-  for (i = 1; i < n; ++i) {
+  for (i = 1; i < total_points; ++i) {
     if (y[i] < min_y) min_y = y[i];
     if (y[i] > max_y) max_y = y[i];
   }
 
   for (double yy = min_y; yy <= max_y; yy += spacing) {
     int count = 0;
-    for (i = 0; i < n; ++i) {
-      int j = (i + 1) % n;
-      double y0 = y[i];
-      double y1 = y[j];
-      if ((yy >= fmin(y0, y1)) && (yy < fmax(y0, y1)) && (y0 != y1)) {
-        cuts[count++] = x[i] + (yy - y0) * (x[j] - x[i]) / (y[j] - y[i]);
+    offset = 0;
+
+    for (i = 0; i < npoly; ++i) {
+      int j;
+      int n = nper[i];
+      for (j = 0; j < n; ++j) {
+        int k = (j + 1) % n;
+        double x0 = x[offset + j];
+        double y0 = y[offset + j];
+        double x1 = x[offset + k];
+        double y1 = y[offset + k];
+        if ((yy >= fmin(y0, y1)) && (yy < fmax(y0, y1)) && (y0 != y1)) {
+          cuts[count].x = x0 + (yy - y0) * (x1 - x0) / (y1 - y0);
+          cuts[count].delta = (y1 > y0) ? 1 : -1;
+          count += 1;
+        }
       }
+      offset += n;
     }
-    qsort(cuts, (size_t) count, sizeof(double), cmp_double);
-    for (i = 0; i + 1 < count; i += 2) {
-      double segx[2] = {cuts[i], cuts[i + 1]};
-      double segy[2] = {yy, yy};
-      render_polyline(dev, brush, segx, segy, 2, fill, 1.0);
+
+    qsort(cuts, (size_t) count, sizeof(HatchIntersection), cmp_intersection);
+
+    if (rule == R_GE_evenOddRule) {
+      for (i = 0; i + 1 < count; i += 2) {
+        double segx[2] = {cuts[i].x, cuts[i + 1].x};
+        double segy[2] = {yy, yy};
+        render_polyline(dev, brush, segx, segy, 2, fill, 1.0, LTY_SOLID);
+      }
+    } else {
+      int winding = 0;
+      for (i = 0; i + 1 < count; ++i) {
+        winding += cuts[i].delta;
+        if (winding != 0 && cuts[i + 1].x > cuts[i].x) {
+          double segx[2] = {cuts[i].x, cuts[i + 1].x};
+          double segy[2] = {yy, yy};
+          render_polyline(dev, brush, segx, segy, 2, fill, 1.0, LTY_SOLID);
+        }
+      }
     }
   }
 
   free(cuts);
 }
 
-static void hatch_fill_rect(SketchDevice *dev, SketchBrush *brush, double x0, double y0, double x1, double y1, int fill) {
+static void hatch_fill_polygon(MypaintrDevice *dev, MypaintrBrush *brush, int n, const double *x, const double *y, int fill) {
+  hatch_fill_path(dev, brush, 1, &n, x, y, fill, R_GE_nonZeroWindingRule);
+}
+
+static void hatch_fill_rect(MypaintrDevice *dev, MypaintrBrush *brush, double x0, double y0, double x1, double y1, int fill) {
   double radius = exp(brush->base_radius_log);
   double spacing = fmax(2.0, radius * 1.5);
   double left = fmin(x0, x1);
@@ -568,11 +749,11 @@ static void hatch_fill_rect(SketchDevice *dev, SketchBrush *brush, double x0, do
   for (double yy = bottom; yy <= top; yy += spacing) {
     double xx[2] = {left, right};
     double yyv[2] = {yy, yy};
-    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0);
+    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0, LTY_SOLID);
   }
 }
 
-static void hatch_fill_circle(SketchDevice *dev, SketchBrush *brush, double x, double y, double r, int fill) {
+static void hatch_fill_circle(MypaintrDevice *dev, MypaintrBrush *brush, double x, double y, double r, int fill) {
   double radius = exp(brush->base_radius_log);
   double spacing = fmax(2.0, radius * 1.5);
 
@@ -581,16 +762,37 @@ static void hatch_fill_circle(SketchDevice *dev, SketchBrush *brush, double x, d
     double dx = sqrt(fmax(r * r - dy * dy, 0.0));
     double xx[2] = {x - dx, x + dx};
     double yyv[2] = {yy, yy};
-    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0);
+    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0, LTY_SOLID);
   }
 }
 
-static void fill_rect(SketchDevice *dev, double x0, double y0, double x1, double y1, int fill) {
+static int should_solid_fill_rect(const MypaintrDevice *dev, double x0, double y0, double x1, double y1, int fill) {
+  double area;
+  double device_area;
+
+  if (R_ALPHA(fill) == 0) {
+    return 1;
+  }
+  if (!dev->auto_solid_bg) {
+    return 0;
+  }
+
+  area = fabs(x1 - x0) * fabs(y1 - y0);
+  device_area = (double) dev->width * (double) dev->height;
+
+  if (area < 0.10 * device_area) {
+    return 0;
+  }
+
+  return colors_close(fill, dev->bg, 12);
+}
+
+static void fill_rect(MypaintrDevice *dev, double x0, double y0, double x1, double y1, int fill) {
   if (R_ALPHA(fill) == 0) {
     return;
   }
 
-  if (dev->fill_style == SKETCHR_FILL_BRUSH) {
+  if (dev->fill_style == MYPAINTR_FILL_BRUSH && !should_solid_fill_rect(dev, x0, y0, x1, y1, fill)) {
     hatch_fill_rect(dev, &dev->fill, x0, y0, x1, y1, fill);
     return;
   }
@@ -607,12 +809,12 @@ static void fill_rect(SketchDevice *dev, double x0, double y0, double x1, double
   cairo_fill(dev->cr);
 }
 
-static void fill_circle(SketchDevice *dev, double x, double y, double r, int fill) {
+static void fill_circle(MypaintrDevice *dev, double x, double y, double r, int fill) {
   if (R_ALPHA(fill) == 0) {
     return;
   }
 
-  if (dev->fill_style == SKETCHR_FILL_BRUSH) {
+  if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
     hatch_fill_circle(dev, &dev->fill, x, y, r, fill);
     return;
   }
@@ -664,23 +866,36 @@ static void configure_brush(MyPaintBrush *brush, SEXP spec) {
   }
 }
 
-static void init_brushes(SketchDevice *dev, SEXP stroke_spec, SEXP fill_spec) {
+static void init_brushes(MypaintrDevice *dev, SEXP stroke_spec, SEXP fill_spec) {
   dev->stroke.brush = mypaint_brush_new();
   dev->fill.brush = mypaint_brush_new();
   if (!dev->stroke.brush || !dev->fill.brush) {
     error("failed to allocate libmypaint brushes");
   }
 
-  configure_brush(dev->stroke.brush, stroke_spec);
-  configure_brush(dev->fill.brush, fill_spec == R_NilValue ? stroke_spec : fill_spec);
-
-  dev->stroke.base_radius_log = mypaint_brush_get_base_value(dev->stroke.brush, MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC);
-  dev->stroke.base_opaque = mypaint_brush_get_base_value(dev->stroke.brush, MYPAINT_BRUSH_SETTING_OPAQUE);
-  dev->fill.base_radius_log = mypaint_brush_get_base_value(dev->fill.brush, MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC);
-  dev->fill.base_opaque = mypaint_brush_get_base_value(dev->fill.brush, MYPAINT_BRUSH_SETTING_OPAQUE);
+  brush_apply_spec(&dev->stroke, stroke_spec);
+  brush_apply_spec(&dev->fill, fill_spec == R_NilValue ? stroke_spec : fill_spec);
 }
 
-static void destroy_device_state(SketchDevice *dev) {
+static MypaintrDevice *current_mypaintr_device(void) {
+  pGEDevDesc gdd = GEcurrentDevice();
+  pDevDesc dd;
+  MypaintrDevice *dev;
+
+  if (!gdd || !gdd->dev) {
+    error("no active graphics device");
+  }
+
+  dd = gdd->dev;
+  dev = (MypaintrDevice *) dd->deviceSpecific;
+  if (!dev || dev->magic != MYPAINTR_MAGIC) {
+    error("current device is not a mypaintr device");
+  }
+
+  return dev;
+}
+
+static void destroy_device_state(MypaintrDevice *dev) {
   if (!dev) {
     return;
   }
@@ -692,16 +907,16 @@ static void destroy_device_state(SketchDevice *dev) {
   free(dev);
 }
 
-static void sketchr_activate(const pDevDesc dd) {
+static void mypaintr_activate(const pDevDesc dd) {
   (void) dd;
 }
 
-static void sketchr_deactivate(const pDevDesc dd) {
+static void mypaintr_deactivate(const pDevDesc dd) {
   (void) dd;
 }
 
-static void sketchr_close(pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_close(pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
 
   if (!dev) {
     return;
@@ -712,8 +927,8 @@ static void sketchr_close(pDevDesc dd) {
   dd->deviceSpecific = NULL;
 }
 
-static void sketchr_clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   dev->clip_left = fmax(0.0, fmin(x0, x1));
   dev->clip_right = fmin(dd->right, fmax(x0, x1));
   dev->clip_bottom = fmax(0.0, fmin(y0, y1));
@@ -721,15 +936,15 @@ static void sketchr_clip(double x0, double x1, double y0, double y1, pDevDesc dd
   apply_cairo_clip(dev);
 }
 
-static void sketchr_size(double *left, double *right, double *bottom, double *top, pDevDesc dd) {
+static void mypaintr_size(double *left, double *right, double *bottom, double *top, pDevDesc dd) {
   *left = 0.0;
   *right = dd->right;
   *bottom = 0.0;
   *top = dd->top;
 }
 
-static void sketchr_new_page(const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_new_page(const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   (void) gc;
   if (dev->page > 0) {
     save_page(dev);
@@ -743,27 +958,35 @@ static void sketchr_new_page(const pGEcontext gc, pDevDesc dd) {
   clear_device(dev, dev->bg);
 }
 
-static void sketchr_line(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_line(double x1, double y1, double x2, double y2, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   double xs[2] = {x1, x2};
   double ys[2] = {y1, y2};
-  render_polyline(dev, &dev->stroke, xs, ys, 2, gc->col, gc->lwd);
+  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
+    render_polyline(dev, &dev->stroke, xs, ys, 2, gc->col, gc->lwd, gc->lty);
+  } else {
+    solid_stroke_polyline(dev, xs, ys, 2, gc->col, gc->lwd, gc->lty, 0);
+  }
 }
 
-static void sketchr_polyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
-  render_polyline(dev, &dev->stroke, x, y, n, gc->col, gc->lwd);
+static void mypaintr_polyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
+  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
+    render_polyline(dev, &dev->stroke, x, y, n, gc->col, gc->lwd, gc->lty);
+  } else {
+    solid_stroke_polyline(dev, x, y, n, gc->col, gc->lwd, gc->lty, 0);
+  }
 }
 
-static void sketchr_polygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_polygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   double *cx;
   double *cy;
 
   if (n < 2) return;
 
   if (gc->fill != NA_INTEGER) {
-    if (dev->fill_style == SKETCHR_FILL_BRUSH) {
+    if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
       hatch_fill_polygon(dev, &dev->fill, n, x, y, gc->fill);
     } else {
       solid_fill_polygon(dev, n, x, y, gc->fill, R_GE_nonZeroWindingRule);
@@ -786,25 +1009,33 @@ static void sketchr_polygon(int n, double *x, double *y, const pGEcontext gc, pD
   memcpy(cy, y, (size_t) n * sizeof(double));
   cx[n] = x[0];
   cy[n] = y[0];
-  render_polyline(dev, &dev->stroke, cx, cy, n + 1, gc->col, gc->lwd);
+  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
+    render_polyline(dev, &dev->stroke, cx, cy, n + 1, gc->col, gc->lwd, gc->lty);
+  } else {
+    solid_stroke_polyline(dev, cx, cy, n + 1, gc->col, gc->lwd, gc->lty, 1);
+  }
   free(cx);
   free(cy);
 }
 
-static void sketchr_rect(double x0, double y0, double x1, double y1, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_rect(double x0, double y0, double x1, double y1, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   double xs[5] = {x0, x1, x1, x0, x0};
   double ys[5] = {y0, y0, y1, y1, y0};
 
   fill_rect(dev, x0, y0, x1, y1, gc->fill);
 
   if (gc->col != NA_INTEGER && R_ALPHA(gc->col) > 0) {
-    render_polyline(dev, &dev->stroke, xs, ys, 5, gc->col, gc->lwd);
+    if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
+      render_polyline(dev, &dev->stroke, xs, ys, 5, gc->col, gc->lwd, gc->lty);
+    } else {
+      solid_stroke_polyline(dev, xs, ys, 5, gc->col, gc->lwd, gc->lty, 1);
+    }
   }
 }
 
-static void sketchr_circle(double x, double y, double r, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_circle(double x, double y, double r, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   int segments;
   double *xs;
   double *ys;
@@ -831,19 +1062,23 @@ static void sketchr_circle(double x, double y, double r, const pGEcontext gc, pD
     ys[i] = y + r * sin(t);
   }
 
-  render_polyline(dev, &dev->stroke, xs, ys, segments + 1, gc->col, gc->lwd);
+  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
+    render_polyline(dev, &dev->stroke, xs, ys, segments + 1, gc->col, gc->lwd, gc->lty);
+  } else {
+    solid_stroke_polyline(dev, xs, ys, segments + 1, gc->col, gc->lwd, gc->lty, 1);
+  }
   free(xs);
   free(ys);
 }
 
-static void sketchr_path(double *x, double *y, int npoly, int *nper, Rboolean winding, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean winding, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   int offset = 0;
   int i;
 
   if (gc->fill != NA_INTEGER && R_ALPHA(gc->fill) > 0) {
-    if (dev->fill_style == SKETCHR_FILL_BRUSH && npoly == 1) {
-      hatch_fill_polygon(dev, &dev->fill, nper[0], x, y, gc->fill);
+    if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
+      hatch_fill_path(dev, &dev->fill, npoly, nper, x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule);
     } else {
       cairo_new_path(dev->cr);
       for (i = 0; i < npoly; ++i) {
@@ -876,7 +1111,11 @@ static void sketchr_path(double *x, double *y, int npoly, int *nper, Rboolean wi
       memcpy(cy, y + offset, (size_t) n * sizeof(double));
       cx[n] = x[offset];
       cy[n] = y[offset];
-      render_polyline(dev, &dev->stroke, cx, cy, n + 1, gc->col, gc->lwd);
+      if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
+        render_polyline(dev, &dev->stroke, cx, cy, n + 1, gc->col, gc->lwd, gc->lty);
+      } else {
+        solid_stroke_polyline(dev, cx, cy, n + 1, gc->col, gc->lwd, gc->lty, 1);
+      }
       free(cx);
       free(cy);
       offset += n;
@@ -899,8 +1138,8 @@ static void raster_to_cairo(unsigned int *raster, unsigned char *out, int w, int
   }
 }
 
-static void sketchr_raster(unsigned int *raster, int w, int h, double x, double y, double width, double height, double rot, Rboolean interpolate, const pGEcontext gc, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_raster(unsigned int *raster, int w, int h, double x, double y, double width, double height, double rot, Rboolean interpolate, const pGEcontext gc, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   cairo_surface_t *tmp_surface;
   cairo_t *tmp_cr;
   unsigned char *tmp_data;
@@ -931,19 +1170,19 @@ static void sketchr_raster(unsigned int *raster, int w, int h, double x, double 
   free(tmp_data);
 }
 
-static double sketchr_str_width_impl(const char *str, const pGEcontext gc, SketchDevice *dev) {
+static double mypaintr_str_width_impl(const char *str, const pGEcontext gc, MypaintrDevice *dev) {
   cairo_text_extents_t extents;
   set_font_face(dev, gc);
   cairo_text_extents(dev->cr, str, &extents);
   return extents.x_advance;
 }
 
-static double sketchr_str_width(const char *str, const pGEcontext gc, pDevDesc dd) {
-  return sketchr_str_width_impl(str, gc, (SketchDevice *) dd->deviceSpecific);
+static double mypaintr_str_width(const char *str, const pGEcontext gc, pDevDesc dd) {
+  return mypaintr_str_width_impl(str, gc, (MypaintrDevice *) dd->deviceSpecific);
 }
 
-static void sketchr_metric_info(int c, const pGEcontext gc, double *ascent, double *descent, double *width, pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static void mypaintr_metric_info(int c, const pGEcontext gc, double *ascent, double *descent, double *width, pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   cairo_font_extents_t fe;
   cairo_text_extents_t te;
   char buf[8];
@@ -964,7 +1203,7 @@ static void sketchr_metric_info(int c, const pGEcontext gc, double *ascent, doub
   *width = te.x_advance;
 }
 
-static void sketchr_text_impl(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, SketchDevice *dev) {
+static void mypaintr_text_impl(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, MypaintrDevice *dev) {
   cairo_text_extents_t extents;
 
   if (gc->col == NA_INTEGER || R_ALPHA(gc->col) == 0) {
@@ -973,7 +1212,6 @@ static void sketchr_text_impl(double x, double y, const char *str, double rot, d
 
   set_font_face(dev, gc);
   cairo_text_extents(dev->cr, str, &extents);
-
   cairo_save(dev->cr);
   cairo_translate(dev->cr, x, flip_y(dev, y));
   cairo_rotate(dev->cr, -rot * M_PI / 180.0);
@@ -983,20 +1221,20 @@ static void sketchr_text_impl(double x, double y, const char *str, double rot, d
   cairo_restore(dev->cr);
 }
 
-static void sketchr_text(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
-  sketchr_text_impl(x, y, str, rot, hadj, gc, (SketchDevice *) dd->deviceSpecific);
+static void mypaintr_text(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
+  mypaintr_text_impl(x, y, str, rot, hadj, gc, (MypaintrDevice *) dd->deviceSpecific);
 }
 
-static void sketchr_text_utf8(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
-  sketchr_text_impl(x, y, str, rot, hadj, gc, (SketchDevice *) dd->deviceSpecific);
+static void mypaintr_text_utf8(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
+  mypaintr_text_impl(x, y, str, rot, hadj, gc, (MypaintrDevice *) dd->deviceSpecific);
 }
 
-static double sketchr_str_width_utf8(const char *str, const pGEcontext gc, pDevDesc dd) {
-  return sketchr_str_width_impl(str, gc, (SketchDevice *) dd->deviceSpecific);
+static double mypaintr_str_width_utf8(const char *str, const pGEcontext gc, pDevDesc dd) {
+  return mypaintr_str_width_impl(str, gc, (MypaintrDevice *) dd->deviceSpecific);
 }
 
-static SEXP sketchr_cap(pDevDesc dd) {
-  SketchDevice *dev = (SketchDevice *) dd->deviceSpecific;
+static SEXP mypaintr_cap(pDevDesc dd) {
+  MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   SEXP out = PROTECT(allocMatrix(INTSXP, dev->height, dev->width));
   int row, col;
 
@@ -1013,7 +1251,7 @@ static SEXP sketchr_cap(pDevDesc dd) {
   return out;
 }
 
-static SEXP sketchr_capabilities(SEXP cap) {
+static SEXP mypaintr_capabilities(SEXP cap) {
   SEXP out = PROTECT(allocVector(LGLSXP, XLENGTH(cap)));
   R_xlen_t i;
   for (i = 0; i < XLENGTH(cap); ++i) {
@@ -1031,7 +1269,61 @@ static SEXP sketchr_capabilities(SEXP cap) {
   return out;
 }
 
-static void init_dev_desc(pDevDesc dd, SketchDevice *dev) {
+static SEXP mypaintr_set_pattern(SEXP pattern, pDevDesc dd) {
+  (void) pattern;
+  (void) dd;
+  return R_NilValue;
+}
+
+static void mypaintr_release_pattern(SEXP ref, pDevDesc dd) {
+  (void) ref;
+  (void) dd;
+}
+
+static SEXP mypaintr_set_clip_path(SEXP path, SEXP ref, pDevDesc dd) {
+  (void) path;
+  (void) ref;
+  (void) dd;
+  return R_NilValue;
+}
+
+static void mypaintr_release_clip_path(SEXP ref, pDevDesc dd) {
+  (void) ref;
+  (void) dd;
+}
+
+static SEXP mypaintr_set_mask(SEXP path, SEXP ref, pDevDesc dd) {
+  (void) path;
+  (void) ref;
+  (void) dd;
+  return R_NilValue;
+}
+
+static void mypaintr_release_mask(SEXP ref, pDevDesc dd) {
+  (void) ref;
+  (void) dd;
+}
+
+static SEXP mypaintr_define_group(SEXP source, int op, SEXP destination, pDevDesc dd) {
+  (void) source;
+  (void) op;
+  (void) destination;
+  (void) dd;
+  return R_NilValue;
+}
+
+static void mypaintr_use_group(SEXP ref, SEXP trans, pDevDesc dd) {
+  (void) ref;
+  (void) trans;
+  (void) dd;
+}
+
+static void mypaintr_release_group(SEXP ref, pDevDesc dd) {
+  (void) ref;
+  (void) dd;
+}
+
+static void init_dev_desc(pDevDesc dd, MypaintrDevice *dev) {
   memset(dd, 0, sizeof(*dd));
 
   dd->left = 0.0;
@@ -1066,52 +1358,69 @@ static void init_dev_desc(pDevDesc dd, SketchDevice *dev) {
   dd->canGenMouseUp = FALSE;
   dd->canGenKeybd = FALSE;
   dd->canGenIdle = FALSE;
-  dd->activate = sketchr_activate;
-  dd->circle = sketchr_circle;
-  dd->clip = sketchr_clip;
-  dd->close = sketchr_close;
-  dd->deactivate = sketchr_deactivate;
-  dd->line = sketchr_line;
-  dd->metricInfo = sketchr_metric_info;
+  dd->haveTransparency = 2;
+  dd->haveTransparentBg = 3;
+  dd->haveRaster = 2;
+  dd->haveCapture = 2;
+  dd->haveLocator = 1;
+  dd->activate = mypaintr_activate;
+  dd->circle = mypaintr_circle;
+  dd->clip = mypaintr_clip;
+  dd->close = mypaintr_close;
+  dd->deactivate = mypaintr_deactivate;
+  dd->line = mypaintr_line;
+  dd->metricInfo = mypaintr_metric_info;
   dd->mode = NULL;
-  dd->newPage = sketchr_new_page;
-  dd->polygon = sketchr_polygon;
-  dd->polyline = sketchr_polyline;
-  dd->rect = sketchr_rect;
-  dd->path = sketchr_path;
-  dd->raster = sketchr_raster;
-  dd->cap = sketchr_cap;
-  dd->size = sketchr_size;
-  dd->strWidth = sketchr_str_width;
-  dd->text = sketchr_text;
+  dd->newPage = mypaintr_new_page;
+  dd->polygon = mypaintr_polygon;
+  dd->polyline = mypaintr_polyline;
+  dd->rect = mypaintr_rect;
+  dd->path = mypaintr_path;
+  dd->raster = mypaintr_raster;
+  dd->cap = mypaintr_cap;
+  dd->size = mypaintr_size;
+  dd->strWidth = mypaintr_str_width;
+  dd->text = mypaintr_text;
   dd->onExit = NULL;
   dd->getEvent = NULL;
   dd->newFrameConfirm = NULL;
+  dd->setPattern = mypaintr_set_pattern;
+  dd->releasePattern = mypaintr_release_pattern;
+  dd->setClipPath = mypaintr_set_clip_path;
+  dd->releaseClipPath = mypaintr_release_clip_path;
+  dd->setMask = mypaintr_set_mask;
+  dd->releaseMask = mypaintr_release_mask;
   dd->hasTextUTF8 = TRUE;
-  dd->textUTF8 = sketchr_text_utf8;
-  dd->strWidthUTF8 = sketchr_str_width_utf8;
+  dd->textUTF8 = mypaintr_text_utf8;
+  dd->strWidthUTF8 = mypaintr_str_width_utf8;
   dd->wantSymbolUTF8 = FALSE;
   dd->useRotatedTextInContour = TRUE;
   dd->deviceVersion = R_GE_glyphs;
   dd->deviceClip = FALSE;
-  dd->capabilities = sketchr_capabilities;
+  dd->defineGroup = mypaintr_define_group;
+  dd->useGroup = mypaintr_use_group;
+  dd->releaseGroup = mypaintr_release_group;
+  dd->capabilities = mypaintr_capabilities;
 }
 
-static SketchDevice *make_device(const char *filename, int width, int height, double res, double pointsize, int bg, int fill_style, SEXP stroke_spec, SEXP fill_spec) {
-  SketchDevice *dev = (SketchDevice *) calloc(1, sizeof(SketchDevice));
+static MypaintrDevice *make_device(const char *filename, int width, int height, double res, double pointsize, int bg, int stroke_style, int fill_style, int auto_solid_bg, SEXP stroke_spec, SEXP fill_spec) {
+  MypaintrDevice *dev = (MypaintrDevice *) calloc(1, sizeof(MypaintrDevice));
   cairo_status_t status;
 
   if (!dev) {
     error("failed to allocate device state");
   }
 
+  dev->magic = MYPAINTR_MAGIC;
   dev->width = width;
   dev->height = height;
   dev->res = res;
   dev->pointsize = pointsize;
   dev->bg = bg;
+  dev->stroke_style = stroke_style;
   dev->fill_style = fill_style;
-  dev->filename = sketchr_strdup(filename);
+  dev->auto_solid_bg = auto_solid_bg;
+  dev->filename = mypaintr_strdup(filename);
   if (!dev->filename) {
     free(dev);
     error("failed to allocate filename");
@@ -1141,10 +1450,10 @@ static SketchDevice *make_device(const char *filename, int width, int height, do
   return dev;
 }
 
-SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP pointsize, SEXP bg_rgba, SEXP stroke_spec, SEXP fill_spec, SEXP fill_style) {
+SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP pointsize, SEXP bg_rgba, SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg) {
   pDevDesc dd;
   pGEDevDesc gdd;
-  SketchDevice *dev;
+  MypaintrDevice *dev;
   int pixel_width;
   int pixel_height;
   int bg;
@@ -1170,7 +1479,9 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
     asReal(res),
     asReal(pointsize),
     bg,
+    asInteger(stroke_style),
     asInteger(fill_style),
+    asLogical(auto_solid_bg),
     stroke_spec,
     fill_spec
   );
@@ -1185,6 +1496,28 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
   gdd = GEcreateDevDesc(dd);
   GEaddDevice2f(gdd, "mypaintr", CHAR(STRING_ELT(filename, 0)));
   GEinitDisplayList(gdd);
+
+  return R_NilValue;
+}
+
+SEXP mypaintr_device_set_style(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg) {
+  MypaintrDevice *dev = current_mypaintr_device();
+
+  if (stroke_spec != R_NilValue) {
+    brush_apply_spec(&dev->stroke, stroke_spec);
+  }
+  if (fill_spec != R_NilValue) {
+    brush_apply_spec(&dev->fill, fill_spec);
+  }
+  if (stroke_style != R_NilValue) {
+    dev->stroke_style = asInteger(stroke_style);
+  }
+  if (fill_style != R_NilValue) {
+    dev->fill_style = asInteger(fill_style);
+  }
+  if (auto_solid_bg != R_NilValue) {
+    dev->auto_solid_bg = asLogical(auto_solid_bg);
+  }
 
   return R_NilValue;
 }

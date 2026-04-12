@@ -21,7 +21,7 @@ Example:
 ```r
 library(mypaintr)
 
-sketch_device(
+mypaint_device(
   "sketch-%d.png",
   brush = "chalk",
   fill_style = "brush"

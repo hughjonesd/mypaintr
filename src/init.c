@@ -2,12 +2,14 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP pointsize, SEXP bg_rgba, SEXP stroke_spec, SEXP fill_spec, SEXP fill_style);
+SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP pointsize, SEXP bg_rgba, SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg);
+SEXP mypaintr_device_set_style(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg);
 SEXP mypaintr_brush_settings_info(void);
 SEXP mypaintr_brush_inputs_info(void);
 
 static const R_CallMethodDef call_methods[] = {
-  {"mypaintr_device_open", (DL_FUNC) &mypaintr_device_open, 9},
+  {"mypaintr_device_open", (DL_FUNC) &mypaintr_device_open, 11},
+  {"mypaintr_device_set_style", (DL_FUNC) &mypaintr_device_set_style, 5},
   {"mypaintr_brush_settings_info", (DL_FUNC) &mypaintr_brush_settings_info, 0},
   {"mypaintr_brush_inputs_info", (DL_FUNC) &mypaintr_brush_inputs_info, 0},
   {NULL, NULL, 0}
