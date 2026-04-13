@@ -42,6 +42,20 @@ brush_preset_table <- list(
 )
 
 default_mypaint_brush_dirs <- function() {
+  pkg_config_file <- system.file("mypaintr-config.dcf", package = "mypaintr", mustWork = FALSE)
+  pkg_mode <- "auto"
+  if (nzchar(pkg_config_file) && file.exists(pkg_config_file)) {
+    dcf <- tryCatch(read.dcf(pkg_config_file), error = function(...) NULL)
+    if (!is.null(dcf) && "brushes_mode" %in% colnames(dcf)) {
+      pkg_mode <- dcf[1L, "brushes_mode"]
+    }
+  }
+
+  mode <- tolower(Sys.getenv("MYPAINTR_BRUSHES", pkg_mode))
+  if (!mode %in% c("auto", "system", "vendored")) {
+    mode <- "auto"
+  }
+
   env <- strsplit(Sys.getenv("MYPAINT_BRUSH_PATH", ""), .Platform$path.sep, fixed = TRUE)[[1L]]
   env <- env[nzchar(env)]
 
@@ -68,7 +82,20 @@ default_mypaint_brush_dirs <- function() {
     "/usr/share/mypaint-data/2.0/brushes"
   ))
 
-  dirs[dir.exists(dirs)]
+  bundled <- system.file("brushes", package = "mypaintr", mustWork = FALSE)
+  if (nzchar(bundled)) {
+    if (mode == "vendored") {
+      dirs <- bundled
+    } else if (mode == "auto") {
+      dirs <- c(dirs, bundled)
+    }
+  } else if (mode == "vendored") {
+    dirs <- character()
+  } else if (mode == "system") {
+    dirs <- dirs
+  }
+
+  unique(dirs[dir.exists(dirs)])
 }
 
 resolve_mypaint_brush_file <- function(brush, paths = default_mypaint_brush_dirs()) {

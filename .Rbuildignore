@@ -1,2 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.DS_Store$
+^Rplots\.pdf$
+^build$
+^inst/doc$
+^tmp($|/)
+^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$
+^vignettes/knitr-display-repro\.Rmd$
+^vignettes/test\.png$

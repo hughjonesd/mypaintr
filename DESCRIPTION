@@ -9,7 +9,7 @@ Description: Raster graphics device for base R graphics that renders
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-SystemRequirements: libmypaint, cairo
+SystemRequirements: cairo, json-c; optional system libmypaint and mypaint-brushes
 Imports:
     grDevices,
     ggplot2
