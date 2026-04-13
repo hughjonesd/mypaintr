@@ -66,7 +66,7 @@ print an axis using (close to) standard R graphics:
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 
-set_brush("ramon/P._shade")
+set_brush("experimental/bubble")
 barplot(VADeaths, axes = FALSE, 
         beside = TRUE, col = palette.colors(5), border = NA,
         cex.names = 0.8)
