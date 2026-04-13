@@ -1,0 +1,53 @@
+---
+title: "Introduction to mypaintr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# mypaintr
+
+mypaintr is a package for creating artistic sketch-like plots in R. It has
+three components:
+
+* An R interface to the [libmypaint](https://github.com/mypaint/libmypaint) 
+  library, which lets you create and import Mypaint brushes. There's a
+  `mypaint_device()` graphics device.
+* R functions to draw lines and shapes with a "rough", hand-drawn look.
+* ggplot geoms and theme elements for ggplot graphs using Mypaint brushes 
+  and hand-drawn paths.
+  
+Here are some demos.
+
+```{r setup, include = FALSE}
+library(mypaintr)
+knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.keep = "none",
+  fig.ext = "png",
+  mypaint = TRUE,
+  fig.width = 5
+)
+```
+
+Brushes are from the mypaint-brushes package which you can install via
+`brew` or your package manager.
+
+```{r}
+set_hand(hand(seed = 1))
+set_brush("deevad/2B_pencil")
+barplot(VADeaths, beside = TRUE, col = palette.colors(5), cex.names = 0.8)
+```
+
+
+```{r}
+set_hand(NULL)
+set_brush("experimental/bubble")
+barplot(VADeaths, beside = TRUE, col = palette.colors(5), cex.names = 0.8)
+```
+

@@ -501,16 +501,94 @@ apply_device_style_override <- function(style) {
   ))
   invisible(.Call(
     mypaintr_device_set_hand,
-    if (isTRUE(style$update_stroke)) style$stroke_hand else NULL,
-    if (isTRUE(style$update_fill)) style$fill_hand else NULL,
-    isTRUE(style$update_stroke),
-    isTRUE(style$update_fill)
+    if (isTRUE(style$update_stroke_hand)) style$stroke_hand else NULL,
+    if (isTRUE(style$update_fill_hand)) style$fill_hand else NULL,
+    isTRUE(style$update_stroke_hand),
+    isTRUE(style$update_fill_hand)
   ))
 }
 
 require_ggplot2 <- function() {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 must be installed to use mypaint theme elements", call. = FALSE)
+  }
+}
+
+require_knitr <- function() {
+  if (!requireNamespace("knitr", quietly = TRUE)) {
+    stop("knitr must be installed to use knitr_chunk_hook()", call. = FALSE)
+  }
+}
+
+#' Create a knitr chunk hook for live mypaint rendering
+#'
+#' The returned hook opens [mypaint_device()] before chunk evaluation and
+#' injects the generated PNG files afterward. This avoids knitr's normal plot
+#' replay path, which does not preserve device-local style changes such as
+#' [set_hand()] and [set_brush()].
+#'
+#' Register it with `knitr::knit_hooks$set(mypaint = knitr_chunk_hook(...))`
+#' and then enable it for chunks with `mypaint = TRUE`. Chunks should also set
+#' `fig.keep = "none"` and `fig.ext = "png"`.
+#'
+#' @param ... Default arguments passed through to [mypaint_device()] when the
+#'   hook opens a device. Chunk-specific overrides can be supplied in the chunk
+#'   option `mypaint.args` as a named list.
+#' @return A function suitable for `knitr::knit_hooks$set()`.
+#' @examples
+#' if (requireNamespace("knitr", quietly = TRUE)) {
+#'   hook <- knitr_chunk_hook(brush = "deevad/2B_pencil")
+#'   print(is.function(hook))
+#' }
+#' @export
+knitr_chunk_hook <- function(...) {
+  require_knitr()
+  device_defaults <- list(...)
+
+  function(before, options, envir) {
+    if (!isTRUE(options$mypaint)) {
+      return()
+    }
+
+    stem <- knitr::fig_path("", options = options, number = NULL)
+    pattern <- paste0(stem, "-%d.png")
+    files_glob <- paste0(stem, "-*.png")
+
+    if (before) {
+      dir.create(dirname(stem), recursive = TRUE, showWarnings = FALSE)
+      unlink(Sys.glob(files_glob))
+
+      dev_args <- c(
+        list(
+          file = pattern,
+          width = options$fig.width[1],
+          height = options$fig.height[1]
+        ),
+        device_defaults
+      )
+      if (is.list(options$mypaint.args)) {
+        dev_args[names(options$mypaint.args)] <- options$mypaint.args
+      }
+      do.call(mypaint_device, dev_args)
+      return()
+    }
+
+    if (identical(names(grDevices::dev.cur()), "mypaintr")) {
+      grDevices::dev.off()
+    }
+
+    files <- sort(Sys.glob(files_glob))
+    if (!length(files)) {
+      return("")
+    }
+
+    options$fig.num <- length(files)
+    pieces <- character(length(files))
+    for (i in seq_along(files)) {
+      options$fig.cur <- i
+      pieces[[i]] <- knitr::hook_plot_md(files[[i]], options)
+    }
+    paste0(pieces, collapse = "")
   }
 }
 
@@ -539,22 +617,247 @@ make_style_override <- function(update_stroke = FALSE,
                                 stroke_spec = NULL,
                                 stroke_style = NULL,
                                 stroke_hand = NULL,
+                                update_stroke_hand = update_stroke,
                                 update_fill = FALSE,
                                 fill_spec = NULL,
                                 fill_style = NULL,
                                 fill_hand = NULL,
+                                update_fill_hand = update_fill,
                                 auto_solid_bg = NULL) {
   list(
     update_stroke = update_stroke,
     stroke_spec = stroke_spec,
     stroke_style = stroke_style,
     stroke_hand = stroke_hand,
+    update_stroke_hand = update_stroke_hand,
     update_fill = update_fill,
     fill_spec = fill_spec,
     fill_style = fill_style,
     fill_hand = fill_hand,
+    update_fill_hand = update_fill_hand,
     auto_solid_bg = auto_solid_bg
   )
+}
+
+alpha_colour <- function(col, alpha = NA_real_) {
+  if (is.null(col) || all(is.na(col))) {
+    return(col)
+  }
+  if (is.list(col)) {
+    stop("pattern fills are not supported by mypaint geoms", call. = FALSE)
+  }
+  alpha <- rep_len(alpha, length(col))
+  out <- col
+  keep <- !is.na(col)
+  keep[keep] <- is.na(alpha[keep]) | alpha[keep] >= 0
+  out[keep] <- grDevices::adjustcolor(col[keep], alpha.f = ifelse(is.na(alpha[keep]), 1, alpha[keep]))
+  out
+}
+
+as_optional_hand <- function(x) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  normalize_hand_spec(x)
+}
+
+closed_rect_path <- function(xmin, xmax, ymin, ymax) {
+  list(
+    x = c(xmin, xmax, xmax, xmin, xmin),
+    y = c(ymin, ymin, ymax, ymax, ymin)
+  )
+}
+
+outline_path <- function(x, y, hand_spec = NULL, closed = TRUE) {
+  if (is.null(hand_spec)) {
+    return(list(x = x, y = y))
+  }
+  with_hand_seed(hand_spec$seed, {
+    roughen_vertex_path(x, y, hand_spec, closed = closed)
+  })
+}
+
+segment_data <- function(x0, y0, x1, y1, hand_spec = NULL) {
+  n <- max(length(x0), length(y0), length(x1), length(y1))
+  x0 <- rep_len(x0, n)
+  y0 <- rep_len(y0, n)
+  x1 <- rep_len(x1, n)
+  y1 <- rep_len(y1, n)
+
+  if (is.null(hand_spec)) {
+    return(list(
+      x = c(rbind(x0, x1)),
+      y = c(rbind(y0, y1)),
+      id = rep(seq_len(n), each = 2L)
+    ))
+  }
+
+  rough_segments_data(x0, y0, x1, y1, hand_spec)
+}
+
+rough_hachure_data <- function(paths, hand_spec = NULL, angle = 45, density = NULL,
+                               rule = c("winding", "evenodd"), cross = FALSE) {
+  rule <- match.arg(rule)
+  rot_paths <- lapply(paths, function(path) rotate_xy(path$x, path$y, -angle))
+  yr <- unlist(lapply(rot_paths, `[[`, "y"), use.names = FALSE)
+  span <- diff(range(yr))
+  gap <- if (!is.null(hand_spec) && !is.null(hand_spec$hachure_gap)) {
+    hand_spec$hachure_gap
+  } else if (is.null(density)) {
+    span / 25
+  } else {
+    span / max(1, density)
+  }
+  gap <- max(gap, .Machine$double.eps)
+
+  add_segments <- function(base_angle, jitter_angle = 0, jitter_gap = 0) {
+    rot_pass <- lapply(paths, function(path) rotate_xy(path$x, path$y, -base_angle))
+    yr_pass <- unlist(lapply(rot_pass, `[[`, "y"), use.names = FALSE)
+    yy <- min(yr_pass)
+    seg_x0 <- numeric()
+    seg_y0 <- numeric()
+    seg_x1 <- numeric()
+    seg_y1 <- numeric()
+
+    while (yy <= max(yr_pass)) {
+      cuts <- rough_path_intersections(rot_pass, yy)
+      if (length(cuts$x) >= 2L) {
+        if (identical(rule, "evenodd")) {
+          for (i in seq(1L, length(cuts$x) - 1L, by = 2L)) {
+            seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
+            seg_x0 <- c(seg_x0, seg$x[1])
+            seg_y0 <- c(seg_y0, seg$y[1])
+            seg_x1 <- c(seg_x1, seg$x[2])
+            seg_y1 <- c(seg_y1, seg$y[2])
+          }
+        } else {
+          winding <- 0L
+          for (i in seq_len(length(cuts$x) - 1L)) {
+            winding <- winding + cuts$delta[i]
+            if (winding != 0L && cuts$x[i + 1L] > cuts$x[i]) {
+              seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
+              seg_x0 <- c(seg_x0, seg$x[1])
+              seg_y0 <- c(seg_y0, seg$y[1])
+              seg_x1 <- c(seg_x1, seg$x[2])
+              seg_y1 <- c(seg_y1, seg$y[2])
+            }
+          }
+        }
+      }
+      yy <- yy + gap * (1 + jitter_gap)
+    }
+
+    segment_data(seg_x0, seg_y0, seg_x1, seg_y1, hand_spec = hand_spec)
+  }
+
+  build <- function(base_angle) {
+    jitter_angle <- if (is.null(hand_spec)) 0 else stats::rnorm(1, sd = hand_spec$hachure_angle_jitter)
+    jitter_gap <- if (is.null(hand_spec)) 0 else stats::rnorm(1, sd = hand_spec$hachure_gap_jitter)
+    add_segments(base_angle + jitter_angle, jitter_angle, jitter_gap)
+  }
+
+  out <- build(angle)
+  if (cross || (!is.null(hand_spec) && identical(hand_spec$hachure_method, "cross"))) {
+    other <- build(angle + 90)
+    if (length(out$x)) {
+      other$id <- other$id + max(out$id)
+      out$x <- c(out$x, other$x)
+      out$y <- c(out$y, other$y)
+      out$id <- c(out$id, other$id)
+    } else {
+      out <- other
+    }
+  }
+  out
+}
+
+make_stroke_style <- function(brush = NULL, settings = NULL) {
+  spec <- if (is.null(brush) && is.null(settings)) NULL else normalize_brush_spec(brush, settings)
+  make_style_override(
+    update_stroke = TRUE,
+    stroke_spec = spec,
+    stroke_style = if (is.null(spec)) 0L else 1L,
+    stroke_hand = NULL,
+    update_stroke_hand = FALSE
+  )
+}
+
+line_gp <- function(colour, linewidth, linetype = 1, linejoin = "mitre", lineend = "butt") {
+  pt <- getFromNamespace(".pt", "ggplot2")
+  grid::gpar(
+    col = colour,
+    fill = NA,
+    lwd = linewidth * pt,
+    lty = linetype,
+    linejoin = linejoin,
+    lineend = lineend
+  )
+}
+
+build_mypaint_rect_grob <- function(data, params, default.units = "native") {
+  child_list <- list()
+  border_brush <- params$brush
+  border_settings <- params$brush_settings
+  fill_brush <- if (is.null(params$fill_brush) && is.null(params$fill_settings)) params$brush else params$fill_brush
+  fill_settings <- params$fill_settings
+  outline_hand <- params$stroke_hand
+  hatch_hand <- params$fill_hand %||% outline_hand
+
+  for (i in seq_len(nrow(data))) {
+    row <- data[i, , drop = FALSE]
+    fill_col <- alpha_colour(row$fill, row$alpha)
+    border_col <- alpha_colour(row$colour, row$alpha)
+    linewidth <- row$linewidth %||% 0.5
+    linetype <- row$linetype %||% 1
+
+    path <- outline_path(
+      closed_rect_path(row$xmin, row$xmax, row$ymin, row$ymax)$x,
+      closed_rect_path(row$xmin, row$xmax, row$ymin, row$ymax)$y,
+      hand_spec = outline_hand,
+      closed = FALSE
+    )
+
+    if (is_visible_col(fill_col)) {
+      hatch <- if (is.null(hatch_hand)) {
+        rough_hachure_data(list(path), hand_spec = NULL, angle = params$angle, density = params$density)
+      } else {
+        with_hand_seed(hatch_hand$seed, {
+          rough_hachure_data(list(path), hand_spec = hatch_hand, angle = params$angle, density = params$density)
+        })
+      }
+      if (length(hatch$x)) {
+        hatch_grob <- grid::polylineGrob(
+          x = hatch$x,
+          y = hatch$y,
+          id = hatch$id,
+          default.units = default.units,
+          gp = line_gp(fill_col, linewidth, linetype, params$linejoin, params$lineend)
+        )
+        child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
+          hatch_grob,
+          make_stroke_style(fill_brush, fill_settings)
+        )
+      }
+    }
+
+    if (is_visible_col(border_col)) {
+      border_grob <- grid::polylineGrob(
+        x = path$x,
+        y = path$y,
+        default.units = default.units,
+        gp = line_gp(border_col, linewidth, linetype, params$linejoin, params$lineend)
+      )
+      child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
+        border_grob,
+        make_stroke_style(border_brush, border_settings)
+      )
+    }
+  }
+
+  if (!length(child_list)) {
+    return(grid::nullGrob())
+  }
+  grid::gTree(children = do.call(grid::gList, child_list))
 }
 
 rgba_int <- function(col) {
@@ -919,6 +1222,64 @@ rough_segments <- function(x0, y0, x1, y1, hand = NULL) {
   })
 }
 
+arrow_unit_scale <- function() {
+  usr <- graphics::par("usr")
+  pin <- graphics::par("pin")
+  c(
+    x = abs(usr[2] - usr[1]) / pin[1],
+    y = abs(usr[4] - usr[3]) / pin[2]
+  )
+}
+
+arrowhead_segments <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2) {
+  head_length <- length
+  n <- max(base::length(x0), base::length(y0), base::length(x1), base::length(y1))
+  x0 <- rep_len(x0, n)
+  y0 <- rep_len(y0, n)
+  x1 <- rep_len(x1, n)
+  y1 <- rep_len(y1, n)
+  code <- rep_len(as.integer(code), n)
+  angle <- rep_len(angle, n)
+
+  scale <- arrow_unit_scale()
+  seg_x0 <- numeric()
+  seg_y0 <- numeric()
+  seg_x1 <- numeric()
+  seg_y1 <- numeric()
+
+  add_head <- function(base_x, base_y, tip_x, tip_y, head_angle) {
+    dx <- (tip_x - base_x) / scale["x"]
+    dy <- (tip_y - base_y) / scale["y"]
+    seg_len <- sqrt(dx * dx + dy * dy)
+    if (!is.finite(seg_len) || seg_len <= 0) {
+      return()
+    }
+
+    head_len <- min(head_length, seg_len / 2)
+    theta <- atan2(dy, dx)
+    spread <- head_angle * pi / 180
+    for (phi in c(theta + pi - spread, theta + pi + spread)) {
+      hx <- tip_x + cos(phi) * head_len * scale["x"]
+      hy <- tip_y + sin(phi) * head_len * scale["y"]
+      seg_x0 <<- c(seg_x0, tip_x)
+      seg_y0 <<- c(seg_y0, tip_y)
+      seg_x1 <<- c(seg_x1, hx)
+      seg_y1 <<- c(seg_y1, hy)
+    }
+  }
+
+  for (i in seq_len(n)) {
+    if (code[i] %in% c(1L, 3L)) {
+      add_head(x1[i], y1[i], x0[i], y0[i], angle[i])
+    }
+    if (code[i] %in% c(2L, 3L)) {
+      add_head(x0[i], y0[i], x1[i], y1[i], angle[i])
+    }
+  }
+
+  list(x0 = seg_x0, y0 = seg_y0, x1 = seg_x1, y1 = seg_y1)
+}
+
 #' Compute a rough multipath outline
 #'
 #' @param x,y Coordinates as for [graphics::polypath()].
@@ -996,6 +1357,38 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
         keep <- geom$id == i
         graphics::lines(geom$x[keep], geom$y[keep], ...)
       }
+    }
+    NULL
+  }))
+}
+
+#' Draw rough arrows
+#'
+#' @param x0,y0 Arrow starts.
+#' @param x1,y1 Arrow ends.
+#' @param length Arrowhead length in inches, as in [graphics::arrows()].
+#' @param angle Arrowhead angle in degrees.
+#' @param code Integer code indicating where heads are drawn:
+#'   `0` for none, `1` at the start, `2` at the end, `3` at both ends.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_arrows(2, 2, 8, 8)
+#' draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
+#' @export
+draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
+                              hand = NULL, ...) {
+  hand_spec <- as_hand(hand)
+  hand_draw <- hand_spec
+  hand_draw$seed <- NULL
+
+  invisible(with_hand_seed(hand_spec$seed, {
+    draw_rough_segments(x0, y0, x1, y1, hand = hand_draw, ...)
+    heads <- arrowhead_segments(x0, y0, x1, y1, length = length, angle = angle, code = code)
+    if (base::length(heads$x0)) {
+      draw_rough_segments(heads$x0, heads$y0, heads$x1, heads$y1, hand = hand_draw, ...)
     }
     NULL
   }))
@@ -1341,6 +1734,170 @@ postDrawDetails.mypaintr_style_grob <- function(x) {
   state <- mypaintr_env$style_stack[[n]]
   mypaintr_env$style_stack <- mypaintr_env$style_stack[-n]
   apply_device_style_state(state)
+}
+
+draw_key_mypaint_rect <- function(data, params, size) {
+  data$xmin <- 0.1
+  data$xmax <- 0.9
+  data$ymin <- 0.1
+  data$ymax <- 0.9
+  build_mypaint_rect_grob(data, params, default.units = "npc")
+}
+
+GeomMypaintCol <- ggplot2::ggproto(
+  "GeomMypaintCol",
+  ggplot2::GeomCol,
+  extra_params = c(
+    "na.rm", "just", "orientation", "lineend", "linejoin",
+    "density", "angle", "brush", "brush_settings",
+    "fill_brush", "fill_settings", "hand", "stroke_hand",
+    "fill_hand", "auto_solid_bg"
+  ),
+  draw_panel = function(self, data, panel_params, coord, lineend = "butt",
+                        linejoin = "mitre", just = 0.5, na.rm = FALSE,
+                        density = NULL, angle = 45,
+                        brush = NULL, brush_settings = NULL,
+                        fill_brush = NULL, fill_settings = NULL,
+                        hand = NULL, stroke_hand = hand, fill_hand = hand,
+                        auto_solid_bg = NULL) {
+    if (!coord$is_linear()) {
+      stop("geom_mypaint_col() currently only supports linear coordinates", call. = FALSE)
+    }
+
+    data <- getFromNamespace("fix_linewidth", "ggplot2")(data, "geom_mypaint_col")
+    coords <- coord$transform(data, panel_params)
+    build_mypaint_rect_grob(
+      coords,
+      list(
+        density = density,
+        angle = angle,
+        lineend = lineend,
+        linejoin = linejoin,
+        brush = brush,
+        brush_settings = brush_settings,
+        fill_brush = fill_brush,
+        fill_settings = fill_settings,
+        stroke_hand = as_optional_hand(stroke_hand),
+        fill_hand = as_optional_hand(fill_hand),
+        auto_solid_bg = auto_solid_bg
+      )
+    )
+  },
+  draw_key = draw_key_mypaint_rect
+)
+
+GeomMypaintBar <- ggplot2::ggproto(
+  "GeomMypaintBar",
+  ggplot2::GeomBar,
+  extra_params = GeomMypaintCol$extra_params,
+  draw_panel = GeomMypaintCol$draw_panel,
+  draw_key = draw_key_mypaint_rect
+)
+
+#' Draw rough, brush-rendered columns in ggplot2
+#'
+#' This geom owns both the bar outline and the hatch fill, so the shading lines
+#' follow the same rough outline rather than the underlying true rectangle.
+#'
+#' @param mapping,data,position,just,lineend,linejoin,na.rm,show.legend,inherit.aes
+#'   As for [ggplot2::geom_col()].
+#' @param density Optional hatch density. When `NULL`, a default density is used.
+#' @param angle Hatch angle in degrees.
+#' @param brush,brush_settings Stroke brush spec and overrides.
+#' @param fill_brush,fill_settings Fill-hatch brush spec and overrides.
+#' @param hand Optional hand-drawn geometry applied to both outline and hatch by
+#'   default.
+#' @param stroke_hand Optional hand-drawn geometry for the outline.
+#' @param fill_hand Optional hand-drawn geometry for the hatch strokes.
+#' @param auto_solid_bg Reserved for future parity with device-level style
+#'   controls.
+#' @param ... Other arguments passed to [ggplot2::layer()].
+#' @return A ggplot layer.
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   ggplot2::ggplot(mtcars, ggplot2::aes(factor(cyl))) +
+#'     geom_mypaint_bar(density = 12)
+#' }
+#' @export
+geom_mypaint_col <- function(mapping = NULL, data = NULL, position = "stack",
+                             ..., just = 0.5, lineend = "butt", linejoin = "mitre",
+                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
+                             density = NULL, angle = 45,
+                             brush = NULL, brush_settings = NULL,
+                             fill_brush = NULL, fill_settings = NULL,
+                             hand = NULL, stroke_hand = hand, fill_hand = hand,
+                             auto_solid_bg = NULL) {
+  require_ggplot2()
+  ggplot2::layer(
+    data = data,
+    mapping = mapping,
+    stat = "identity",
+    geom = GeomMypaintCol,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      just = just,
+      lineend = lineend,
+      linejoin = linejoin,
+      na.rm = na.rm,
+      density = density,
+      angle = angle,
+      brush = brush,
+      brush_settings = brush_settings,
+      fill_brush = fill_brush,
+      fill_settings = fill_settings,
+      hand = hand,
+      stroke_hand = stroke_hand,
+      fill_hand = fill_hand,
+      auto_solid_bg = auto_solid_bg,
+      ...
+    )
+  )
+}
+
+#' Draw rough, brush-rendered bars in ggplot2
+#'
+#' @inheritParams geom_mypaint_col
+#' @param stat The statistical transformation to use. Defaults to `"count"`.
+#' @return A ggplot layer.
+#' @export
+geom_mypaint_bar <- function(mapping = NULL, data = NULL, stat = "count",
+                             position = "stack", ..., just = 0.5,
+                             lineend = "butt", linejoin = "mitre", na.rm = FALSE,
+                             show.legend = NA, inherit.aes = TRUE,
+                             density = NULL, angle = 45,
+                             brush = NULL, brush_settings = NULL,
+                             fill_brush = NULL, fill_settings = NULL,
+                             hand = NULL, stroke_hand = hand, fill_hand = hand,
+                             auto_solid_bg = NULL) {
+  require_ggplot2()
+  ggplot2::layer(
+    data = data,
+    mapping = mapping,
+    stat = stat,
+    geom = GeomMypaintBar,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(
+      just = just,
+      lineend = lineend,
+      linejoin = linejoin,
+      na.rm = na.rm,
+      density = density,
+      angle = angle,
+      brush = brush,
+      brush_settings = brush_settings,
+      fill_brush = fill_brush,
+      fill_settings = fill_settings,
+      hand = hand,
+      stroke_hand = stroke_hand,
+      fill_hand = fill_hand,
+      auto_solid_bg = auto_solid_bg,
+      ...
+    )
+  )
 }
 
 #' Built-in brush presets
