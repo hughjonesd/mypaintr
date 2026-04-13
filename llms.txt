@@ -1,0 +1,121 @@
+# mypaintr
+
+mypaintr is an R package that lets you plot graphics in a human-like,
+sketched way, using brushes from the
+[libmypaint](https://github.com/mypaint/libmypaint) library and
+algorithms for “rough” lines and polygons.
+
+## Installation
+
+You can install the development version of mypaintr from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("hughjonesd/mypaintr")
+```
+
+## Example
+
+A base R barplot using a custom brush, plus a hand-drawn axis:
+
+``` r
+library(mypaintr)
+
+set_brush("experimental/bubble")
+barplot(VADeaths, axes = FALSE, 
+        beside = TRUE, col = palette.colors(5), border = NA,
+        cex.names = 0.8)
+
+set_brush(NULL)
+set_hand(hand())
+axis(side = 2, at = seq(0, 60, 20))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)
+
+# Package index
+
+## Devices and Styles
+
+- [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
+  : Open a libmypaint-backed graphics device
+- [`mypaint_style()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_style.md)
+  : Update the active mypaintr device style
+- [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
+  : Set the active mypaintr brush
+- [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
+  : Set the active mypaintr hand-drawn geometry
+- [`brush_dirs()`](https://hughjonesd.github.io/mypaintr/reference/brush_dirs.md)
+  : Discover installed mypaint brush directories
+- [`brushes()`](https://hughjonesd.github.io/mypaintr/reference/brushes.md)
+  : List installed mypaint brushes
+- [`load_brush()`](https://hughjonesd.github.io/mypaintr/reference/load_brush.md)
+  : Load an installed mypaint brush
+- [`brush_presets()`](https://hughjonesd.github.io/mypaintr/reference/brush_presets.md)
+  : Built-in brush presets
+- [`brush_settings()`](https://hughjonesd.github.io/mypaintr/reference/brush_settings.md)
+  : libmypaint brush setting metadata
+- [`brush_inputs()`](https://hughjonesd.github.io/mypaintr/reference/brush_inputs.md)
+  : libmypaint brush input metadata
+
+## Rough Drawing
+
+- [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md) :
+  Hand-drawn geometry settings
+- [`draw_rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_lines.md)
+  : Draw rough connected lines
+- [`draw_rough_segments()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_segments.md)
+  : Draw rough segments
+- [`draw_rough_arrows()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_arrows.md)
+  : Draw rough arrows
+- [`draw_rough_points()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_points.md)
+  : Draw rough points
+- [`draw_rough_polygons()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_polygons.md)
+  : Draw rough polygons
+- [`draw_rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_polypath.md)
+  : Draw a rough multipath with optional holes
+- [`draw_rough_rect()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_rect.md)
+  : Draw a rough rectangle
+- [`rough_polygon()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygon.md)
+  : Compute a rough polygon outline
+- [`rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/rough_polypath.md)
+  : Compute a rough multipath outline
+- [`rough_rect()`](https://hughjonesd.github.io/mypaintr/reference/rough_rect.md)
+  : Compute a rough rectangle outline
+- [`rough_segments()`](https://hughjonesd.github.io/mypaintr/reference/rough_segments.md)
+  : Compute rough segment geometry
+
+## Fill Patterns
+
+- [`hatch()`](https://hughjonesd.github.io/mypaintr/reference/hatch.md)
+  : Hatch fill pattern
+- [`crosshatch()`](https://hughjonesd.github.io/mypaintr/reference/crosshatch.md)
+  : Cross-hatch fill pattern
+- [`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
+  : Zigzag fill pattern
+- [`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md)
+  : Jumble fill pattern
+
+## ggplot2 Integration
+
+- [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
+  : Draw rough, brush-rendered bars in ggplot2
+- [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md)
+  : Draw rough, brush-rendered columns in ggplot2
+- [`element_mypaint_line()`](https://hughjonesd.github.io/mypaintr/reference/element_mypaint_line.md)
+  : Theme line element with scoped mypaint rendering
+- [`element_mypaint_rect()`](https://hughjonesd.github.io/mypaintr/reference/element_mypaint_rect.md)
+  : Theme rectangle element with scoped mypaint rendering
+
+## knitr
+
+- [`knitr_chunk_hook()`](https://hughjonesd.github.io/mypaintr/reference/knitr_chunk_hook.md)
+  : Create a knitr chunk hook for live mypaint rendering
+
+# Articles
+
+### All vignettes
+
+- [Introduction to
+  mypaintr](https://hughjonesd.github.io/mypaintr/articles/introduction.md):
