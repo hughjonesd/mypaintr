@@ -23,6 +23,10 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends libcairo2-dev libjson-c-dev libcurl4-openssl-dev libssl-dev libxml2-dev
 
+      - name: Install extra dependencies
+        run: |
+          apt-get install -y --no-install-recommends libmypaint libmypaint-dev mypaint-brushes
+
       - name: Install R dependencies
         run: |
           install.packages(c("pkgdown", "knitr", "rmarkdown", "roxygen2", "ggplot2"))
