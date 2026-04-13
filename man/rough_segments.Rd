@@ -11,11 +11,11 @@ rough_segments(x0, y0, x1, y1, hand = NULL)
 
 \item{x1, y1}{Segment ends.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 }
 \value{
-A list with `x`, `y`, and `id` components describing roughened
-  polyline geometry for each segment.
+A list with \code{x}, \code{y}, and \code{id} components describing roughened
+polyline geometry for each segment.
 }
 \description{
 Compute rough segment geometry

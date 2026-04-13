@@ -18,20 +18,20 @@ draw_rough_polygons(
 \arguments{
 \item{x, y}{Polygon coordinates.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
 \item{col}{Fill colour. When visible, a hachure fill is drawn.}
 
 \item{border}{Border colour.}
 
-\item{density}{Hatch density. When `NULL`, a default density is used.}
+\item{density}{Hatch density. When \code{NULL}, a default density is used.}
 
 \item{angle}{Hatch angle in degrees.}
 
-\item{...}{Graphics parameters passed to [graphics::lines()].}
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
-Draws on the current device and returns `NULL` invisibly.
+Draws on the current device and returns \code{NULL} invisibly.
 }
 \description{
 Draw rough polygons

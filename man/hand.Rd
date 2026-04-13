@@ -33,7 +33,7 @@ strokes.}
 \item{endpoint_jitter}{Relative endpoint jitter as a proportion of segment
 length.}
 
-\item{hachure_gap}{Optional gap between hatch lines. When `NULL`, a default
+\item{hachure_gap}{Optional gap between hatch lines. When \code{NULL}, a default
 based on polygon size is used.}
 
 \item{hachure_angle}{Base hatch angle in degrees.}
@@ -42,7 +42,7 @@ based on polygon size is used.}
 
 \item{hachure_gap_jitter}{Relative jitter in hatch spacing.}
 
-\item{hachure_method}{Either `"parallel"` or `"cross"`.}
+\item{hachure_method}{Either \code{"parallel"} or \code{"cross"}.}
 }
 \value{
 An object describing how rough geometry should be generated.

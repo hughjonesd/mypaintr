@@ -8,7 +8,7 @@ brushes(paths = default_mypaint_brush_dirs())
 }
 \arguments{
 \item{paths}{Optional brush directories. Defaults to locally discovered
-`mypaint-brushes` locations.}
+\code{mypaint-brushes} locations.}
 }
 \value{
 A character vector of brush names, relative to the brush root.

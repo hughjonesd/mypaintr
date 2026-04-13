@@ -7,14 +7,14 @@
 draw_rough_lines(x, y = NULL, hand = NULL, ...)
 }
 \arguments{
-\item{x, y}{Coordinates as for [graphics::lines()].}
+\item{x, y}{Coordinates as for \code{\link[graphics:lines]{graphics::lines()}}.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
-\item{...}{Graphics parameters passed to [graphics::lines()].}
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
-Draws on the current device and returns `NULL` invisibly.
+Draws on the current device and returns \code{NULL} invisibly.
 }
 \description{
 Draw rough connected lines

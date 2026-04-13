@@ -7,14 +7,14 @@
 draw_rough_points(x, y = NULL, hand = NULL, ...)
 }
 \arguments{
-\item{x, y}{Point coordinates as for [graphics::points()].}
+\item{x, y}{Point coordinates as for \code{\link[graphics:points]{graphics::points()}}.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
-\item{...}{Graphics parameters passed to [graphics::points()].}
+\item{...}{Graphics parameters passed to \code{\link[graphics:points]{graphics::points()}}.}
 }
 \value{
-Draws on the current device and returns `NULL` invisibly.
+Draws on the current device and returns \code{NULL} invisibly.
 }
 \description{
 Draw rough points

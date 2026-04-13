@@ -24,7 +24,7 @@ mypaint_device(
 )
 }
 \arguments{
-\item{file}{Output PNG filename. If it contains `\%d`, pages are numbered.}
+\item{file}{Output PNG filename. If it contains \verb{\\\%d}, pages are numbered.}
 
 \item{width, height}{Device size in inches.}
 
@@ -35,23 +35,23 @@ mypaint_device(
 \item{bg}{Background colour.}
 
 \item{brush}{Stroke brush preset, installed mypaint brush name,
-`.myb` file path, JSON brush string, named settings, or `NULL` for solid
+\code{.myb} file path, JSON brush string, named settings, or \code{NULL} for solid
 strokes.}
 
-\item{brush_settings}{Named settings overriding `brush`.}
+\item{brush_settings}{Named settings overriding \code{brush}.}
 
 \item{stroke_style}{Legacy override for whether stroke drawing uses the brush
-backend or solid Cairo rendering. When `NULL`, this is inferred from
-whether `brush` is `NULL`.}
+backend or solid Cairo rendering. When \code{NULL}, this is inferred from
+whether \code{brush} is \code{NULL}.}
 
 \item{fill_style}{Legacy override for whether fill drawing uses the brush
-backend or solid Cairo rendering. When `NULL`, this is inferred from
-whether `fill_brush` is `NULL`.}
+backend or solid Cairo rendering. When \code{NULL}, this is inferred from
+whether \code{fill_brush} is \code{NULL}.}
 
-\item{fill_brush}{Optional fill brush spec. Defaults to `brush` when not
-supplied. Use explicit `NULL` for solid fills.}
+\item{fill_brush}{Optional fill brush spec. Defaults to \code{brush} when not
+supplied. Use explicit \code{NULL} for solid fills.}
 
-\item{fill_settings}{Named settings overriding `fill_brush`.}
+\item{fill_settings}{Named settings overriding \code{fill_brush}.}
 
 \item{hand}{Optional hand-drawn geometry spec applied to both stroke and
 fill primitives by default.}
@@ -61,10 +61,10 @@ fill primitives by default.}
 \item{fill_hand}{Optional hand-drawn geometry spec for fills.}
 
 \item{auto_solid_bg}{Draw large fills that match the device background using
-normal Cairo rendering even when `fill_style = "brush"`.}
+normal Cairo rendering even when \code{fill_style = "brush"}.}
 }
 \value{
-Opens a graphics device and returns `NULL` invisibly.
+Opens a graphics device and returns \code{NULL} invisibly.
 }
 \description{
 Open a libmypaint-backed graphics device

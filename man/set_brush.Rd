@@ -13,17 +13,17 @@ set_brush(
 }
 \arguments{
 \item{brush}{Brush preset, installed brush name, JSON brush string, named
-settings, or `NULL` to switch the selected type back to solid rendering.}
+settings, or \code{NULL} to switch the selected type back to solid rendering.}
 
-\item{settings}{Named settings overriding `brush`.}
+\item{settings}{Named settings overriding \code{brush}.}
 
-\item{type}{Which rendering channel to update: `"both"`, `"stroke"`, or
-`"fill"`.}
+\item{type}{Which rendering channel to update: \code{"both"}, \code{"stroke"}, or
+\code{"fill"}.}
 
 \item{auto_solid_bg}{Optional override for background-like fills.}
 }
 \value{
-`NULL`, invisibly.
+\code{NULL}, invisibly.
 }
 \description{
 Set the active mypaintr brush

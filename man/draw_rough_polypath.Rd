@@ -18,27 +18,27 @@ draw_rough_polypath(
 )
 }
 \arguments{
-\item{x, y}{Coordinates as for [graphics::polypath()].}
+\item{x, y}{Coordinates as for \code{\link[graphics:polypath]{graphics::polypath()}}.}
 
-\item{id}{Optional path ids. Consecutive points with the same `id` belong to
+\item{id}{Optional path ids. Consecutive points with the same \code{id} belong to
 one closed ring.}
 
-\item{rule}{Fill rule, `"winding"` or `"evenodd"`.}
+\item{rule}{Fill rule, \code{"winding"} or \code{"evenodd"}.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
 \item{col}{Fill colour. When visible, a hachure fill is drawn.}
 
 \item{border}{Border colour.}
 
-\item{density}{Hatch density. When `NULL`, a default density is used.}
+\item{density}{Hatch density. When \code{NULL}, a default density is used.}
 
 \item{angle}{Hatch angle in degrees.}
 
-\item{...}{Graphics parameters passed to [graphics::lines()].}
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
-Draws on the current device and returns `NULL` invisibly.
+Draws on the current device and returns \code{NULL} invisibly.
 }
 \description{
 Draw a rough multipath with optional holes

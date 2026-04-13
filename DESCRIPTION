@@ -13,4 +13,5 @@ SystemRequirements: libmypaint, cairo
 Imports:
     grDevices
 NeedsCompilation: yes
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

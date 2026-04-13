@@ -9,11 +9,11 @@ rough_polygon(x, y = NULL, hand = NULL)
 \arguments{
 \item{x, y}{Polygon coordinates.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 }
 \value{
-A list with `x` and `y` components containing a roughened closed
-  outline suitable for plotting with [graphics::lines()].
+A list with \code{x} and \code{y} components containing a roughened closed
+outline suitable for plotting with \code{\link[graphics:lines]{graphics::lines()}}.
 }
 \description{
 Compute a rough polygon outline

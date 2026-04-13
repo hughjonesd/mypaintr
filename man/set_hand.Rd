@@ -7,14 +7,14 @@
 set_hand(hand = NULL, type = c("both", "stroke", "fill"))
 }
 \arguments{
-\item{hand}{Hand-drawn geometry created with [hand()], or `NULL` to disable
+\item{hand}{Hand-drawn geometry created with \code{\link[=hand]{hand()}}, or \code{NULL} to disable
 it for the selected type.}
 
-\item{type}{Which rendering channel to update: `"both"`, `"stroke"`, or
-`"fill"`.}
+\item{type}{Which rendering channel to update: \code{"both"}, \code{"stroke"}, or
+\code{"fill"}.}
 }
 \value{
-`NULL`, invisibly.
+\code{NULL}, invisibly.
 }
 \description{
 Set the active mypaintr hand-drawn geometry

@@ -17,21 +17,21 @@ mypaint_style(
 \arguments{
 \item{brush}{Stroke brush preset, JSON brush string, or named settings.}
 
-\item{brush_settings}{Named settings overriding `brush`.}
+\item{brush_settings}{Named settings overriding \code{brush}.}
 
-\item{stroke_style}{Either `"brush"` or `"solid"`.}
+\item{stroke_style}{Either \code{"brush"} or \code{"solid"}.}
 
-\item{fill_style}{Either `"solid"` or `"brush"`.}
+\item{fill_style}{Either \code{"solid"} or \code{"brush"}.}
 
 \item{fill_brush}{Fill brush preset, JSON brush string, or named settings.}
 
-\item{fill_settings}{Named settings overriding `fill_brush`.}
+\item{fill_settings}{Named settings overriding \code{fill_brush}.}
 
 \item{auto_solid_bg}{Whether large fills matching the device background should
 be drawn normally.}
 }
 \value{
-`NULL`, invisibly.
+\code{NULL}, invisibly.
 }
 \description{
 Update the active mypaintr device style

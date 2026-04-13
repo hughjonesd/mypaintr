@@ -7,7 +7,7 @@
 brush_dirs()
 }
 \value{
-A character vector of directories containing `.myb` brushes.
+A character vector of directories containing \code{.myb} brushes.
 }
 \description{
 Discover installed mypaint brush directories

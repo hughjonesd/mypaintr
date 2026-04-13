@@ -13,18 +13,18 @@ rough_polypath(
 )
 }
 \arguments{
-\item{x, y}{Coordinates as for [graphics::polypath()].}
+\item{x, y}{Coordinates as for \code{\link[graphics:polypath]{graphics::polypath()}}.}
 
-\item{id}{Optional path ids. Consecutive points with the same `id` belong to
+\item{id}{Optional path ids. Consecutive points with the same \code{id} belong to
 one closed ring.}
 
-\item{rule}{Fill rule, `"winding"` or `"evenodd"`.}
+\item{rule}{Fill rule, \code{"winding"} or \code{"evenodd"}.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 }
 \value{
-A list with `x`, `y`, `id`, and `rule` components describing
-  roughened closed rings.
+A list with \code{x}, \code{y}, \code{id}, and \code{rule} components describing
+roughened closed rings.
 }
 \description{
 Compute a rough multipath outline

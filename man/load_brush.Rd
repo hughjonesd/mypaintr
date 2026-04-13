@@ -7,13 +7,13 @@
 load_brush(brush, paths = default_mypaint_brush_dirs())
 }
 \arguments{
-\item{brush}{Brush name like `"classic/pencil"` or a path to a `.myb` file.}
+\item{brush}{Brush name like \code{"classic/pencil"} or a path to a \code{.myb} file.}
 
 \item{paths}{Optional brush directories. Defaults to locally discovered
-`mypaint-brushes` locations.}
+\code{mypaint-brushes} locations.}
 }
 \value{
-A JSON brush string suitable for `mypaint_device(brush = ...)`.
+A JSON brush string suitable for \code{mypaint_device(brush = ...)}.
 }
 \description{
 Load an installed mypaint brush

@@ -11,12 +11,12 @@ draw_rough_segments(x0, y0, x1, y1, hand = NULL, ...)
 
 \item{x1, y1}{Segment ends.}
 
-\item{hand}{Hand-drawn geometry settings created with [hand()].}
+\item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
-\item{...}{Graphics parameters passed to [graphics::lines()].}
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
-Draws on the current device and returns `NULL` invisibly.
+Draws on the current device and returns \code{NULL} invisibly.
 }
 \description{
 Draw rough segments
