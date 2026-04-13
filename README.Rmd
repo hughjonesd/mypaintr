@@ -1,0 +1,53 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+library(mypaintr)
+knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.ext = "png",
+  fig.width = 5
+)
+```
+
+# mypaintr
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+mypaintr is an R package that lets you plot graphics in a human-like, sketched
+way, using brushes from the [libmypaint](https://github.com/mypaint/libmypaint)
+library and algorithms for "rough" lines and polygons.
+
+## Installation
+
+You can install the development version of mypaintr from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("hughjonesd/mypaintr")
+```
+
+## Example
+
+A base R barplot using a custom brush, plus a hand-drawn axis:
+
+```{r, mypaint=TRUE, fig.keep="none"}
+library(mypaintr)
+
+set_brush("experimental/bubble")
+barplot(VADeaths, axes = FALSE, 
+        beside = TRUE, col = palette.colors(5), border = NA,
+        cex.names = 0.8)
+
+set_brush(NULL)
+set_hand(hand())
+axis(side = 2, at = seq(0, 60, 20))
+
+```

@@ -1,36 +1,42 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # mypaintr
 
-`mypaintr` is an R package that opens a raster graphics device backed by
-`libmypaint` for strokes and Cairo for text and solid fills.
+<!-- badges: start -->
 
-Current state:
+<!-- badges: end -->
 
-- Base graphics primitives such as lines, rectangles, polygons, circles and text work.
-- Stroke rendering uses `libmypaint` brush settings, so preset and custom brushes affect the output.
-- Fill rendering supports either solid Cairo fills or brush-hatched fills.
-- The device writes PNG files and supports multi-page output through filenames containing `%d`.
+mypaintr is an R package that lets you plot graphics in a human-like,
+sketched way, using brushes from the
+[libmypaint](https://github.com/mypaint/libmypaint) library and
+algorithms for “rough” lines and polygons.
 
-Limitations in this first version:
+## Installation
 
-- Dashed line types are not yet honoured.
-- Text is rendered by Cairo rather than `libmypaint`.
-- Complex path fills with `fill_style = "brush"` fall back to solid filling unless the path is a single polygon.
+You can install the development version of mypaintr from
+[GitHub](https://github.com/) with:
 
-Example:
+``` r
+# install.packages("pak")
+pak::pak("hughjonesd/mypaintr")
+```
 
-```r
+## Example
+
+A base R barplot using a custom brush, plus a hand-drawn axis:
+
+``` r
 library(mypaintr)
 
-mypaint_device(
-  "sketch-%d.png",
-  brush = "chalk",
-  fill_style = "brush"
-)
+set_brush("experimental/bubble")
+barplot(VADeaths, axes = FALSE, 
+        beside = TRUE, col = palette.colors(5), border = NA,
+        cex.names = 0.8)
 
-plot(1:10, col = "grey30", pch = 16, cex = 1.4)
-polygon(c(2, 5, 8, 6, 3), c(2, 7, 6, 3, 1.5),
-        border = "black", col = rgb(0.2, 0.7, 0.5, 0.6))
-lines(1:10, col = "firebrick", lwd = 4)
-title("chalk")
-dev.off()
+set_brush(NULL)
+set_hand(hand())
+axis(side = 2, at = seq(0, 60, 20))
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
