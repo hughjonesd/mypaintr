@@ -1,0 +1,63 @@
+url: https://hughjonesd.github.io/mypaintr/
+
+development:
+  mode: unreleased
+
+template:
+  bootstrap: 5
+
+home:
+  title: mypaintr
+  description: Artistic R graphics with libmypaint brushes and rough drawing helpers.
+
+reference:
+  - title: Devices and Styles
+    contents:
+      - mypaint_device
+      - mypaint_style
+      - set_brush
+      - set_hand
+      - brush_dirs
+      - brushes
+      - load_brush
+      - brush_presets
+      - brush_settings
+      - brush_inputs
+
+  - title: Rough Drawing
+    contents:
+      - hand
+      - draw_rough_lines
+      - draw_rough_segments
+      - draw_rough_arrows
+      - draw_rough_points
+      - draw_rough_polygons
+      - draw_rough_polypath
+      - draw_rough_rect
+      - rough_polygon
+      - rough_polypath
+      - rough_rect
+      - rough_segments
+
+  - title: Fill Patterns
+    contents:
+      - hatch
+      - crosshatch
+      - zigzag
+      - jumble
+
+  - title: ggplot2 Integration
+    contents:
+      - geom_mypaint_bar
+      - geom_mypaint_col
+      - element_mypaint_line
+      - element_mypaint_rect
+
+  - title: knitr
+    contents:
+      - knitr_chunk_hook
+
+navbar:
+  structure:
+    left: [reference, articles]
+    right: [github]

@@ -11,3 +11,4 @@ src/Makevars.user
 src/Makevars.win.user
 .Rproj.user
 inst/doc
+docs

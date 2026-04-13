@@ -1,0 +1,14 @@
+This package is licensed under the MIT license. See `LICENSE` for the CRAN
+metadata file and `LICENSE.md` for the full license text.
+
+Bundled third-party components:
+
+- `src/vendor/libmypaint/`
+  License: ISC
+  Copyright: Martin Renold and contributors
+  Full text: `src/vendor/libmypaint/COPYING`
+
+- `inst/brushes/`
+  License: CC0 1.0 Universal
+  Source: `mypaint-brushes`
+  Full text: `inst/brushes/COPYING`
