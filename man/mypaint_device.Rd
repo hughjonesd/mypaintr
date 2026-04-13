@@ -5,7 +5,8 @@
 \title{Open a libmypaint-backed graphics device}
 \usage{
 mypaint_device(
-  file,
+  filename = NULL,
+  file = NULL,
   width = 7,
   height = 7,
   res = 144,
@@ -24,7 +25,10 @@ mypaint_device(
 )
 }
 \arguments{
-\item{file}{Output PNG filename. If it contains \verb{\\\%d}, pages are numbered.}
+\item{filename}{Output PNG filename. If it contains \verb{\\\%d}, pages are
+numbered.}
+
+\item{file}{Deprecated compatibility alias for \code{filename}.}
 
 \item{width, height}{Device size in inches.}
 

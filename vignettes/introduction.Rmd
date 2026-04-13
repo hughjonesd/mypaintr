@@ -3,11 +3,12 @@ title: "Introduction to mypaintr"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{introduction}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
-# mypaintr
 
 mypaintr is a package for creating artistic sketch-like plots in R. It has
 three components:
@@ -28,9 +29,7 @@ knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.keep = "none",
   fig.ext = "png",
-  mypaint = TRUE,
   fig.width = 5
 )
 ```
@@ -38,16 +37,66 @@ knitr::opts_chunk$set(
 Brushes are from the mypaint-brushes package which you can install via
 `brew` or your package manager.
 
-```{r}
+```{r, mypaint=TRUE, fig.keep="none"}
 set_hand(hand(seed = 1))
-set_brush("deevad/2B_pencil")
-barplot(VADeaths, beside = TRUE, col = palette.colors(5), cex.names = 0.8)
+set_brush("tanda/marker-01")
+barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
+Set `hand` or `brush` to `NULL` to revert to the default:
 
-```{r}
+```{r, mypaint=TRUE, fig.keep="none"}
 set_hand(NULL)
-set_brush("experimental/bubble")
-barplot(VADeaths, beside = TRUE, col = palette.colors(5), cex.names = 0.8)
+set_brush("ramon/P._shade")
+barplot(VADeaths, axes = FALSE, 
+        beside = TRUE, col = palette.colors(5), border = NA,
+        cex.names = 0.8)
+set_brush(NULL)
+axis(side = 2, at = seq(0, 60, 20))
 ```
 
+# Rough lines and polygons
+
+These functions can be used with any graphics device, as in the next chunks:
+
+```{r, dev="png"}
+knitr::opts_chunk$get("dev")
+
+plot(1:10, 1:10, type = "n")
+draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red")
+draw_rough_rect(8, 4, 5, 8, density = 15, col = "blue3")
+
+draw_rough_arrows(1, 9, 8, 9, col = "grey40")
+```
+
+Control lines and fills with the `hand()` function:
+
+
+```{r, dev="png"}
+
+plot(1:10, 1:10, type = "n")
+
+my_hand <- hand(wobble = 0.01, multi_stroke = 2)
+draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red", hand = my_hand)
+draw_rough_rect(8, 4, 5, 8, density = 15, col = "blue3", hand = my_hand)
+
+draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
+```
+
+
+
+```{r, dev="png", fig.width=5, fig.height=5}
+
+plot(5:55, 5:55, type = "n", xlab = "bow", ylab = "wobble", axes = FALSE,
+     mar = rep(0.1, 4))
+
+for (row in 1:5) for (col in 1:5) {
+  my_hand <- hand(wobble = 0.02 * row, bow = 0.02 * col)
+  draw_rough_rect(
+    10 * col - 3, 10 * row - 3,
+    10 * col + 3, 10 * row + 3,
+    hand = my_hand,
+    col = "red"
+  )
+}
+```

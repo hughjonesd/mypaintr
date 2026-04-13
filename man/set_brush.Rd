@@ -23,7 +23,9 @@ settings, or \code{NULL} to switch the selected type back to solid rendering.}
 \item{auto_solid_bg}{Optional override for background-like fills.}
 }
 \value{
-\code{NULL}, invisibly.
+\code{NULL}, invisibly. If the active device is not \code{mypaintr}, the
+selected brush becomes the default for the next \code{\link[=mypaint_device]{mypaint_device()}} opened
+in this R session.
 }
 \description{
 Set the active mypaintr brush

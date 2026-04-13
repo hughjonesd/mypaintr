@@ -12,6 +12,7 @@ draw_rough_polypath(
   hand = NULL,
   col = NA,
   border = graphics::par("fg"),
+  fill_pattern = NULL,
   density = NULL,
   angle = 45,
   clip = TRUE,
@@ -28,17 +29,20 @@ one closed ring.}
 
 \item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
-\item{col}{Fill colour. When visible and \code{density} is \code{NULL}, a solid fill is
-drawn. When \code{density} is set, a hachure fill is drawn.}
+\item{col}{Fill colour. When visible and \code{fill_pattern} is \code{NULL}, a solid
+fill is drawn.}
 
 \item{border}{Border colour.}
 
-\item{density}{Hatch density. When \code{NULL}, the polygon is filled solidly.}
+\item{fill_pattern}{Optional fill pattern created with \code{\link[=rough_fill]{rough_fill()}}.}
 
-\item{angle}{Hatch angle in degrees.}
+\item{density}{Legacy shortcut for line density. When supplied without
+\code{fill_pattern}, it is treated as \code{rough_fill("lines", density = density)}.}
 
-\item{clip}{When \code{TRUE}, hatch line endpoints are kept on the shape boundary
-to reduce visible overshoot.}
+\item{angle}{Legacy shortcut for the base fill angle.}
+
+\item{clip}{Legacy shortcut controlling endpoint clipping for line-based
+patterns.}
 
 \item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }

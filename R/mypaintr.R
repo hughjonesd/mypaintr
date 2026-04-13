@@ -101,6 +101,15 @@ read_mypaint_brush <- function(path) {
 
 mypaintr_env <- new.env(parent = emptyenv())
 mypaintr_env$style_stack <- list()
+mypaintr_env$default_style <- list(
+  stroke_spec = NULL,
+  fill_spec = NULL,
+  stroke_style = NULL,
+  fill_style = NULL,
+  auto_solid_bg = NULL,
+  stroke_hand = NULL,
+  fill_hand = NULL
+)
 
 with_hand_seed <- function(seed, expr) {
   if (is.null(seed)) {
@@ -344,60 +353,6 @@ rough_path_intersections <- function(paths, yy) {
   list(x = cuts[ord], delta = delta[ord])
 }
 
-draw_rough_hachure_fill <- function(paths, hand_spec, col, angle = 45, density = NULL, rule = c("winding", "evenodd"), xpd = NULL, clip = TRUE, ...) {
-  rule <- match.arg(rule)
-  rot_paths <- lapply(paths, function(path) rotate_xy(path$x, path$y, -angle))
-  yr <- unlist(lapply(rot_paths, `[[`, "y"), use.names = FALSE)
-  span <- diff(range(yr))
-  gap <- hand_spec$hachure_gap %||% if (is.null(density)) span / 25 else span / max(1, density)
-  gap <- max(gap, .Machine$double.eps)
-
-  draw_pass <- function(base_angle) {
-    hand_fill <- clipped_hatch_hand(hand_spec, clip = clip)
-    rot_pass <- lapply(paths, function(path) rotate_xy(path$x, path$y, -base_angle))
-    yr_pass <- unlist(lapply(rot_pass, `[[`, "y"), use.names = FALSE)
-    yy <- min(yr_pass)
-    while (yy <= max(yr_pass)) {
-      cuts <- rough_path_intersections(rot_pass, yy)
-      if (length(cuts$x) >= 2L) {
-        if (identical(rule, "evenodd")) {
-          for (i in seq(1L, length(cuts$x) - 1L, by = 2L)) {
-            seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
-            draw_rough_segments(
-              seg$x[1], seg$y[1], seg$x[2], seg$y[2],
-              hand = hand_fill,
-              col = col,
-              xpd = xpd,
-              ...
-            )
-          }
-        } else {
-          winding <- 0L
-          for (i in seq_len(length(cuts$x) - 1L)) {
-            winding <- winding + cuts$delta[i]
-            if (winding != 0L && cuts$x[i + 1L] > cuts$x[i]) {
-              seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
-              draw_rough_segments(
-                seg$x[1], seg$y[1], seg$x[2], seg$y[2],
-                hand = hand_fill,
-                col = col,
-                xpd = xpd,
-                ...
-              )
-            }
-          }
-        }
-      }
-      yy <- yy + gap * (1 + stats::rnorm(1, sd = hand_spec$hachure_gap_jitter))
-    }
-  }
-
-  draw_pass(angle + stats::rnorm(1, sd = hand_spec$hachure_angle_jitter))
-  if (identical(hand_spec$hachure_method, "cross")) {
-    draw_pass(angle + 90 + stats::rnorm(1, sd = hand_spec$hachure_angle_jitter))
-  }
-}
-
 clipped_hatch_hand <- function(hand_spec, clip = TRUE) {
   hand_fill <- hand_spec
   hand_fill$seed <- NULL
@@ -405,6 +360,367 @@ clipped_hatch_hand <- function(hand_spec, clip = TRUE) {
     hand_fill$endpoint_jitter <- 0
   }
   hand_fill
+}
+
+offset_id <- function(id, by = 0L) {
+  if (!length(id)) {
+    return(id)
+  }
+  as.integer(id + by)
+}
+
+combine_polyline_data <- function(parts) {
+  parts <- Filter(function(x) !is.null(x) && length(x$x), parts)
+  if (!length(parts)) {
+    return(list(x = numeric(), y = numeric(), id = integer()))
+  }
+
+  out <- list(x = numeric(), y = numeric(), id = integer())
+  next_id <- 0L
+  for (part in parts) {
+    ids <- match(part$id, unique(part$id))
+    out$x <- c(out$x, part$x)
+    out$y <- c(out$y, part$y)
+    out$id <- c(out$id, offset_id(ids, next_id))
+    next_id <- max(out$id)
+  }
+  out
+}
+
+point_in_paths <- function(paths, x, y, rule = c("winding", "evenodd")) {
+  rule <- match.arg(rule)
+  x <- rep_len(x, max(length(x), length(y)))
+  y <- rep_len(y, max(length(x), length(y)))
+  vapply(seq_along(x), function(i) {
+    cuts <- rough_path_intersections(paths, y[i])
+    keep <- cuts$x < x[i]
+    if (!any(keep)) {
+      return(FALSE)
+    }
+    if (identical(rule, "evenodd")) {
+      sum(keep) %% 2L == 1L
+    } else {
+      sum(cuts$delta[keep]) != 0L
+    }
+  }, logical(1))
+}
+
+path_bbox <- function(paths) {
+  xs <- unlist(lapply(paths, `[[`, "x"), use.names = FALSE)
+  ys <- unlist(lapply(paths, `[[`, "y"), use.names = FALSE)
+  list(
+    xmin = min(xs),
+    xmax = max(xs),
+    ymin = min(ys),
+    ymax = max(ys)
+  )
+}
+
+sample_point_in_paths <- function(paths, rule = c("winding", "evenodd"), max_tries = 200L) {
+  rule <- match.arg(rule)
+  box <- path_bbox(paths)
+  for (i in seq_len(max_tries)) {
+    x <- stats::runif(1L, box$xmin, box$xmax)
+    y <- stats::runif(1L, box$ymin, box$ymax)
+    if (point_in_paths(paths, x, y, rule)) {
+      return(c(x = x, y = y))
+    }
+  }
+  c(x = mean(c(box$xmin, box$xmax)), y = mean(c(box$ymin, box$ymax)))
+}
+
+scanline_intervals <- function(paths, angle = 45, gap = NULL, rule = c("winding", "evenodd"),
+                               jitter_gap = 0) {
+  rule <- match.arg(rule)
+  rot_paths <- lapply(paths, function(path) rotate_xy(path$x, path$y, -angle))
+  yr <- unlist(lapply(rot_paths, `[[`, "y"), use.names = FALSE)
+  if (!length(yr)) {
+    return(data.frame(row = integer(), interval = integer(), y = numeric(), x0 = numeric(), x1 = numeric()))
+  }
+
+  span <- diff(range(yr))
+  gap <- gap %||% (if (span <= 0) 1 else span / 25)
+  gap <- max(gap, .Machine$double.eps)
+
+  yy <- min(yr)
+  row <- 1L
+  out <- data.frame(row = integer(), interval = integer(), y = numeric(), x0 = numeric(), x1 = numeric())
+  while (yy <= max(yr)) {
+    cuts <- rough_path_intersections(rot_paths, yy)
+    if (length(cuts$x) >= 2L) {
+      intervals <- list()
+      if (identical(rule, "evenodd")) {
+        for (i in seq(1L, length(cuts$x) - 1L, by = 2L)) {
+          intervals[[length(intervals) + 1L]] <- c(cuts$x[i], cuts$x[i + 1L])
+        }
+      } else {
+        winding <- 0L
+        for (i in seq_len(length(cuts$x) - 1L)) {
+          winding <- winding + cuts$delta[i]
+          if (winding != 0L && cuts$x[i + 1L] > cuts$x[i]) {
+            intervals[[length(intervals) + 1L]] <- c(cuts$x[i], cuts$x[i + 1L])
+          }
+        }
+      }
+      if (length(intervals)) {
+        mat <- do.call(rbind, intervals)
+        out <- rbind(
+          out,
+          data.frame(
+            row = rep.int(row, nrow(mat)),
+            interval = seq_len(nrow(mat)),
+            y = rep.int(yy, nrow(mat)),
+            x0 = mat[, 1L],
+            x1 = mat[, 2L]
+          )
+        )
+      }
+    }
+    row <- row + 1L
+    step <- gap * (1 + jitter_gap)
+    yy <- yy + max(step, gap / 5, .Machine$double.eps)
+  }
+
+  out
+}
+
+polyline_data <- function(paths, hand_spec = NULL) {
+  out_x <- numeric()
+  out_y <- numeric()
+  out_id <- integer()
+
+  for (i in seq_along(paths)) {
+    path <- paths[[i]]
+    if (length(path$x) < 2L) next
+    if (is.null(hand_spec)) {
+      out_x <- c(out_x, path$x)
+      out_y <- c(out_y, path$y)
+      out_id <- c(out_id, rep.int(i, length(path$x)))
+    } else {
+      rough <- roughen_vertex_path(path$x, path$y, hand_spec, closed = FALSE)
+      out_x <- c(out_x, rough$x)
+      out_y <- c(out_y, rough$y)
+      out_id <- c(out_id, rep.int(i, length(rough$x)))
+    }
+  }
+
+  list(x = out_x, y = out_y, id = out_id)
+}
+
+#' Describe a rough fill pattern
+#'
+#' @param style Fill pattern style: `"lines"`, `"cross"`, `"zigzag"`, or
+#'   `"scribble"`.
+#' @param density Approximate line density. When `NULL`, a default density based
+#'   on the shape size is used.
+#' @param angle Base angle in degrees for line-based fills.
+#' @param angles Optional explicit angle vector. This is most useful for
+#'   `"cross"` fills, where multiple line passes can be supplied.
+#' @param gap Optional absolute gap between passes in data units.
+#' @param clip When `TRUE`, hatch endpoints stay on the shape boundary to reduce
+#'   overshoot.
+#' @param strokes Approximate number of scribble strokes.
+#' @param step Scribble step size in data units.
+#' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @export
+rough_fill <- function(style = c("lines", "cross", "zigzag", "scribble"),
+                       density = NULL,
+                       angle = 45,
+                       angles = NULL,
+                       gap = NULL,
+                       clip = TRUE,
+                       strokes = NULL,
+                       step = NULL) {
+  style <- match.arg(style)
+  structure(
+    list(
+      style = style,
+      density = density,
+      angle = angle,
+      angles = angles,
+      gap = gap,
+      clip = isTRUE(clip),
+      strokes = strokes,
+      step = step
+    ),
+    class = "mypaintr_fill_pattern"
+  )
+}
+
+as_fill_pattern <- function(fill_pattern = NULL, density = NULL, angle = 45, clip = TRUE,
+                            hand_spec = NULL, default_when_missing = FALSE) {
+  if (is.null(fill_pattern)) {
+    if (!is.null(density) || default_when_missing) {
+      style <- if (!is.null(hand_spec) && identical(hand_spec$hachure_method, "cross")) "cross" else "lines"
+      return(rough_fill(style = style, density = density, angle = angle, clip = clip))
+    }
+    return(NULL)
+  }
+
+  if (is.character(fill_pattern) && length(fill_pattern) == 1L) {
+    fill_pattern <- rough_fill(style = fill_pattern, density = density, angle = angle, clip = clip)
+  }
+
+  if (!inherits(fill_pattern, "mypaintr_fill_pattern")) {
+    stop("fill_pattern must be created with rough_fill()", call. = FALSE)
+  }
+
+  out <- fill_pattern
+  if (!is.null(density) && is.null(out$density)) out$density <- density
+  if (!missing(angle) && identical(out$angle, 45) && !is.null(angle)) out$angle <- angle
+  out$clip <- if (is.null(out$clip)) isTRUE(clip) else isTRUE(out$clip)
+  out
+}
+
+fill_pattern_gap <- function(fill_pattern, paths, hand_spec = NULL) {
+  box <- path_bbox(paths)
+  span <- max(box$xmax - box$xmin, box$ymax - box$ymin)
+  gap <- fill_pattern$gap
+  if (is.null(gap) && !is.null(hand_spec) && !is.null(hand_spec$hachure_gap)) {
+    gap <- hand_spec$hachure_gap
+  }
+  if (is.null(gap)) {
+    gap <- if (is.null(fill_pattern$density)) span / 25 else span / max(1, fill_pattern$density)
+  }
+  max(gap, .Machine$double.eps)
+}
+
+line_fill_angles <- function(fill_pattern) {
+  if (!is.null(fill_pattern$angles)) {
+    return(as.numeric(fill_pattern$angles))
+  }
+  if (identical(fill_pattern$style, "cross")) {
+    c(fill_pattern$angle, fill_pattern$angle + 90)
+  } else {
+    fill_pattern$angle
+  }
+}
+
+rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL,
+                                    rule = c("winding", "evenodd")) {
+  rule <- match.arg(rule)
+  fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec, default_when_missing = FALSE)
+  if (is.null(fill_pattern)) {
+    return(list(x = numeric(), y = numeric(), id = integer()))
+  }
+
+  fill_hand <- if (is.null(hand_spec)) NULL else clipped_hatch_hand(hand_spec, clip = fill_pattern$clip)
+  gap <- fill_pattern_gap(fill_pattern, paths, hand_spec)
+  jitter_gap <- if (is.null(hand_spec)) 0 else hand_spec$hachure_gap_jitter
+  jitter_angle <- if (is.null(hand_spec)) 0 else hand_spec$hachure_angle_jitter
+
+  build_lines <- function(base_angle) {
+    rows <- scanline_intervals(
+      paths,
+      angle = base_angle,
+      gap = gap,
+      rule = rule,
+      jitter_gap = if (jitter_gap == 0) 0 else stats::rnorm(1, sd = jitter_gap)
+    )
+    if (!nrow(rows)) {
+      return(list(x = numeric(), y = numeric(), id = integer()))
+    }
+    starts <- rotate_xy(rows$x0, rows$y, base_angle)
+    ends <- rotate_xy(rows$x1, rows$y, base_angle)
+    segment_data(starts$x, starts$y, ends$x, ends$y, hand_spec = fill_hand)
+  }
+
+  build_zigzag <- function(base_angle) {
+    rows <- scanline_intervals(
+      paths,
+      angle = base_angle,
+      gap = gap,
+      rule = rule,
+      jitter_gap = if (jitter_gap == 0) 0 else stats::rnorm(1, sd = jitter_gap)
+    )
+    if (!nrow(rows)) {
+      return(list(x = numeric(), y = numeric(), id = integer()))
+    }
+    split_rows <- split(rows, rows$interval)
+    polylines <- list()
+    for (grp in split_rows) {
+      grp <- grp[order(grp$row), , drop = FALSE]
+      if (!nrow(grp)) next
+      px <- numeric()
+      py <- numeric()
+      for (i in seq_len(nrow(grp))) {
+        px <- c(px, grp$x0[i], grp$x1[i])
+        py <- c(py, grp$y[i], grp$y[i])
+      }
+      xy <- rotate_xy(px, py, base_angle)
+      polylines[[length(polylines) + 1L]] <- list(x = xy$x, y = xy$y)
+    }
+    polyline_data(polylines, hand_spec = fill_hand)
+  }
+
+  build_scribble <- function() {
+    box <- path_bbox(paths)
+    span <- max(box$xmax - box$xmin, box$ymax - box$ymin)
+    step <- fill_pattern$step %||% max(gap / 2, span / 35)
+    n_strokes <- fill_pattern$strokes %||% max(1L, round((fill_pattern$density %||% 12) / 4))
+    n_steps <- max(12L, round(2 * span / step))
+    polylines <- vector("list", n_strokes)
+
+    for (s in seq_len(n_strokes)) {
+      p <- sample_point_in_paths(paths, rule = rule)
+      theta <- stats::runif(1L, 0, 2 * pi)
+      px <- numeric(n_steps)
+      py <- numeric(n_steps)
+      px[1] <- p[1]
+      py[1] <- p[2]
+      for (i in 2:n_steps) {
+        accepted <- FALSE
+        for (attempt in seq_len(12L)) {
+          theta_try <- theta + stats::rnorm(1L, sd = pi / 5) + if (attempt > 1L) stats::runif(1L, pi / 2, 3 * pi / 2) else 0
+          cand_x <- px[i - 1L] + step * cos(theta_try)
+          cand_y <- py[i - 1L] + step * sin(theta_try)
+          if (point_in_paths(paths, cand_x, cand_y, rule)) {
+            theta <- theta_try
+            px[i] <- cand_x
+            py[i] <- cand_y
+            accepted <- TRUE
+            break
+          }
+        }
+        if (!accepted) {
+          p <- sample_point_in_paths(paths, rule = rule)
+          px[i] <- p[1]
+          py[i] <- p[2]
+        }
+      }
+      polylines[[s]] <- list(x = px, y = py)
+    }
+
+    polyline_data(polylines, hand_spec = fill_hand)
+  }
+
+  if (identical(fill_pattern$style, "scribble")) {
+    return(build_scribble())
+  }
+
+  parts <- lapply(
+    line_fill_angles(fill_pattern),
+    function(base_angle) {
+      if (jitter_angle != 0) {
+        base_angle <- base_angle + stats::rnorm(1, sd = jitter_angle)
+      }
+      if (identical(fill_pattern$style, "zigzag")) build_zigzag(base_angle) else build_lines(base_angle)
+    }
+  )
+  combine_polyline_data(parts)
+}
+
+draw_rough_fill_pattern <- function(paths, hand_spec, col, fill_pattern = NULL,
+                                    rule = c("winding", "evenodd"), xpd = NULL, ...) {
+  geom <- rough_fill_pattern_data(paths, hand_spec = hand_spec, fill_pattern = fill_pattern, rule = rule)
+  if (!length(geom$x)) {
+    return(invisible(NULL))
+  }
+  for (i in unique(geom$id)) {
+    keep <- geom$id == i
+    graphics::lines(geom$x[keep], geom$y[keep], col = col, xpd = xpd, ...)
+  }
+  invisible(NULL)
 }
 
 normalize_settings <- function(settings) {
@@ -544,6 +860,39 @@ current_device_style <- function() {
   .Call(mypaintr_device_get_style)
 }
 
+default_device_style <- function() {
+  mypaintr_env$default_style
+}
+
+update_default_device_style <- function(stroke_spec = NULL,
+                                        fill_spec = NULL,
+                                        stroke_style = NULL,
+                                        fill_style = NULL,
+                                        auto_solid_bg = NULL,
+                                        stroke_hand = NULL,
+                                        fill_hand = NULL,
+                                        update_stroke = FALSE,
+                                        update_fill = FALSE) {
+  defaults <- default_device_style()
+
+  if (update_stroke) {
+    defaults$stroke_spec <- stroke_spec
+    defaults$stroke_style <- stroke_style
+    defaults$stroke_hand <- stroke_hand
+  }
+  if (update_fill) {
+    defaults$fill_spec <- fill_spec
+    defaults$fill_style <- fill_style
+    defaults$fill_hand <- fill_hand
+  }
+  if (!is.null(auto_solid_bg)) {
+    defaults$auto_solid_bg <- isTRUE(auto_solid_bg)
+  }
+
+  mypaintr_env$default_style <- defaults
+  invisible(NULL)
+}
+
 apply_device_style_state <- function(state) {
   if (is.null(state) || !is_mypaintr_device()) {
     return(invisible(NULL))
@@ -600,6 +949,11 @@ require_knitr <- function() {
   }
 }
 
+chunk_sets_dev_explicitly <- function(options) {
+  src <- options$params.src %||% ""
+  is.character(src) && length(src) == 1L && grepl("(^|,)\\s*dev\\s*=", src, perl = TRUE)
+}
+
 #' Create a knitr chunk hook for live mypaint rendering
 #'
 #' The returned hook opens [mypaint_device()] before chunk evaluation and
@@ -609,7 +963,8 @@ require_knitr <- function() {
 #'
 #' Register it with `knitr::knit_hooks$set(mypaint = knitr_chunk_hook(...))`
 #' and then enable it for chunks with `mypaint = TRUE`. Chunks should also set
-#' `fig.keep = "none"` and `fig.ext = "png"`.
+#' `fig.keep = "none"` and `fig.ext = "png"`. If a chunk explicitly sets
+#' `dev=`, the hook is skipped and knitr's normal device handling is used.
 #'
 #' @param ... Default arguments passed through to [mypaint_device()] when the
 #'   hook opens a device. Chunk-specific overrides can be supplied in the chunk
@@ -627,6 +982,9 @@ knitr_chunk_hook <- function(...) {
 
   function(before, options, envir) {
     if (!isTRUE(options$mypaint)) {
+      return()
+    }
+    if (chunk_sets_dev_explicitly(options)) {
       return()
     }
 
@@ -777,78 +1135,17 @@ segment_data <- function(x0, y0, x1, y1, hand_spec = NULL) {
 
 rough_hachure_data <- function(paths, hand_spec = NULL, angle = 45, density = NULL,
                                rule = c("winding", "evenodd"), cross = FALSE) {
-  rule <- match.arg(rule)
-  rot_paths <- lapply(paths, function(path) rotate_xy(path$x, path$y, -angle))
-  yr <- unlist(lapply(rot_paths, `[[`, "y"), use.names = FALSE)
-  span <- diff(range(yr))
-  gap <- if (!is.null(hand_spec) && !is.null(hand_spec$hachure_gap)) {
-    hand_spec$hachure_gap
-  } else if (is.null(density)) {
-    span / 25
+  style <- if (cross || (!is.null(hand_spec) && identical(hand_spec$hachure_method, "cross"))) {
+    "cross"
   } else {
-    span / max(1, density)
+    "lines"
   }
-  gap <- max(gap, .Machine$double.eps)
-
-  add_segments <- function(base_angle, jitter_angle = 0, jitter_gap = 0) {
-    rot_pass <- lapply(paths, function(path) rotate_xy(path$x, path$y, -base_angle))
-    yr_pass <- unlist(lapply(rot_pass, `[[`, "y"), use.names = FALSE)
-    yy <- min(yr_pass)
-    seg_x0 <- numeric()
-    seg_y0 <- numeric()
-    seg_x1 <- numeric()
-    seg_y1 <- numeric()
-
-    while (yy <= max(yr_pass)) {
-      cuts <- rough_path_intersections(rot_pass, yy)
-      if (length(cuts$x) >= 2L) {
-        if (identical(rule, "evenodd")) {
-          for (i in seq(1L, length(cuts$x) - 1L, by = 2L)) {
-            seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
-            seg_x0 <- c(seg_x0, seg$x[1])
-            seg_y0 <- c(seg_y0, seg$y[1])
-            seg_x1 <- c(seg_x1, seg$x[2])
-            seg_y1 <- c(seg_y1, seg$y[2])
-          }
-        } else {
-          winding <- 0L
-          for (i in seq_len(length(cuts$x) - 1L)) {
-            winding <- winding + cuts$delta[i]
-            if (winding != 0L && cuts$x[i + 1L] > cuts$x[i]) {
-              seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
-              seg_x0 <- c(seg_x0, seg$x[1])
-              seg_y0 <- c(seg_y0, seg$y[1])
-              seg_x1 <- c(seg_x1, seg$x[2])
-              seg_y1 <- c(seg_y1, seg$y[2])
-            }
-          }
-        }
-      }
-      yy <- yy + gap * (1 + jitter_gap)
-    }
-
-    segment_data(seg_x0, seg_y0, seg_x1, seg_y1, hand_spec = hand_spec)
-  }
-
-  build <- function(base_angle) {
-    jitter_angle <- if (is.null(hand_spec)) 0 else stats::rnorm(1, sd = hand_spec$hachure_angle_jitter)
-    jitter_gap <- if (is.null(hand_spec)) 0 else stats::rnorm(1, sd = hand_spec$hachure_gap_jitter)
-    add_segments(base_angle + jitter_angle, jitter_angle, jitter_gap)
-  }
-
-  out <- build(angle)
-  if (cross || (!is.null(hand_spec) && identical(hand_spec$hachure_method, "cross"))) {
-    other <- build(angle + 90)
-    if (length(out$x)) {
-      other$id <- other$id + max(out$id)
-      out$x <- c(out$x, other$x)
-      out$y <- c(out$y, other$y)
-      out$id <- c(out$id, other$id)
-    } else {
-      out <- other
-    }
-  }
-  out
+  rough_fill_pattern_data(
+    paths,
+    hand_spec = hand_spec,
+    fill_pattern = rough_fill(style = style, density = density, angle = angle, clip = TRUE),
+    rule = rule
+  )
 }
 
 make_stroke_style <- function(brush = NULL, settings = NULL) {
@@ -882,6 +1179,14 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
   fill_settings <- params$fill_settings
   outline_hand <- params$stroke_hand
   hatch_hand <- params$fill_hand %||% outline_hand
+  fill_pattern <- as_fill_pattern(
+    params$fill_pattern,
+    density = params$density,
+    angle = params$angle,
+    clip = params$clip %||% TRUE,
+    hand_spec = hatch_hand,
+    default_when_missing = TRUE
+  )
 
   for (i in seq_len(nrow(data))) {
     row <- data[i, , drop = FALSE]
@@ -899,10 +1204,10 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
 
     if (is_visible_col(fill_col)) {
       hatch <- if (is.null(hatch_hand)) {
-        rough_hachure_data(list(path), hand_spec = NULL, angle = params$angle, density = params$density)
+        rough_fill_pattern_data(list(path), hand_spec = NULL, fill_pattern = fill_pattern)
       } else {
         with_hand_seed(hatch_hand$seed, {
-          rough_hachure_data(list(path), hand_spec = hatch_hand, angle = params$angle, density = params$density)
+          rough_fill_pattern_data(list(path), hand_spec = hatch_hand, fill_pattern = fill_pattern)
         })
       }
       if (length(hatch$x)) {
@@ -947,7 +1252,9 @@ rgba_int <- function(col) {
 
 #' Open a libmypaint-backed graphics device
 #'
-#' @param file Output PNG filename. If it contains `\%d`, pages are numbered.
+#' @param filename Output PNG filename. If it contains `\%d`, pages are
+#'   numbered.
+#' @param file Deprecated compatibility alias for `filename`.
 #' @param width,height Device size in inches.
 #' @param res Resolution in pixels per inch.
 #' @param pointsize Base pointsize.
@@ -1021,7 +1328,8 @@ rgba_int <- function(col) {
 #' dev.off()
 #' unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 #' @export
-mypaint_device <- function(file,
+mypaint_device <- function(filename = NULL,
+                           file = NULL,
                            width = 7,
                            height = 7,
                            res = 144,
@@ -1037,8 +1345,24 @@ mypaint_device <- function(file,
                            stroke_hand = NULL,
                            fill_hand = NULL,
                            auto_solid_bg = TRUE) {
+  if (is.null(filename)) {
+    filename <- file
+  } else if (!is.null(file) && !identical(filename, file)) {
+    stop("Specify only one of `filename` or `file`.", call. = FALSE)
+  }
+
+  brush_missing <- missing(brush)
+  fill_brush_missing <- missing(fill_brush)
+  stroke_style_missing <- missing(stroke_style)
+  fill_style_missing <- missing(fill_style)
+  hand_missing <- missing(hand)
+  stroke_hand_missing <- missing(stroke_hand)
+  fill_hand_missing <- missing(fill_hand)
+  auto_solid_bg_missing <- missing(auto_solid_bg)
+  defaults <- default_device_style()
+
   stopifnot(
-    is.character(file), length(file) == 1L,
+    is.character(filename), length(filename) == 1L,
     is.numeric(width), length(width) == 1L, width > 0,
     is.numeric(height), length(height) == 1L, height > 0,
     is.numeric(res), length(res) == 1L, res > 0,
@@ -1061,24 +1385,53 @@ mypaint_device <- function(file,
     fill_hand <- hand
   }
 
-  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
-  fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
+  stroke_spec <- if (brush_missing && is.null(brush_settings) && !is.null(defaults$stroke_spec)) {
+    defaults$stroke_spec
+  } else if (is.null(brush) && is.null(brush_settings)) {
+    NULL
+  } else {
+    normalize_brush_spec(brush, brush_settings)
+  }
+  fill_spec <- if (fill_brush_missing && is.null(fill_settings) && !is.null(defaults$fill_spec)) {
+    defaults$fill_spec
+  } else if (fill_brush_missing && is.null(fill_settings) && brush_missing && !is.null(defaults$stroke_spec)) {
+    defaults$stroke_spec
+  } else if (is.null(fill_brush) && is.null(fill_settings)) {
+    NULL
+  } else {
+    normalize_brush_spec(fill_brush, fill_settings)
+  }
   warn_if_pure_smudge_brush(stroke_spec, "stroke")
   warn_if_pure_smudge_brush(fill_spec, "fill")
-  stroke_style <- if (is.null(stroke_style)) {
+  stroke_style <- if (stroke_style_missing && !is.null(defaults$stroke_style)) {
+    defaults$stroke_style
+  } else if (is.null(stroke_style)) {
     if (is.null(brush)) 0L else 1L
   } else {
     normalize_render_style(stroke_style)
   }
-  fill_style <- if (is.null(fill_style)) {
+  fill_style <- if (fill_style_missing && !is.null(defaults$fill_style)) {
+    defaults$fill_style
+  } else if (fill_style_missing && fill_brush_missing && !is.null(defaults$stroke_style)) {
+    defaults$stroke_style
+  } else if (is.null(fill_style)) {
     if (is.null(fill_brush)) 0L else 1L
   } else {
     normalize_render_style(fill_style)
   }
+  if (stroke_hand_missing && hand_missing && !is.null(defaults$stroke_hand)) {
+    stroke_hand <- defaults$stroke_hand
+  }
+  if (fill_hand_missing && hand_missing && !is.null(defaults$fill_hand)) {
+    fill_hand <- defaults$fill_hand
+  }
+  if (auto_solid_bg_missing && !is.null(defaults$auto_solid_bg)) {
+    auto_solid_bg <- defaults$auto_solid_bg
+  }
 
   invisible(.Call(
     mypaintr_device_open,
-    enc2utf8(normalizePath(file, winslash = "/", mustWork = FALSE)),
+    enc2utf8(normalizePath(filename, winslash = "/", mustWork = FALSE)),
     as.numeric(width),
     as.numeric(height),
     as.numeric(res),
@@ -1102,7 +1455,9 @@ mypaint_device <- function(file,
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
 #' @param auto_solid_bg Optional override for background-like fills.
-#' @return `NULL`, invisibly.
+#' @return `NULL`, invisibly. If the active device is not `mypaintr`, the
+#'   selected brush becomes the default for the next [mypaint_device()] opened
+#'   in this R session.
 #' @export
 set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
   type <- match.arg(type)
@@ -1129,6 +1484,19 @@ set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", 
     fill_style <- !is.null(spec)
   }
 
+  if (!is_mypaintr_device()) {
+    update_default_device_style(
+      stroke_spec = stroke_spec,
+      fill_spec = fill_spec,
+      stroke_style = if (is.null(stroke_style)) NULL else as.integer(stroke_style),
+      fill_style = if (is.null(fill_style)) NULL else as.integer(fill_style),
+      auto_solid_bg = auto_solid_bg,
+      update_stroke = type %in% c("both", "stroke"),
+      update_fill = type %in% c("both", "fill")
+    )
+    return(invisible(NULL))
+  }
+
   invisible(.Call(
     mypaintr_device_set_brush,
     stroke_spec,
@@ -1145,14 +1513,29 @@ set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", 
 #'   it for the selected type.
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
-#' @return `NULL`, invisibly.
+#' @return `NULL`, invisibly. If the active device is not `mypaintr`, the
+#'   selected hand settings become the default for the next [mypaint_device()]
+#'   opened in this R session.
 #' @export
 set_hand <- function(hand = NULL, type = c("both", "stroke", "fill")) {
   type <- match.arg(type)
+  stroke_hand <- if (type %in% c("both", "stroke")) normalize_hand_spec(hand) else NULL
+  fill_hand <- if (type %in% c("both", "fill")) normalize_hand_spec(hand) else NULL
+
+  if (!is_mypaintr_device()) {
+    update_default_device_style(
+      stroke_hand = stroke_hand,
+      fill_hand = fill_hand,
+      update_stroke = type %in% c("both", "stroke"),
+      update_fill = type %in% c("both", "fill")
+    )
+    return(invisible(NULL))
+  }
+
   invisible(.Call(
     mypaintr_device_set_hand,
-    if (type %in% c("both", "stroke")) normalize_hand_spec(hand) else NULL,
-    if (type %in% c("both", "fill")) normalize_hand_spec(hand) else NULL,
+    stroke_hand,
+    fill_hand,
     type %in% c("both", "stroke"),
     type %in% c("both", "fill")
   ))
@@ -1168,7 +1551,9 @@ set_hand <- function(hand = NULL, type = c("both", "stroke", "fill")) {
 #' @param fill_settings Named settings overriding `fill_brush`.
 #' @param auto_solid_bg Whether large fills matching the device background should
 #'   be drawn normally.
-#' @return `NULL`, invisibly.
+#' @return `NULL`, invisibly. If the active device is not `mypaintr`, the style
+#'   becomes the default for the next [mypaint_device()] opened in this R
+#'   session.
 #' @export
 mypaint_style <- function(brush = NULL,
                           brush_settings = NULL,
@@ -1195,12 +1580,28 @@ mypaint_style <- function(brush = NULL,
     normalize_brush_spec(fill_brush, fill_settings)
   }
 
+  stroke_style <- normalize_render_style(stroke_style)
+  fill_style <- normalize_render_style(fill_style)
+
+  if (!is_mypaintr_device()) {
+    update_default_device_style(
+      stroke_spec = stroke_spec,
+      fill_spec = fill_spec,
+      stroke_style = stroke_style,
+      fill_style = fill_style,
+      auto_solid_bg = auto_solid_bg,
+      update_stroke = !is.null(brush) || !is.null(brush_settings) || !is.null(stroke_style),
+      update_fill = !is.null(fill_brush) || !is.null(fill_settings) || !is.null(fill_style)
+    )
+    return(invisible(NULL))
+  }
+
   invisible(.Call(
     mypaintr_device_set_style,
     stroke_spec,
     fill_spec,
-    normalize_render_style(stroke_style),
-    normalize_render_style(fill_style),
+    stroke_style,
+    fill_style,
     if (is.null(auto_solid_bg)) NULL else isTRUE(auto_solid_bg)
   ))
 }
@@ -1489,13 +1890,15 @@ draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 
 #'   one closed ring.
 #' @param rule Fill rule, `"winding"` or `"evenodd"`.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible and `density` is `NULL`, a solid fill is
-#'   drawn. When `density` is set, a hachure fill is drawn.
+#' @param col Fill colour. When visible and `fill_pattern` is `NULL`, a solid
+#'   fill is drawn.
 #' @param border Border colour.
-#' @param density Hatch density. When `NULL`, the polygon is filled solidly.
-#' @param angle Hatch angle in degrees.
-#' @param clip When `TRUE`, hatch line endpoints are kept on the shape boundary
-#'   to reduce visible overshoot.
+#' @param fill_pattern Optional fill pattern created with [rough_fill()].
+#' @param density Legacy shortcut for line density. When supplied without
+#'   `fill_pattern`, it is treated as `rough_fill("lines", density = density)`.
+#' @param angle Legacy shortcut for the base fill angle.
+#' @param clip Legacy shortcut controlling endpoint clipping for line-based
+#'   patterns.
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -1508,17 +1911,18 @@ draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 
 #' @export
 draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"),
                                 hand = NULL, col = NA, border = graphics::par("fg"),
-                                density = NULL, angle = 45, clip = TRUE, ...) {
+                                fill_pattern = NULL, density = NULL, angle = 45, clip = TRUE, ...) {
   hand_spec <- as_hand(hand)
   rule <- match.arg(rule)
   paths0 <- split_polypath(x, y, id)
+  fill_pattern <- as_fill_pattern(fill_pattern, density = density, angle = angle, clip = clip, hand_spec = hand_spec)
 
   invisible(with_hand_seed(hand_spec$seed, {
     geom <- rough_polypath_data(paths0, hand_spec, rule)
     paths <- split_polypath(geom$x, geom$y, geom$id)
 
     if (is_visible_col(col)) {
-      if (is.null(density)) {
+      if (is.null(fill_pattern)) {
         solid_path <- join_polypath_na(paths)
         do.call(
           graphics::polypath,
@@ -1528,14 +1932,12 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
           )
         )
       } else {
-        draw_rough_hachure_fill(
+        draw_rough_fill_pattern(
           paths,
           hand_spec,
           col = col,
-          angle = angle,
-          density = density,
+          fill_pattern = fill_pattern,
           rule = geom$rule,
-          clip = clip,
           ...
         )
       }
@@ -1561,13 +1963,15 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #'
 #' @param x,y Polygon coordinates.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible and `density` is `NULL`, a solid fill is
-#'   drawn. When `density` is set, a hachure fill is drawn.
+#' @param col Fill colour. When visible and `fill_pattern` is `NULL`, a solid
+#'   fill is drawn.
 #' @param border Border colour.
-#' @param density Hatch density. When `NULL`, the polygon is filled solidly.
-#' @param angle Hatch angle in degrees.
-#' @param clip When `TRUE`, hatch line endpoints are kept on the shape boundary
-#'   to reduce visible overshoot.
+#' @param fill_pattern Optional fill pattern created with [rough_fill()].
+#' @param density Legacy shortcut for line density. When supplied without
+#'   `fill_pattern`, it is treated as `rough_fill("lines", density = density)`.
+#' @param angle Legacy shortcut for the base fill angle.
+#' @param clip Legacy shortcut controlling endpoint clipping for line-based
+#'   patterns.
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -1575,14 +1979,15 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
 #' @export
 draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
-                                density = NULL, angle = 45, clip = TRUE, ...) {
+                                fill_pattern = NULL, density = NULL, angle = 45, clip = TRUE, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
+  fill_pattern <- as_fill_pattern(fill_pattern, density = density, angle = angle, clip = clip, hand_spec = hand_spec)
 
   invisible(with_hand_seed(hand_spec$seed, {
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
     if (is_visible_col(col)) {
-      if (is.null(density)) {
+      if (is.null(fill_pattern)) {
         do.call(
           graphics::polygon,
           c(
@@ -1591,13 +1996,11 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
           )
         )
       } else {
-        draw_rough_hachure_fill(
+        draw_rough_fill_pattern(
           list(rough_outline),
           hand_spec,
           col = col,
-          angle = angle,
-          density = density,
-          clip = clip,
+          fill_pattern = fill_pattern,
           ...
         )
       }
@@ -1622,13 +2025,15 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' @param x0,y0 Rectangle corner.
 #' @param x1,y1 Opposite rectangle corner.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible and `density` is `NULL`, a solid fill is
-#'   drawn. When `density` is set, a hachure fill is drawn.
+#' @param col Fill colour. When visible and `fill_pattern` is `NULL`, a solid
+#'   fill is drawn.
 #' @param border Border colour.
-#' @param density Hatch density. When `NULL`, the rectangle is filled solidly.
-#' @param angle Hatch angle in degrees.
-#' @param clip When `TRUE`, hatch line endpoints are kept on the shape boundary
-#'   to reduce visible overshoot.
+#' @param fill_pattern Optional fill pattern created with [rough_fill()].
+#' @param density Legacy shortcut for line density. When supplied without
+#'   `fill_pattern`, it is treated as `rough_fill("lines", density = density)`.
+#' @param angle Legacy shortcut for the base fill angle.
+#' @param clip Legacy shortcut controlling endpoint clipping for line-based
+#'   patterns.
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -1636,10 +2041,20 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' draw_rough_rect(2, 2, 5, 6, col = "grey80")
 #' @export
 draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = graphics::par("fg"),
-                            density = NULL, angle = 45, clip = TRUE, ...) {
+                            fill_pattern = NULL, density = NULL, angle = 45, clip = TRUE, ...) {
   x <- c(x0, x1, x1, x0)
   y <- c(y0, y0, y1, y1)
-  draw_rough_polygons(x, y, hand = hand, col = col, border = border, density = density, angle = angle, clip = clip, ...)
+  draw_rough_polygons(
+    x, y,
+    hand = hand,
+    col = col,
+    border = border,
+    fill_pattern = fill_pattern,
+    density = density,
+    angle = angle,
+    clip = clip,
+    ...
+  )
 }
 
 
@@ -1869,13 +2284,13 @@ GeomMypaintCol <- ggplot2::ggproto(
   ggplot2::GeomCol,
   extra_params = c(
     "na.rm", "just", "orientation", "lineend", "linejoin",
-    "density", "angle", "brush", "brush_settings",
+    "density", "angle", "fill_pattern", "clip", "brush", "brush_settings",
     "fill_brush", "fill_settings", "hand", "stroke_hand",
     "fill_hand", "auto_solid_bg"
   ),
   draw_panel = function(self, data, panel_params, coord, lineend = "butt",
                         linejoin = "mitre", just = 0.5, na.rm = FALSE,
-                        density = NULL, angle = 45,
+                        density = NULL, angle = 45, fill_pattern = NULL, clip = TRUE,
                         brush = NULL, brush_settings = NULL,
                         fill_brush = NULL, fill_settings = NULL,
                         hand = NULL, stroke_hand = hand, fill_hand = hand,
@@ -1891,6 +2306,8 @@ GeomMypaintCol <- ggplot2::ggproto(
       list(
         density = density,
         angle = angle,
+        fill_pattern = fill_pattern,
+        clip = clip,
         lineend = lineend,
         linejoin = linejoin,
         brush = brush,
@@ -1921,8 +2338,12 @@ GeomMypaintBar <- ggplot2::ggproto(
 #'
 #' @param mapping,data,position,just,lineend,linejoin,na.rm,show.legend,inherit.aes
 #'   As for [ggplot2::geom_col()].
-#' @param density Optional hatch density. When `NULL`, a default density is used.
-#' @param angle Hatch angle in degrees.
+#' @param fill_pattern Optional fill pattern created with [rough_fill()]. When
+#'   omitted, bars use a simple line fill by default.
+#' @param density Legacy shortcut for line density.
+#' @param angle Legacy shortcut for the base fill angle.
+#' @param clip Legacy shortcut controlling endpoint clipping for line-based
+#'   patterns.
 #' @param brush,brush_settings Stroke brush spec and overrides.
 #' @param fill_brush,fill_settings Fill-hatch brush spec and overrides.
 #' @param hand Optional hand-drawn geometry applied to both outline and hatch by
@@ -1942,7 +2363,7 @@ GeomMypaintBar <- ggplot2::ggproto(
 geom_mypaint_col <- function(mapping = NULL, data = NULL, position = "stack",
                              ..., just = 0.5, lineend = "butt", linejoin = "mitre",
                              na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                             density = NULL, angle = 45,
+                             density = NULL, angle = 45, fill_pattern = NULL, clip = TRUE,
                              brush = NULL, brush_settings = NULL,
                              fill_brush = NULL, fill_settings = NULL,
                              hand = NULL, stroke_hand = hand, fill_hand = hand,
@@ -1963,6 +2384,8 @@ geom_mypaint_col <- function(mapping = NULL, data = NULL, position = "stack",
       na.rm = na.rm,
       density = density,
       angle = angle,
+      fill_pattern = fill_pattern,
+      clip = clip,
       brush = brush,
       brush_settings = brush_settings,
       fill_brush = fill_brush,
@@ -1986,7 +2409,7 @@ geom_mypaint_bar <- function(mapping = NULL, data = NULL, stat = "count",
                              position = "stack", ..., just = 0.5,
                              lineend = "butt", linejoin = "mitre", na.rm = FALSE,
                              show.legend = NA, inherit.aes = TRUE,
-                             density = NULL, angle = 45,
+                             density = NULL, angle = 45, fill_pattern = NULL, clip = TRUE,
                              brush = NULL, brush_settings = NULL,
                              fill_brush = NULL, fill_settings = NULL,
                              hand = NULL, stroke_hand = hand, fill_hand = hand,
@@ -2007,6 +2430,8 @@ geom_mypaint_bar <- function(mapping = NULL, data = NULL, stat = "count",
       na.rm = na.rm,
       density = density,
       angle = angle,
+      fill_pattern = fill_pattern,
+      clip = clip,
       brush = brush,
       brush_settings = brush_settings,
       fill_brush = fill_brush,

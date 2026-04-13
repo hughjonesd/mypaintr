@@ -17,6 +17,8 @@ geom_mypaint_col(
   inherit.aes = TRUE,
   density = NULL,
   angle = 45,
+  fill_pattern = NULL,
+  clip = TRUE,
   brush = NULL,
   brush_settings = NULL,
   fill_brush = NULL,
@@ -32,9 +34,15 @@ geom_mypaint_col(
 
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
-\item{density}{Optional hatch density. When \code{NULL}, a default density is used.}
+\item{density}{Legacy shortcut for line density.}
 
-\item{angle}{Hatch angle in degrees.}
+\item{angle}{Legacy shortcut for the base fill angle.}
+
+\item{fill_pattern}{Optional fill pattern created with \code{\link[=rough_fill]{rough_fill()}}. When
+omitted, bars use a simple line fill by default.}
+
+\item{clip}{Legacy shortcut controlling endpoint clipping for line-based
+patterns.}
 
 \item{brush, brush_settings}{Stroke brush spec and overrides.}
 

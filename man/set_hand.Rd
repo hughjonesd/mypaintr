@@ -14,7 +14,9 @@ it for the selected type.}
 \code{"fill"}.}
 }
 \value{
-\code{NULL}, invisibly.
+\code{NULL}, invisibly. If the active device is not \code{mypaintr}, the
+selected hand settings become the default for the next \code{\link[=mypaint_device]{mypaint_device()}}
+opened in this R session.
 }
 \description{
 Set the active mypaintr hand-drawn geometry

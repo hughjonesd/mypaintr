@@ -23,7 +23,8 @@ replay path, which does not preserve device-local style changes such as
 \details{
 Register it with \code{knitr::knit_hooks$set(mypaint = knitr_chunk_hook(...))}
 and then enable it for chunks with \code{mypaint = TRUE}. Chunks should also set
-\code{fig.keep = "none"} and \code{fig.ext = "png"}.
+\code{fig.keep = "none"} and \code{fig.ext = "png"}. If a chunk explicitly sets
+\verb{dev=}, the hook is skipped and knitr's normal device handling is used.
 }
 \examples{
 if (requireNamespace("knitr", quietly = TRUE)) {

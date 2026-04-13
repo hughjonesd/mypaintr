@@ -31,7 +31,9 @@ mypaint_style(
 be drawn normally.}
 }
 \value{
-\code{NULL}, invisibly.
+\code{NULL}, invisibly. If the active device is not \code{mypaintr}, the style
+becomes the default for the next \code{\link[=mypaint_device]{mypaint_device()}} opened in this R
+session.
 }
 \description{
 Update the active mypaintr device style
