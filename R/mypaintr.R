@@ -403,6 +403,67 @@ normalize_settings <- function(settings) {
   settings
 }
 
+json_brush_base_value <- function(json, setting) {
+  pattern <- sprintf(
+    '"%s"[[:space:]]*:[[:space:]]*\\{[^}]*"base_value"[[:space:]]*:[[:space:]]*([-+0-9.eE]+)',
+    setting
+  )
+  match <- regexec(pattern, json, perl = TRUE)
+  captures <- regmatches(json, match)[[1L]]
+  if (length(captures) < 2L) {
+    return(NA_real_)
+  }
+  suppressWarnings(as.numeric(captures[[2L]]))
+}
+
+is_probably_pure_smudge_brush <- function(spec) {
+  if (is.null(spec)) {
+    return(FALSE)
+  }
+
+  settings <- spec$settings %||% setNames(numeric(), character())
+  json <- spec$json %||% ""
+
+  value_for <- function(name, default = NA_real_) {
+    if (name %in% names(settings)) {
+      return(as.numeric(settings[[name]]))
+    }
+    value <- json_brush_base_value(json, name)
+    if (is.na(value)) default else value
+  }
+
+  smudge <- value_for("smudge", default = 0)
+  opaque_multiply <- value_for("opaque_multiply", default = 1)
+  colorize <- value_for("colorize", default = 0)
+  restore_color <- value_for("restore_color", default = 0)
+
+  isTRUE(smudge >= 0.8 &&
+    opaque_multiply <= 0.02 &&
+    colorize <= 0.02 &&
+    restore_color <= 0.02)
+}
+
+warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
+  type <- match.arg(type)
+  if (!is_probably_pure_smudge_brush(spec)) {
+    return(invisible(NULL))
+  }
+
+  if (type == "fill") {
+    warning(
+      "Pure smudge brush selected for fill: mypaintr falls back to solid fills; proper smudged fills are not supported.",
+      call. = FALSE
+    )
+  } else {
+    warning(
+      "Pure smudge brush selected for stroke: mypaintr approximates this as a surface-sampled paint stroke; proper smudging is not yet supported.",
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
+}
+
 normalize_brush_spec <- function(brush, settings = NULL) {
   base_settings <- setNames(numeric(), character())
   json <- NULL
@@ -432,10 +493,11 @@ normalize_brush_spec <- function(brush, settings = NULL) {
     base_settings[names(override_settings)] <- override_settings
   }
 
-  list(
+  spec <- list(
     json = json,
     settings = base_settings
   )
+  spec
 }
 
 normalize_render_style <- function(style) {
@@ -983,6 +1045,8 @@ mypaint_device <- function(file,
 
   stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
   fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
+  warn_if_pure_smudge_brush(stroke_spec, "stroke")
+  warn_if_pure_smudge_brush(fill_spec, "fill")
   stroke_style <- if (is.null(stroke_style)) {
     if (is.null(brush)) 0L else 1L
   } else {
@@ -1029,6 +1093,12 @@ set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", 
   }
 
   spec <- if (is.null(brush) && is.null(settings)) NULL else normalize_brush_spec(brush, settings)
+  if (type %in% c("both", "stroke")) {
+    warn_if_pure_smudge_brush(spec, "stroke")
+  }
+  if (type %in% c("both", "fill")) {
+    warn_if_pure_smudge_brush(spec, "fill")
+  }
   stroke_spec <- fill_spec <- NULL
   stroke_style <- fill_style <- NULL
 
