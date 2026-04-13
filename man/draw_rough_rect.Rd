@@ -13,9 +13,6 @@ draw_rough_rect(
   col = NA,
   border = graphics::par("fg"),
   fill_pattern = NULL,
-  density = NULL,
-  angle = 45,
-  clip = TRUE,
   ...
 )
 }
@@ -31,15 +28,8 @@ fill is drawn.}
 
 \item{border}{Border colour.}
 
-\item{fill_pattern}{Optional fill pattern created with \code{\link[=rough_fill]{rough_fill()}}.}
-
-\item{density}{Legacy shortcut for line density. When supplied without
-\code{fill_pattern}, it is treated as \code{rough_fill("lines", density = density)}.}
-
-\item{angle}{Legacy shortcut for the base fill angle.}
-
-\item{clip}{Legacy shortcut controlling endpoint clipping for line-based
-patterns.}
+\item{fill_pattern}{Optional fill pattern created with \code{\link[=hatch]{hatch()}},
+\code{\link[=crosshatch]{crosshatch()}}, \code{\link[=zigzag]{zigzag()}}, or \code{\link[=jumble]{jumble()}}.}
 
 \item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
