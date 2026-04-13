@@ -1,11 +1,11 @@
 Package: mypaintr
 Type: Package
-Title: Artistic Graphics Device Backed by libmypaint
+Title: Draw Human-style Graphics Using "libmypaint"
 Version: 0.0.1
 Authors@R: person("David", "Hugh-Jones", email = "david@example.com", role = c("aut", "cre"))
-Description: Raster graphics device for base R graphics that renders
-    stroked primitives with libmypaint and uses Cairo for text and
-    solid fills on the same backing surface.
+Description: R graphics device for human-like, sketched plotting. Uses 
+  libmypaint brushes to draw lines and polygons. Includes functions for
+  plotting "rough" lines and polygons.
 License: MIT + file LICENSE
 URL: https://github.com/hughjonesd/mypaintr,
     https://hughjonesd.github.io/mypaintr/
