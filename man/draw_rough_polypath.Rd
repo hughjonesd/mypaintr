@@ -14,6 +14,7 @@ draw_rough_polypath(
   border = graphics::par("fg"),
   density = NULL,
   angle = 45,
+  clip = TRUE,
   ...
 )
 }
@@ -27,13 +28,17 @@ one closed ring.}
 
 \item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
 
-\item{col}{Fill colour. When visible, a hachure fill is drawn.}
+\item{col}{Fill colour. When visible and \code{density} is \code{NULL}, a solid fill is
+drawn. When \code{density} is set, a hachure fill is drawn.}
 
 \item{border}{Border colour.}
 
-\item{density}{Hatch density. When \code{NULL}, a default density is used.}
+\item{density}{Hatch density. When \code{NULL}, the polygon is filled solidly.}
 
 \item{angle}{Hatch angle in degrees.}
+
+\item{clip}{When \code{TRUE}, hatch line endpoints are kept on the shape boundary
+to reduce visible overshoot.}
 
 \item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }

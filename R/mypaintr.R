@@ -272,6 +272,16 @@ split_polypath <- function(x, y = NULL, id = NULL) {
   lapply(groups, function(idx) list(x = xy$x[idx], y = xy$y[idx]))
 }
 
+join_polypath_na <- function(paths) {
+  x <- unlist(lapply(paths, function(path) c(path$x, NA_real_)), use.names = FALSE)
+  y <- unlist(lapply(paths, function(path) c(path$y, NA_real_)), use.names = FALSE)
+  if (length(x)) {
+    x <- x[-length(x)]
+    y <- y[-length(y)]
+  }
+  list(x = x, y = y)
+}
+
 rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
   n <- max(length(x0), length(y0), length(x1), length(y1))
   x0 <- rep_len(x0, n)
@@ -334,7 +344,7 @@ rough_path_intersections <- function(paths, yy) {
   list(x = cuts[ord], delta = delta[ord])
 }
 
-draw_rough_hachure_fill <- function(paths, hand_spec, col, angle = 45, density = NULL, rule = c("winding", "evenodd"), xpd = NULL, ...) {
+draw_rough_hachure_fill <- function(paths, hand_spec, col, angle = 45, density = NULL, rule = c("winding", "evenodd"), xpd = NULL, clip = TRUE, ...) {
   rule <- match.arg(rule)
   rot_paths <- lapply(paths, function(path) rotate_xy(path$x, path$y, -angle))
   yr <- unlist(lapply(rot_paths, `[[`, "y"), use.names = FALSE)
@@ -343,8 +353,7 @@ draw_rough_hachure_fill <- function(paths, hand_spec, col, angle = 45, density =
   gap <- max(gap, .Machine$double.eps)
 
   draw_pass <- function(base_angle) {
-    hand_fill <- hand_spec
-    hand_fill$seed <- NULL
+    hand_fill <- clipped_hatch_hand(hand_spec, clip = clip)
     rot_pass <- lapply(paths, function(path) rotate_xy(path$x, path$y, -base_angle))
     yr_pass <- unlist(lapply(rot_pass, `[[`, "y"), use.names = FALSE)
     yy <- min(yr_pass)
@@ -387,6 +396,15 @@ draw_rough_hachure_fill <- function(paths, hand_spec, col, angle = 45, density =
   if (identical(hand_spec$hachure_method, "cross")) {
     draw_pass(angle + 90 + stats::rnorm(1, sd = hand_spec$hachure_angle_jitter))
   }
+}
+
+clipped_hatch_hand <- function(hand_spec, clip = TRUE) {
+  hand_fill <- hand_spec
+  hand_fill$seed <- NULL
+  if (isTRUE(clip)) {
+    hand_fill$endpoint_jitter <- 0
+  }
+  hand_fill
 }
 
 normalize_settings <- function(settings) {
@@ -1471,10 +1489,13 @@ draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 
 #'   one closed ring.
 #' @param rule Fill rule, `"winding"` or `"evenodd"`.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible, a hachure fill is drawn.
+#' @param col Fill colour. When visible and `density` is `NULL`, a solid fill is
+#'   drawn. When `density` is set, a hachure fill is drawn.
 #' @param border Border colour.
-#' @param density Hatch density. When `NULL`, a default density is used.
+#' @param density Hatch density. When `NULL`, the polygon is filled solidly.
 #' @param angle Hatch angle in degrees.
+#' @param clip When `TRUE`, hatch line endpoints are kept on the shape boundary
+#'   to reduce visible overshoot.
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -1487,7 +1508,7 @@ draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 
 #' @export
 draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"),
                                 hand = NULL, col = NA, border = graphics::par("fg"),
-                                density = NULL, angle = 45, ...) {
+                                density = NULL, angle = 45, clip = TRUE, ...) {
   hand_spec <- as_hand(hand)
   rule <- match.arg(rule)
   paths0 <- split_polypath(x, y, id)
@@ -1497,15 +1518,27 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
     paths <- split_polypath(geom$x, geom$y, geom$id)
 
     if (is_visible_col(col)) {
-      draw_rough_hachure_fill(
-        paths,
-        hand_spec,
-        col = col,
-        angle = angle,
-        density = density,
-        rule = geom$rule,
-        ...
-      )
+      if (is.null(density)) {
+        solid_path <- join_polypath_na(paths)
+        do.call(
+          graphics::polypath,
+          c(
+            list(x = solid_path$x, y = solid_path$y, rule = geom$rule, col = col, border = NA),
+            list(...)
+          )
+        )
+      } else {
+        draw_rough_hachure_fill(
+          paths,
+          hand_spec,
+          col = col,
+          angle = angle,
+          density = density,
+          rule = geom$rule,
+          clip = clip,
+          ...
+        )
+      }
     }
     if (is_visible_col(border)) {
       for (j in seq_len(max(1L, hand_spec$multi_stroke))) {
@@ -1528,10 +1561,13 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #'
 #' @param x,y Polygon coordinates.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible, a hachure fill is drawn.
+#' @param col Fill colour. When visible and `density` is `NULL`, a solid fill is
+#'   drawn. When `density` is set, a hachure fill is drawn.
 #' @param border Border colour.
-#' @param density Hatch density. When `NULL`, a default density is used.
+#' @param density Hatch density. When `NULL`, the polygon is filled solidly.
 #' @param angle Hatch angle in degrees.
+#' @param clip When `TRUE`, hatch line endpoints are kept on the shape boundary
+#'   to reduce visible overshoot.
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -1539,21 +1575,32 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
 #' @export
 draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
-                                density = NULL, angle = 45, ...) {
+                                density = NULL, angle = 45, clip = TRUE, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
 
   invisible(with_hand_seed(hand_spec$seed, {
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
     if (is_visible_col(col)) {
-      draw_rough_hachure_fill(
-        list(rough_outline),
-        hand_spec,
-        col = col,
-        angle = angle,
-        density = density,
-        ...
-      )
+      if (is.null(density)) {
+        do.call(
+          graphics::polygon,
+          c(
+            list(x = rough_outline$x, y = rough_outline$y, col = col, border = NA),
+            list(...)
+          )
+        )
+      } else {
+        draw_rough_hachure_fill(
+          list(rough_outline),
+          hand_spec,
+          col = col,
+          angle = angle,
+          density = density,
+          clip = clip,
+          ...
+        )
+      }
     }
     if (is_visible_col(border)) {
       draw_path_strokes(
@@ -1575,10 +1622,13 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' @param x0,y0 Rectangle corner.
 #' @param x1,y1 Opposite rectangle corner.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible, a hachure fill is drawn.
+#' @param col Fill colour. When visible and `density` is `NULL`, a solid fill is
+#'   drawn. When `density` is set, a hachure fill is drawn.
 #' @param border Border colour.
-#' @param density Hatch density. When `NULL`, a default density is used.
+#' @param density Hatch density. When `NULL`, the rectangle is filled solidly.
 #' @param angle Hatch angle in degrees.
+#' @param clip When `TRUE`, hatch line endpoints are kept on the shape boundary
+#'   to reduce visible overshoot.
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -1586,10 +1636,10 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' draw_rough_rect(2, 2, 5, 6, col = "grey80")
 #' @export
 draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = graphics::par("fg"),
-                            density = NULL, angle = 45, ...) {
+                            density = NULL, angle = 45, clip = TRUE, ...) {
   x <- c(x0, x1, x1, x0)
   y <- c(y0, y0, y1, y1)
-  draw_rough_polygons(x, y, hand = hand, col = col, border = border, density = density, angle = angle, ...)
+  draw_rough_polygons(x, y, hand = hand, col = col, border = border, density = density, angle = angle, clip = clip, ...)
 }
 
 
