@@ -180,6 +180,19 @@ ggplot(diamonds) +
    theme_minimal() 
 ```
 
+Some more fancy examples:
+
+```{r, mypaint=TRUE, fig.keep="none"}
+
+set_brush("experimental/hard_blot", type = "fill")
+ggplot(diamonds) + 
+  geom_violin(aes(cut, price, fill = cut, colour = cut)) +
+  theme_minimal() +
+  theme(
+    panel.grid = element_mypaint_line()
+  )
+```
+
 
 # Using mypaintr in knitr
 
