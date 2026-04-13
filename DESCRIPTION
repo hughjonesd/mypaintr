@@ -12,6 +12,8 @@ LazyData: true
 SystemRequirements: libmypaint, cairo
 Imports:
     grDevices
+Suggests:
+    ggplot2
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

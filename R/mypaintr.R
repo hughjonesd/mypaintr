@@ -99,6 +99,9 @@ read_mypaint_brush <- function(path) {
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+mypaintr_env <- new.env(parent = emptyenv())
+mypaintr_env$style_stack <- list()
+
 with_hand_seed <- function(seed, expr) {
   if (is.null(seed)) {
     return(force(expr))
@@ -448,6 +451,110 @@ normalize_hand_spec <- function(x) {
     return(NULL)
   }
   as_hand(x)
+}
+
+is_mypaintr_device <- function() {
+  identical(names(grDevices::dev.cur()), "mypaintr")
+}
+
+current_device_style <- function() {
+  if (!is_mypaintr_device()) {
+    return(NULL)
+  }
+  .Call(mypaintr_device_get_style)
+}
+
+apply_device_style_state <- function(state) {
+  if (is.null(state) || !is_mypaintr_device()) {
+    return(invisible(NULL))
+  }
+
+  invisible(.Call(
+    mypaintr_device_set_style,
+    state$stroke_spec,
+    state$fill_spec,
+    state$stroke_style,
+    state$fill_style,
+    state$auto_solid_bg
+  ))
+  invisible(.Call(
+    mypaintr_device_set_hand,
+    state$stroke_hand,
+    state$fill_hand,
+    TRUE,
+    TRUE
+  ))
+}
+
+apply_device_style_override <- function(style) {
+  if (is.null(style) || !is_mypaintr_device()) {
+    return(invisible(NULL))
+  }
+
+  invisible(.Call(
+    mypaintr_device_set_style,
+    if (isTRUE(style$update_stroke)) style$stroke_spec else NULL,
+    if (isTRUE(style$update_fill)) style$fill_spec else NULL,
+    if (isTRUE(style$update_stroke)) style$stroke_style else NULL,
+    if (isTRUE(style$update_fill)) style$fill_style else NULL,
+    if (is.null(style$auto_solid_bg)) NULL else isTRUE(style$auto_solid_bg)
+  ))
+  invisible(.Call(
+    mypaintr_device_set_hand,
+    if (isTRUE(style$update_stroke)) style$stroke_hand else NULL,
+    if (isTRUE(style$update_fill)) style$fill_hand else NULL,
+    isTRUE(style$update_stroke),
+    isTRUE(style$update_fill)
+  ))
+}
+
+require_ggplot2 <- function() {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("ggplot2 must be installed to use mypaint theme elements", call. = FALSE)
+  }
+}
+
+new_mypaintr_element <- function(element, class_name, style) {
+  attr(element, "mypaintr_style") <- style
+  class(element) <- c(class_name, class(element))
+  element
+}
+
+base_element <- function(element, class_name) {
+  out <- element
+  attr(out, "mypaintr_style") <- NULL
+  class(out) <- setdiff(class(out), class_name)
+  out
+}
+
+wrap_mypaintr_style_grob <- function(child, style) {
+  grid::gTree(
+    children = grid::gList(child),
+    mypaintr_style = style,
+    cl = "mypaintr_style_grob"
+  )
+}
+
+make_style_override <- function(update_stroke = FALSE,
+                                stroke_spec = NULL,
+                                stroke_style = NULL,
+                                stroke_hand = NULL,
+                                update_fill = FALSE,
+                                fill_spec = NULL,
+                                fill_style = NULL,
+                                fill_hand = NULL,
+                                auto_solid_bg = NULL) {
+  list(
+    update_stroke = update_stroke,
+    stroke_spec = stroke_spec,
+    stroke_style = stroke_style,
+    stroke_hand = stroke_hand,
+    update_fill = update_fill,
+    fill_spec = fill_spec,
+    fill_style = fill_style,
+    fill_hand = fill_hand,
+    auto_solid_bg = auto_solid_bg
+  )
 }
 
 rgba_int <- function(col) {
@@ -1049,6 +1156,191 @@ draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {
     }
     NULL
   }))
+}
+
+#' Theme line element with scoped mypaint rendering
+#'
+#' Uses the current `mypaint` device for drawing, but temporarily overrides the
+#' stroke settings while the theme line is drawn. This is useful for keeping
+#' axes, ticks, or panel grid lines solid while data layers use rough or brush
+#' rendering.
+#'
+#' @param brush Stroke brush preset, installed brush name, JSON brush string,
+#'   named settings, or `NULL` for solid strokes.
+#' @param brush_settings Named settings overriding `brush`.
+#' @param hand Optional hand-drawn geometry created with [hand()].
+#' @param colour,linewidth,linetype,lineend,linejoin,arrow,arrow.fill,inherit.blank,size
+#'   Passed through to [ggplot2::element_line()].
+#' @return A ggplot theme element.
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   ggplot2::theme(axis.line = element_mypaint_line())
+#' }
+#' @export
+element_mypaint_line <- function(brush = NULL,
+                                 brush_settings = NULL,
+                                 hand = NULL,
+                                 colour = NULL,
+                                 linewidth = NULL,
+                                 linetype = NULL,
+                                 lineend = NULL,
+                                 color = NULL,
+                                 linejoin = NULL,
+                                 arrow = FALSE,
+                                 arrow.fill = NULL,
+                                 inherit.blank = FALSE,
+                                 size = NULL,
+                                 ...) {
+  require_ggplot2()
+  if (is.null(brush) && !is.null(brush_settings)) {
+    stop("brush_settings requires brush", call. = FALSE)
+  }
+
+  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
+  style <- make_style_override(
+    update_stroke = TRUE,
+    stroke_spec = stroke_spec,
+    stroke_style = if (is.null(stroke_spec)) 0L else 1L,
+    stroke_hand = normalize_hand_spec(hand)
+  )
+  args <- list(
+    colour = colour,
+    linewidth = linewidth,
+    linetype = linetype,
+    lineend = lineend,
+    color = color,
+    linejoin = linejoin,
+    arrow = arrow,
+    arrow.fill = arrow.fill,
+    inherit.blank = inherit.blank,
+    ...
+  )
+  if (!is.null(size)) {
+    args$size <- size
+  }
+  element <- do.call(ggplot2::element_line, args)
+  new_mypaintr_element(element, "mypaintr_element_line", style)
+}
+
+#' Theme rectangle element with scoped mypaint rendering
+#'
+#' Uses the current `mypaint` device for drawing, but temporarily overrides the
+#' stroke and fill settings while the rectangle is drawn. This is useful for
+#' panel backgrounds, panel borders, and legend keys in ggplot2 themes.
+#'
+#' @param brush Stroke brush preset, installed brush name, JSON brush string,
+#'   named settings, or `NULL` for solid borders.
+#' @param brush_settings Named settings overriding `brush`.
+#' @param fill_brush Fill brush preset, installed brush name, JSON brush string,
+#'   named settings, or `NULL` for solid fills.
+#' @param fill_settings Named settings overriding `fill_brush`.
+#' @param hand Optional hand-drawn geometry applied to both stroke and fill by
+#'   default.
+#' @param stroke_hand Optional hand-drawn geometry for the border.
+#' @param fill_hand Optional hand-drawn geometry for the fill.
+#' @param auto_solid_bg Optional override for background-like fills.
+#' @param fill,colour,linewidth,linetype,color,linejoin,inherit.blank,size
+#'   Passed through to [ggplot2::element_rect()].
+#' @return A ggplot theme element.
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   ggplot2::theme(panel.background = element_mypaint_rect())
+#' }
+#' @export
+element_mypaint_rect <- function(brush = NULL,
+                                 brush_settings = NULL,
+                                 fill_brush = NULL,
+                                 fill_settings = NULL,
+                                 hand = NULL,
+                                 stroke_hand = hand,
+                                 fill_hand = hand,
+                                 auto_solid_bg = NULL,
+                                 fill = NULL,
+                                 colour = NULL,
+                                 linewidth = NULL,
+                                 linetype = NULL,
+                                 color = NULL,
+                                 linejoin = NULL,
+                                 inherit.blank = FALSE,
+                                 size = NULL,
+                                 ...) {
+  require_ggplot2()
+  if (missing(fill_brush)) {
+    fill_brush <- brush
+  }
+  if (is.null(brush) && !is.null(brush_settings)) {
+    stop("brush_settings requires brush", call. = FALSE)
+  }
+  if (is.null(fill_brush) && !is.null(fill_settings)) {
+    stop("fill_settings requires fill_brush", call. = FALSE)
+  }
+
+  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
+  fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
+  style <- make_style_override(
+    update_stroke = TRUE,
+    stroke_spec = stroke_spec,
+    stroke_style = if (is.null(stroke_spec)) 0L else 1L,
+    stroke_hand = normalize_hand_spec(stroke_hand),
+    update_fill = TRUE,
+    fill_spec = fill_spec,
+    fill_style = if (is.null(fill_spec)) 0L else 1L,
+    fill_hand = normalize_hand_spec(fill_hand),
+    auto_solid_bg = auto_solid_bg
+  )
+  args <- list(
+    fill = fill,
+    colour = colour,
+    linewidth = linewidth,
+    linetype = linetype,
+    color = color,
+    linejoin = linejoin,
+    inherit.blank = inherit.blank,
+    ...
+  )
+  if (!is.null(size)) {
+    args$size <- size
+  }
+  element <- do.call(ggplot2::element_rect, args)
+  new_mypaintr_element(element, "mypaintr_element_rect", style)
+}
+
+#' @exportS3Method ggplot2::element_grob
+element_grob.mypaintr_element_line <- function(element, ...) {
+  child <- ggplot2::element_grob(base_element(element, "mypaintr_element_line"), ...)
+  wrap_mypaintr_style_grob(child, attr(element, "mypaintr_style", exact = TRUE))
+}
+
+#' @exportS3Method ggplot2::element_grob
+element_grob.mypaintr_element_rect <- function(element, ...) {
+  child <- ggplot2::element_grob(base_element(element, "mypaintr_element_rect"), ...)
+  wrap_mypaintr_style_grob(child, attr(element, "mypaintr_style", exact = TRUE))
+}
+
+#' @exportS3Method grid::preDrawDetails
+preDrawDetails.mypaintr_style_grob <- function(x) {
+  if (!is_mypaintr_device()) {
+    return()
+  }
+
+  mypaintr_env$style_stack <- c(mypaintr_env$style_stack, list(current_device_style()))
+  apply_device_style_override(x$mypaintr_style)
+}
+
+#' @exportS3Method grid::postDrawDetails
+postDrawDetails.mypaintr_style_grob <- function(x) {
+  if (!is_mypaintr_device()) {
+    return()
+  }
+
+  n <- length(mypaintr_env$style_stack)
+  if (!n) {
+    return()
+  }
+
+  state <- mypaintr_env$style_stack[[n]]
+  mypaintr_env$style_stack <- mypaintr_env$style_stack[-n]
+  apply_device_style_state(state)
 }
 
 #' Built-in brush presets

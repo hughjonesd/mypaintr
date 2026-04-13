@@ -86,6 +86,10 @@ typedef struct {
   MypaintrBrush fill;
   MypaintrHand stroke_hand;
   MypaintrHand fill_hand;
+  SEXP stroke_spec;
+  SEXP fill_spec;
+  SEXP stroke_hand_spec;
+  SEXP fill_hand_spec;
 } MypaintrDevice;
 
 static void configure_brush(MyPaintBrush *brush, SEXP spec);
@@ -195,6 +199,27 @@ static SEXP list_element(SEXP list, const char *name) {
   }
 
   return R_NilValue;
+}
+
+static void replace_preserved(SEXP *slot, SEXP value) {
+  if (*slot && *slot != R_NilValue) {
+    R_ReleaseObject(*slot);
+  }
+
+  if (value == R_NilValue) {
+    *slot = R_NilValue;
+    return;
+  }
+
+  *slot = Rf_duplicate(value);
+  R_PreserveObject(*slot);
+}
+
+static SEXP duplicate_or_nil(SEXP value) {
+  if (!value || value == R_NilValue) {
+    return R_NilValue;
+  }
+  return Rf_duplicate(value);
 }
 
 static void rgb_to_hsv(double r, double g, double b, double *h, double *s, double *v) {
@@ -1225,6 +1250,7 @@ static void configure_brush(MyPaintBrush *brush, SEXP spec) {
 }
 
 static void init_brushes(MypaintrDevice *dev, SEXP stroke_spec, SEXP fill_spec) {
+  SEXP actual_fill_spec = fill_spec == R_NilValue ? stroke_spec : fill_spec;
   dev->stroke.brush = mypaint_brush_new();
   dev->fill.brush = mypaint_brush_new();
   if (!dev->stroke.brush || !dev->fill.brush) {
@@ -1232,12 +1258,16 @@ static void init_brushes(MypaintrDevice *dev, SEXP stroke_spec, SEXP fill_spec) 
   }
 
   brush_apply_spec(&dev->stroke, stroke_spec);
-  brush_apply_spec(&dev->fill, fill_spec == R_NilValue ? stroke_spec : fill_spec);
+  brush_apply_spec(&dev->fill, actual_fill_spec);
+  replace_preserved(&dev->stroke_spec, stroke_spec);
+  replace_preserved(&dev->fill_spec, actual_fill_spec);
 }
 
 static void init_hands(MypaintrDevice *dev, SEXP stroke_hand, SEXP fill_hand) {
   configure_hand(&dev->stroke_hand, stroke_hand, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
   configure_hand(&dev->fill_hand, fill_hand, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
+  replace_preserved(&dev->stroke_hand_spec, stroke_hand);
+  replace_preserved(&dev->fill_hand_spec, fill_hand);
 }
 
 static MypaintrDevice *current_mypaintr_device(void) {
@@ -1262,6 +1292,10 @@ static void destroy_device_state(MypaintrDevice *dev) {
   if (!dev) {
     return;
   }
+  if (dev->stroke_spec && dev->stroke_spec != R_NilValue) R_ReleaseObject(dev->stroke_spec);
+  if (dev->fill_spec && dev->fill_spec != R_NilValue) R_ReleaseObject(dev->fill_spec);
+  if (dev->stroke_hand_spec && dev->stroke_hand_spec != R_NilValue) R_ReleaseObject(dev->stroke_hand_spec);
+  if (dev->fill_hand_spec && dev->fill_hand_spec != R_NilValue) R_ReleaseObject(dev->fill_hand_spec);
   if (dev->stroke.brush) mypaint_brush_unref(dev->stroke.brush);
   if (dev->fill.brush) mypaint_brush_unref(dev->fill.brush);
   if (dev->cr) cairo_destroy(dev->cr);
@@ -1863,9 +1897,11 @@ SEXP mypaintr_device_set_style(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_sty
 
   if (stroke_spec != R_NilValue) {
     brush_apply_spec(&dev->stroke, stroke_spec);
+    replace_preserved(&dev->stroke_spec, stroke_spec);
   }
   if (fill_spec != R_NilValue) {
     brush_apply_spec(&dev->fill, fill_spec);
+    replace_preserved(&dev->fill_spec, fill_spec);
   }
   if (stroke_style != R_NilValue) {
     dev->stroke_style = asInteger(stroke_style);
@@ -1889,12 +1925,40 @@ SEXP mypaintr_device_set_hand(SEXP stroke_hand, SEXP fill_hand, SEXP update_stro
 
   if (asLogical(update_stroke)) {
     configure_hand(&dev->stroke_hand, stroke_hand, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
+    replace_preserved(&dev->stroke_hand_spec, stroke_hand);
   }
   if (asLogical(update_fill)) {
     configure_hand(&dev->fill_hand, fill_hand, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
+    replace_preserved(&dev->fill_hand_spec, fill_hand);
   }
 
   return R_NilValue;
+}
+
+SEXP mypaintr_device_get_style(void) {
+  MypaintrDevice *dev = current_mypaintr_device();
+  SEXP out = PROTECT(allocVector(VECSXP, 7));
+  SEXP names = PROTECT(allocVector(STRSXP, 7));
+
+  SET_STRING_ELT(names, 0, mkChar("stroke_spec"));
+  SET_STRING_ELT(names, 1, mkChar("fill_spec"));
+  SET_STRING_ELT(names, 2, mkChar("stroke_style"));
+  SET_STRING_ELT(names, 3, mkChar("fill_style"));
+  SET_STRING_ELT(names, 4, mkChar("auto_solid_bg"));
+  SET_STRING_ELT(names, 5, mkChar("stroke_hand"));
+  SET_STRING_ELT(names, 6, mkChar("fill_hand"));
+
+  SET_VECTOR_ELT(out, 0, duplicate_or_nil(dev->stroke_spec));
+  SET_VECTOR_ELT(out, 1, duplicate_or_nil(dev->fill_spec));
+  SET_VECTOR_ELT(out, 2, ScalarInteger(dev->stroke_style));
+  SET_VECTOR_ELT(out, 3, ScalarInteger(dev->fill_style));
+  SET_VECTOR_ELT(out, 4, ScalarLogical(dev->auto_solid_bg));
+  SET_VECTOR_ELT(out, 5, duplicate_or_nil(dev->stroke_hand_spec));
+  SET_VECTOR_ELT(out, 6, duplicate_or_nil(dev->fill_hand_spec));
+  setAttrib(out, R_NamesSymbol, names);
+
+  UNPROTECT(2);
+  return out;
 }
 
 SEXP mypaintr_brush_settings_info(void) {
