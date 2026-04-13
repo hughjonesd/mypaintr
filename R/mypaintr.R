@@ -255,10 +255,86 @@ polygon_intersections <- function(x, y, yy) {
   sort(cuts)
 }
 
-draw_rough_hachure_fill <- function(x, y, hand_spec, col, angle = 45, density = NULL, xpd = NULL, ...) {
-  rot <- rotate_xy(x, y, -angle)
-  xr <- rot$x
-  yr <- rot$y
+split_polypath <- function(x, y = NULL, id = NULL) {
+  xy <- grDevices::xy.coords(x, y)
+  if (is.null(id)) {
+    id <- rep.int(1L, length(xy$x))
+  }
+  id <- as.integer(id)
+  if (length(id) != length(xy$x)) {
+    stop("id must have the same length as x and y", call. = FALSE)
+  }
+
+  groups <- split(seq_along(id), id)
+  lapply(groups, function(idx) list(x = xy$x[idx], y = xy$y[idx]))
+}
+
+rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
+  n <- max(length(x0), length(y0), length(x1), length(y1))
+  x0 <- rep_len(x0, n)
+  y0 <- rep_len(y0, n)
+  x1 <- rep_len(x1, n)
+  y1 <- rep_len(y1, n)
+
+  out_x <- numeric()
+  out_y <- numeric()
+  out_id <- integer()
+  for (i in seq_len(n)) {
+    seg <- rough_segment_path(x0[i], y0[i], x1[i], y1[i], hand_spec)
+    out_x <- c(out_x, seg$x)
+    out_y <- c(out_y, seg$y)
+    out_id <- c(out_id, rep.int(i, length(seg$x)))
+  }
+
+  list(x = out_x, y = out_y, id = out_id)
+}
+
+rough_polypath_data <- function(paths, hand_spec, rule) {
+  out_x <- numeric()
+  out_y <- numeric()
+  out_id <- integer()
+  for (i in seq_along(paths)) {
+    path <- roughen_vertex_path(paths[[i]]$x, paths[[i]]$y, hand_spec, closed = TRUE)
+    out_x <- c(out_x, path$x)
+    out_y <- c(out_y, path$y)
+    out_id <- c(out_id, rep.int(i, length(path$x)))
+  }
+  list(x = out_x, y = out_y, id = out_id, rule = rule)
+}
+
+rough_path_intersections <- function(paths, yy) {
+  cuts <- numeric()
+  delta <- integer()
+
+  for (path in paths) {
+    n <- length(path$x)
+    if (n < 2L) next
+    for (i in seq_len(n)) {
+      j <- if (i == n) 1L else i + 1L
+      y0 <- path$y[i]
+      y1 <- path$y[j]
+      if (y0 == y1) next
+      if (yy >= min(y0, y1) && yy < max(y0, y1)) {
+        x0 <- path$x[i]
+        x1 <- path$x[j]
+        cuts <- c(cuts, x0 + (yy - y0) * (x1 - x0) / (y1 - y0))
+        delta <- c(delta, if (y1 > y0) 1L else -1L)
+      }
+    }
+  }
+
+  if (!length(cuts)) {
+    return(list(x = numeric(), delta = integer()))
+  }
+
+  ord <- order(cuts)
+  list(x = cuts[ord], delta = delta[ord])
+}
+
+draw_rough_hachure_fill <- function(paths, hand_spec, col, angle = 45, density = NULL, rule = c("winding", "evenodd"), xpd = NULL, ...) {
+  rule <- match.arg(rule)
+  rot_paths <- lapply(paths, function(path) rotate_xy(path$x, path$y, -angle))
+  yr <- unlist(lapply(rot_paths, `[[`, "y"), use.names = FALSE)
   span <- diff(range(yr))
   gap <- hand_spec$hachure_gap %||% if (is.null(density)) span / 25 else span / max(1, density)
   gap <- max(gap, .Machine$double.eps)
@@ -266,22 +342,38 @@ draw_rough_hachure_fill <- function(x, y, hand_spec, col, angle = 45, density = 
   draw_pass <- function(base_angle) {
     hand_fill <- hand_spec
     hand_fill$seed <- NULL
-    rot_pass <- rotate_xy(x, y, -base_angle)
-    xr_pass <- rot_pass$x
-    yr_pass <- rot_pass$y
+    rot_pass <- lapply(paths, function(path) rotate_xy(path$x, path$y, -base_angle))
+    yr_pass <- unlist(lapply(rot_pass, `[[`, "y"), use.names = FALSE)
     yy <- min(yr_pass)
     while (yy <= max(yr_pass)) {
-      cuts <- polygon_intersections(xr_pass, yr_pass, yy)
-      if (length(cuts) >= 2L) {
-        for (i in seq(1L, length(cuts) - 1L, by = 2L)) {
-          seg <- rotate_xy(c(cuts[i], cuts[i + 1L]), c(yy, yy), base_angle)
-          draw_rough_segments(
-            seg$x[1], seg$y[1], seg$x[2], seg$y[2],
-            hand = hand_fill,
-            col = col,
-            xpd = xpd,
-            ...
-          )
+      cuts <- rough_path_intersections(rot_pass, yy)
+      if (length(cuts$x) >= 2L) {
+        if (identical(rule, "evenodd")) {
+          for (i in seq(1L, length(cuts$x) - 1L, by = 2L)) {
+            seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
+            draw_rough_segments(
+              seg$x[1], seg$y[1], seg$x[2], seg$y[2],
+              hand = hand_fill,
+              col = col,
+              xpd = xpd,
+              ...
+            )
+          }
+        } else {
+          winding <- 0L
+          for (i in seq_len(length(cuts$x) - 1L)) {
+            winding <- winding + cuts$delta[i]
+            if (winding != 0L && cuts$x[i + 1L] > cuts$x[i]) {
+              seg <- rotate_xy(c(cuts$x[i], cuts$x[i + 1L]), c(yy, yy), base_angle)
+              draw_rough_segments(
+                seg$x[1], seg$y[1], seg$x[2], seg$y[2],
+                hand = hand_fill,
+                col = col,
+                xpd = xpd,
+                ...
+              )
+            }
+          }
         }
       }
       yy <- yy + gap * (1 + stats::rnorm(1, sd = hand_spec$hachure_gap_jitter))
@@ -703,6 +795,48 @@ rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
   )
 }
 
+#' Compute rough segment geometry
+#'
+#' @param x0,y0 Segment starts.
+#' @param x1,y1 Segment ends.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @return A list with `x`, `y`, and `id` components describing roughened
+#'   polyline geometry for each segment.
+#' @examples
+#' rough_segments(1:2, 1:2, 2:3, 3:2)
+#' @export
+rough_segments <- function(x0, y0, x1, y1, hand = NULL) {
+  hand_spec <- as_hand(hand)
+  with_hand_seed(hand_spec$seed, {
+    rough_segments_data(x0, y0, x1, y1, hand_spec)
+  })
+}
+
+#' Compute a rough multipath outline
+#'
+#' @param x,y Coordinates as for [graphics::polypath()].
+#' @param id Optional path ids. Consecutive points with the same `id` belong to
+#'   one closed ring.
+#' @param rule Fill rule, `"winding"` or `"evenodd"`.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @return A list with `x`, `y`, `id`, and `rule` components describing
+#'   roughened closed rings.
+#' @examples
+#' rough_polypath(c(2, 4, 4, 2, 2.5, 3.5, 3.5, 2.5),
+#'                c(2, 2, 4, 4, 2.5, 2.5, 3.5, 3.5),
+#'                id = c(rep(1, 4), rep(2, 4)),
+#'                rule = "evenodd")
+#' @export
+rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"), hand = NULL) {
+  hand_spec <- as_hand(hand)
+  rule <- match.arg(rule)
+  paths <- split_polypath(x, y, id)
+
+  with_hand_seed(hand_spec$seed, {
+    rough_polypath_data(paths, hand_spec, rule)
+  })
+}
+
 #' Draw rough connected lines
 #'
 #' @param x,y Coordinates as for [graphics::lines()].
@@ -748,20 +882,73 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
 #' @export
 draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
-  n <- max(length(x0), length(y0), length(x1), length(y1))
-  x0 <- rep_len(x0, n)
-  y0 <- rep_len(y0, n)
-  x1 <- rep_len(x1, n)
-  y1 <- rep_len(y1, n)
+  invisible(with_hand_seed(hand_spec$seed, {
+    for (j in seq_len(max(1L, hand_spec$multi_stroke))) {
+      geom <- rough_segments_data(x0, y0, x1, y1, hand_spec)
+      for (i in unique(geom$id)) {
+        keep <- geom$id == i
+        graphics::lines(geom$x[keep], geom$y[keep], ...)
+      }
+    }
+    NULL
+  }))
+}
+
+#' Draw a rough multipath with optional holes
+#'
+#' @param x,y Coordinates as for [graphics::polypath()].
+#' @param id Optional path ids. Consecutive points with the same `id` belong to
+#'   one closed ring.
+#' @param rule Fill rule, `"winding"` or `"evenodd"`.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param col Fill colour. When visible, a hachure fill is drawn.
+#' @param border Border colour.
+#' @param density Hatch density. When `NULL`, a default density is used.
+#' @param angle Hatch angle in degrees.
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
+#'                     c(2, 2, 8, 8, 4, 4, 6, 6),
+#'                     id = c(rep(1, 4), rep(2, 4)),
+#'                     rule = "evenodd",
+#'                     col = "grey80")
+#' @export
+draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"),
+                                hand = NULL, col = NA, border = graphics::par("fg"),
+                                density = NULL, angle = 45, ...) {
+  hand_spec <- as_hand(hand)
+  rule <- match.arg(rule)
+  paths0 <- split_polypath(x, y, id)
 
   invisible(with_hand_seed(hand_spec$seed, {
-    for (i in seq_len(n)) {
-      draw_path_strokes(
-        list(x = c(x0[i], x1[i]), y = c(y0[i], y1[i])),
+    geom <- rough_polypath_data(paths0, hand_spec, rule)
+    paths <- split_polypath(geom$x, geom$y, geom$id)
+
+    if (is_visible_col(col)) {
+      draw_rough_hachure_fill(
+        paths,
         hand_spec,
-        graphics::lines,
+        col = col,
+        angle = angle,
+        density = density,
+        rule = geom$rule,
         ...
       )
+    }
+    if (is_visible_col(border)) {
+      for (j in seq_len(max(1L, hand_spec$multi_stroke))) {
+        paths_j <- if (j == 1L) {
+          paths
+        } else {
+          geom_j <- rough_polypath_data(paths0, hand_spec, rule)
+          split_polypath(geom_j$x, geom_j$y, geom_j$id)
+        }
+        for (path in paths_j) {
+          graphics::lines(path$x, path$y, col = border, ...)
+        }
+      }
     }
     NULL
   }))
@@ -790,8 +977,7 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
     if (is_visible_col(col)) {
       draw_rough_hachure_fill(
-        rough_outline$x,
-        rough_outline$y,
+        list(rough_outline),
         hand_spec,
         col = col,
         angle = angle,
@@ -835,6 +1021,7 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
   y <- c(y0, y0, y1, y1)
   draw_rough_polygons(x, y, hand = hand, col = col, border = border, density = density, angle = angle, ...)
 }
+
 
 #' Draw rough points
 #'
