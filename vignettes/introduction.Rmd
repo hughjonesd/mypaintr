@@ -119,3 +119,77 @@ text(c(2, 2, 8, 8), c(0.5, 5.5, 0.5, 5.5),
 ```
 
 
+# ggplot2
+
+You can use ggplot2 with a mypaint output device:
+
+```{r, mypaint=TRUE, fig.keep="none"}
+
+library(ggplot2)
+
+# At the console, do this:
+# mypaint_device("output.png")
+set_hand(hand())
+set_brush("experimental/bubble")
+
+ggplot(diamonds) + 
+  geom_bar(aes(cut, fill = cut)) + 
+   theme_minimal() 
+```
+
+This is fine, but we can do better:
+
+* We probably don't want a special brush to render the white plot background rectangle.
+* We might want to have some "normal" elements mixed in with the sketch elements.
+
+mypaintr provides `element_mypaint_line()`, `element_mypaint_rect()`,
+`geom_mypaint_bar()`, `geom_mypaint_col()` to modify the brush and hand
+used for individual plot elements. By default these will use "normal"
+drawing. 
+
+Here's the same picture as above but with a clean background and straight
+grid lines:
+
+
+```{r, mypaint=TRUE, fig.keep="none"}
+
+set_hand(hand())
+set_brush("experimental/bubble")
+
+ggplot(diamonds) + 
+  geom_bar(aes(cut, fill = cut)) + 
+   theme_minimal() +
+   theme(
+     # fill=NULL and hand=NULL by default, i.e. no special effects
+     plot.background = element_mypaint_rect(fill = "white"),
+     # the same
+     panel.grid = element_mypaint_line()
+   )
+```
+
+Or you can go the other way and only set `hand` and `brush` inside `geom_mypaint_bar()`:
+
+```{r, mypaint=TRUE, fig.keep="none"}
+
+
+ggplot(diamonds) + 
+  geom_mypaint_bar(aes(cut, fill = cut, colour = cut), 
+                   brush = "deevad/ballpen",
+                   fill_pattern = zigzag(density = 12),
+                   hand = hand(multi_stroke = 2)) + 
+   theme_minimal() 
+```
+
+
+# Using mypaintr in knitr
+
+Knitr replays graphics on its own device. To make this work while dynamically updating the device within chunks, you must install a special hook:
+
+```r
+knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+```
+
+Then in chunks where you use `mypaint_device`, you need to set chunk options
+`mypaint=TRUE, fig.keep="none"`. 
+
+Don't set `dev` explicitly: the hook will do it for you.
