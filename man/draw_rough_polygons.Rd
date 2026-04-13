@@ -34,7 +34,7 @@ draw_rough_polygons(
 Draws on the current device and returns `NULL` invisibly.
 }
 \description{
-Convenience alias for [draw_rough_polygon()].
+Draw rough polygons
 }
 \examples{
 plot(1:10, 1:10, type = "n")

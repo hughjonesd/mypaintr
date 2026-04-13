@@ -217,13 +217,17 @@ roughen_vertex_path <- function(x, y, hand_spec, closed = FALSE) {
   list(x = out_x, y = out_y)
 }
 
-draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE) {
+draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, base_path = NULL) {
   args <- list(...)
   strokes <- max(1L, as.integer(hand_spec$multi_stroke))
   for (i in seq_len(strokes)) {
     lwd <- args$lwd %||% graphics::par("lwd")
     jittered_lwd <- max(0.01, lwd * (1 + stats::rnorm(1, sd = hand_spec$width_jitter)))
-    path_i <- roughen_vertex_path(path$x, path$y, hand_spec, closed = closed)
+    path_i <- if (i == 1L && !is.null(base_path)) {
+      base_path
+    } else {
+      roughen_vertex_path(path$x, path$y, hand_spec, closed = closed)
+    }
     args_i <- args
     args_i$x <- path_i$x
     args_i$y <- path_i$y
@@ -663,29 +667,40 @@ hand <- function(seed = NULL,
   )
 }
 
-#' Draw a rough single segment
+#' Compute a rough polygon outline
 #'
-#' @param x0,y0 Segment start.
-#' @param x1,y1 Segment end.
+#' @param x,y Polygon coordinates.
 #' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
+#' @return A list with `x` and `y` components containing a roughened closed
+#'   outline suitable for plotting with [graphics::lines()].
 #' @examples
-#' plot(1:10, 1:10, type = "n")
-#' draw_rough_line(1, 1, 10, 9)
+#' rough_polygon(c(2, 5, 8, 3), c(2, 7, 5, 1))
 #' @export
-draw_rough_line <- function(x0, y0, x1, y1, hand = NULL, ...) {
+rough_polygon <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
+  xy <- grDevices::xy.coords(x, y)
 
-  invisible(with_hand_seed(hand_spec$seed, {
-    draw_path_strokes(
-      list(x = c(x0, x1), y = c(y0, y1)),
-      hand_spec,
-      graphics::lines,
-      ...
-    )
-    NULL
-  }))
+  with_hand_seed(hand_spec$seed, {
+    roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
+  })
+}
+
+#' Compute a rough rectangle outline
+#'
+#' @param x0,y0 Rectangle corner.
+#' @param x1,y1 Opposite rectangle corner.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @return A list with `x` and `y` components containing a roughened closed
+#'   outline suitable for plotting with [graphics::lines()].
+#' @examples
+#' rough_rect(2, 2, 5, 6)
+#' @export
+rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
+  rough_polygon(
+    c(x0, x1, x1, x0),
+    c(y0, y0, y1, y1),
+    hand = hand
+  )
 }
 
 #' Draw rough connected lines
@@ -752,7 +767,7 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   }))
 }
 
-#' Draw a rough polygon
+#' Draw rough polygons
 #'
 #' @param x,y Polygon coordinates.
 #' @param hand Hand-drawn geometry settings created with [hand()].
@@ -764,18 +779,19 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_polygon(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
+#' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
 #' @export
-draw_rough_polygon <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
-                               density = NULL, angle = 45, ...) {
+draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
+                                density = NULL, angle = 45, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
 
   invisible(with_hand_seed(hand_spec$seed, {
+    rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
     if (is_visible_col(col)) {
       draw_rough_hachure_fill(
-        xy$x,
-        xy$y,
+        rough_outline$x,
+        rough_outline$y,
         hand_spec,
         col = col,
         angle = angle,
@@ -789,36 +805,13 @@ draw_rough_polygon <- function(x, y = NULL, hand = NULL, col = NA, border = grap
         hand_spec,
         graphics::lines,
         col = border,
+        base_path = rough_outline,
         closed = TRUE,
         ...
       )
     }
     NULL
   }))
-}
-
-#' Draw rough polygons
-#'
-#' Convenience alias for [draw_rough_polygon()].
-#'
-#' @inheritParams draw_rough_polygon
-#' @return Draws on the current device and returns `NULL` invisibly.
-#' @examples
-#' plot(1:10, 1:10, type = "n")
-#' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
-#' @export
-draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
-                                density = NULL, angle = 45, ...) {
-  draw_rough_polygon(
-    x = x,
-    y = y,
-    hand = hand,
-    col = col,
-    border = border,
-    density = density,
-    angle = angle,
-    ...
-  )
 }
 
 #' Draw a rough rectangle
@@ -840,7 +833,7 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
                             density = NULL, angle = 45, ...) {
   x <- c(x0, x1, x1, x0)
   y <- c(y0, y0, y1, y1)
-  draw_rough_polygon(x, y, hand = hand, col = col, border = border, density = density, angle = angle, ...)
+  draw_rough_polygons(x, y, hand = hand, col = col, border = border, density = density, angle = angle, ...)
 }
 
 #' Draw rough points
