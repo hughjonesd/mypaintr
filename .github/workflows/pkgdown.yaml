@@ -25,7 +25,7 @@ jobs:
 
       - name: Install extra dependencies
         run: |
-          apt-get install -y --no-install-recommends libmypaint libmypaint-dev mypaint-brushes
+          apt-get install -y --no-install-recommends libmypaint-1.5-1 libmypaint-dev mypaint-brushes
 
       - name: Install R dependencies
         run: |
