@@ -496,16 +496,40 @@ static void init_surface(MypaintrDevice *dev) {
 
 static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd) {
   int i;
+  double start_dx;
+  double start_dy;
+  double start_len;
+  double preroll;
+  double start_x;
+  double start_y;
+  double radius;
 
   if (n < 2 || R_ALPHA(col) == 0) {
     return;
   }
 
   brush_apply_gc(brush, col, lwd);
+  start_dx = x[1] - x[0];
+  start_dy = y[1] - y[0];
+  start_len = sqrt(start_dx * start_dx + start_dy * start_dy);
+  radius = exp(mypaint_brush_get_base_value(brush->brush, MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC));
+  preroll = fmax(4.0, 6.0 * radius);
+  if (start_len > 1e-9) {
+    start_x = x[0] - preroll * start_dx / start_len;
+    start_y = y[0] - preroll * start_dy / start_len;
+  } else {
+    start_x = x[0];
+    start_y = y[0];
+  }
+
   mypaint_brush_reset(brush->brush);
   mypaint_brush_new_stroke(brush->brush);
   mypaint_surface_begin_atomic(&dev->surface);
-  mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, 0.0f, 0.0f, 0.01);
+  mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) start_x, (float) start_y, 0.0f, 0.0f, 0.0f, 0.01);
+  if (start_len > 1e-9) {
+    double dt0 = fmax(preroll / 240.0, 0.001);
+    mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, 0.0f, 0.0f, dt0);
+  }
   mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[0], (float) y[0], 1.0f, 0.0f, 0.0f, 0.001);
 
   for (i = 1; i < n; ++i) {

@@ -97,6 +97,199 @@ read_mypaint_brush <- function(path) {
   paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
 }
 
+`%||%` <- function(x, y) if (is.null(x)) y else x
+
+with_hand_seed <- function(seed, expr) {
+  if (is.null(seed)) {
+    return(force(expr))
+  }
+
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    has_seed <- TRUE
+  } else {
+    has_seed <- FALSE
+  }
+
+  on.exit({
+    if (has_seed) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  set.seed(seed)
+  force(expr)
+}
+
+as_hand <- function(x = NULL) {
+  if (is.null(x)) {
+    return(hand())
+  }
+  if (!inherits(x, "mypaintr_hand")) {
+    stop("hand must be created with hand()", call. = FALSE)
+  }
+  x
+}
+
+is_visible_col <- function(col) {
+  !is.null(col) && !all(is.na(col)) && grDevices::col2rgb(col, alpha = TRUE)[4, 1] > 0
+}
+
+rotate_xy <- function(x, y, angle_deg) {
+  theta <- angle_deg * pi / 180
+  cth <- cos(theta)
+  sth <- sin(theta)
+  list(
+    x = cth * x - sth * y,
+    y = sth * x + cth * y
+  )
+}
+
+rough_control_offsets <- function(t, amplitude) {
+  ctrl_x <- c(0, 0.33, 0.66, 1)
+  ctrl_y <- c(0, stats::rnorm(2, sd = amplitude), 0)
+  stats::approx(ctrl_x, ctrl_y, xout = t, rule = 2)$y
+}
+
+rough_segment_path <- function(x0, y0, x1, y1, hand_spec) {
+  dx <- x1 - x0
+  dy <- y1 - y0
+  len <- sqrt(dx * dx + dy * dy)
+  if (!is.finite(len) || len <= 0) {
+    return(list(x = c(x0), y = c(y0)))
+  }
+
+  ux <- dx / len
+  uy <- dy / len
+  px <- -uy
+  py <- ux
+  endpoint_sd <- hand_spec$endpoint_jitter * len
+  bow_amp <- stats::rnorm(1, sd = hand_spec$bow * len)
+  wobble_amp <- hand_spec$wobble * len
+  n <- max(6L, ceiling(len * 12))
+  t <- seq(0, 1, length.out = n)
+
+  start_para <- stats::rnorm(1, sd = endpoint_sd)
+  end_para <- stats::rnorm(1, sd = endpoint_sd)
+  start_perp <- stats::rnorm(1, sd = endpoint_sd)
+  end_perp <- stats::rnorm(1, sd = endpoint_sd)
+
+  sx <- x0 + ux * start_para + px * start_perp
+  sy <- y0 + uy * start_para + py * start_perp
+  ex <- x1 + ux * end_para + px * end_perp
+  ey <- y1 + uy * end_para + py * end_perp
+
+  base_x <- sx + (ex - sx) * t
+  base_y <- sy + (ey - sy) * t
+  bow <- bow_amp * sin(pi * t)
+  wobble <- rough_control_offsets(t, wobble_amp) * sin(pi * t)
+  offset <- bow + wobble
+
+  list(
+    x = base_x + px * offset,
+    y = base_y + py * offset
+  )
+}
+
+roughen_vertex_path <- function(x, y, hand_spec, closed = FALSE) {
+  n <- length(x)
+  if (n < 2) {
+    return(list(x = x, y = y))
+  }
+
+  seg_n <- if (closed) n else n - 1L
+  out_x <- numeric()
+  out_y <- numeric()
+
+  for (i in seq_len(seg_n)) {
+    j <- if (i == n) 1L else i + 1L
+    seg <- rough_segment_path(x[i], y[i], x[j], y[j], hand_spec)
+    if (length(out_x)) {
+      seg$x <- seg$x[-1L]
+      seg$y <- seg$y[-1L]
+    }
+    out_x <- c(out_x, seg$x)
+    out_y <- c(out_y, seg$y)
+  }
+
+  list(x = out_x, y = out_y)
+}
+
+draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE) {
+  args <- list(...)
+  strokes <- max(1L, as.integer(hand_spec$multi_stroke))
+  for (i in seq_len(strokes)) {
+    lwd <- args$lwd %||% graphics::par("lwd")
+    jittered_lwd <- max(0.01, lwd * (1 + stats::rnorm(1, sd = hand_spec$width_jitter)))
+    path_i <- roughen_vertex_path(path$x, path$y, hand_spec, closed = closed)
+    args_i <- args
+    args_i$x <- path_i$x
+    args_i$y <- path_i$y
+    args_i$lwd <- jittered_lwd
+    do.call(draw_fun, args_i)
+  }
+}
+
+polygon_intersections <- function(x, y, yy) {
+  n <- length(x)
+  cuts <- numeric()
+  for (i in seq_len(n)) {
+    j <- if (i == n) 1L else i + 1L
+    y0 <- y[i]
+    y1 <- y[j]
+    if (y0 == y1) {
+      next
+    }
+    if (yy >= min(y0, y1) && yy < max(y0, y1)) {
+      x0 <- x[i]
+      x1 <- x[j]
+      cuts <- c(cuts, x0 + (yy - y0) * (x1 - x0) / (y1 - y0))
+    }
+  }
+  sort(cuts)
+}
+
+draw_rough_hachure_fill <- function(x, y, hand_spec, col, angle = 45, density = NULL, xpd = NULL, ...) {
+  rot <- rotate_xy(x, y, -angle)
+  xr <- rot$x
+  yr <- rot$y
+  span <- diff(range(yr))
+  gap <- hand_spec$hachure_gap %||% if (is.null(density)) span / 25 else span / max(1, density)
+  gap <- max(gap, .Machine$double.eps)
+
+  draw_pass <- function(base_angle) {
+    hand_fill <- hand_spec
+    hand_fill$seed <- NULL
+    rot_pass <- rotate_xy(x, y, -base_angle)
+    xr_pass <- rot_pass$x
+    yr_pass <- rot_pass$y
+    yy <- min(yr_pass)
+    while (yy <= max(yr_pass)) {
+      cuts <- polygon_intersections(xr_pass, yr_pass, yy)
+      if (length(cuts) >= 2L) {
+        for (i in seq(1L, length(cuts) - 1L, by = 2L)) {
+          seg <- rotate_xy(c(cuts[i], cuts[i + 1L]), c(yy, yy), base_angle)
+          draw_rough_segments(
+            seg$x[1], seg$y[1], seg$x[2], seg$y[2],
+            hand = hand_fill,
+            col = col,
+            xpd = xpd,
+            ...
+          )
+        }
+      }
+      yy <- yy + gap * (1 + stats::rnorm(1, sd = hand_spec$hachure_gap_jitter))
+    }
+  }
+
+  draw_pass(angle + stats::rnorm(1, sd = hand_spec$hachure_angle_jitter))
+  if (identical(hand_spec$hachure_method, "cross")) {
+    draw_pass(angle + 90 + stats::rnorm(1, sd = hand_spec$hachure_angle_jitter))
+  }
+}
+
 normalize_settings <- function(settings) {
   if (is.null(settings)) {
     return(setNames(numeric(), character()))
@@ -312,6 +505,266 @@ mypaint_style <- function(brush = NULL,
     normalize_render_style(fill_style),
     if (is.null(auto_solid_bg)) NULL else isTRUE(auto_solid_bg)
   ))
+}
+
+#' Hand-drawn geometry settings
+#'
+#' @param seed Optional random seed used for repeatable geometry.
+#' @param bow Typical bowing of long strokes as a proportion of segment length.
+#' @param wobble Low-frequency path wobble as a proportion of segment length.
+#' @param multi_stroke Number of overdrawn strokes to use.
+#' @param width_jitter Relative variation in line width between overdrawn
+#'   strokes.
+#' @param endpoint_jitter Relative endpoint jitter as a proportion of segment
+#'   length.
+#' @param hachure_gap Optional gap between hatch lines. When `NULL`, a default
+#'   based on polygon size is used.
+#' @param hachure_angle Base hatch angle in degrees.
+#' @param hachure_angle_jitter Random angle variation for hatch passes.
+#' @param hachure_gap_jitter Relative jitter in hatch spacing.
+#' @param hachure_method Either `"parallel"` or `"cross"`.
+#' @return An object describing how rough geometry should be generated.
+#' @examples
+#' hand()
+#' hand(seed = 1, bow = 0.02, wobble = 0.01)
+#' @export
+hand <- function(seed = NULL,
+                 bow = 0.015,
+                 wobble = 0.006,
+                 multi_stroke = 2L,
+                 width_jitter = 0.08,
+                 endpoint_jitter = 0.01,
+                 hachure_gap = NULL,
+                 hachure_angle = 45,
+                 hachure_angle_jitter = 12,
+                 hachure_gap_jitter = 0.15,
+                 hachure_method = c("parallel", "cross")) {
+  hachure_method <- match.arg(hachure_method)
+
+  structure(
+    list(
+      seed = seed,
+      bow = bow,
+      wobble = wobble,
+      multi_stroke = as.integer(multi_stroke),
+      width_jitter = width_jitter,
+      endpoint_jitter = endpoint_jitter,
+      hachure_gap = hachure_gap,
+      hachure_angle = hachure_angle,
+      hachure_angle_jitter = hachure_angle_jitter,
+      hachure_gap_jitter = hachure_gap_jitter,
+      hachure_method = hachure_method
+    ),
+    class = "mypaintr_hand"
+  )
+}
+
+#' Draw a rough single segment
+#'
+#' @param x0,y0 Segment start.
+#' @param x1,y1 Segment end.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_line(1, 1, 10, 9)
+#' @export
+draw_rough_line <- function(x0, y0, x1, y1, hand = hand(), ...) {
+  hand_spec <- as_hand(hand)
+
+  invisible(with_hand_seed(hand_spec$seed, {
+    draw_path_strokes(
+      list(x = c(x0, x1), y = c(y0, y1)),
+      hand_spec,
+      graphics::lines,
+      ...
+    )
+    NULL
+  }))
+}
+
+#' Draw rough connected lines
+#'
+#' @param x,y Coordinates as for [graphics::lines()].
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, cumsum(rnorm(10)), type = "n")
+#' draw_rough_lines(1:10, cumsum(rnorm(10)))
+#' @export
+draw_rough_lines <- function(x, y = NULL, hand = hand(), ...) {
+  hand_spec <- as_hand(hand)
+  xy <- grDevices::xy.coords(x, y)
+  ok <- stats::complete.cases(xy$x, xy$y)
+  groups <- cumsum(!ok)
+
+  invisible(with_hand_seed(hand_spec$seed, {
+    for (g in unique(groups[ok])) {
+      keep <- ok & groups == g
+      if (sum(keep) >= 2L) {
+        draw_path_strokes(
+          list(x = xy$x[keep], y = xy$y[keep]),
+          hand_spec,
+          graphics::lines,
+          ...
+        )
+      }
+    }
+    NULL
+  }))
+}
+
+#' Draw rough segments
+#'
+#' @param x0,y0 Segment starts.
+#' @param x1,y1 Segment ends.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_segments(1:3, 1:3, 2:4, 3:1)
+#' @export
+draw_rough_segments <- function(x0, y0, x1, y1, hand = hand(), ...) {
+  hand_spec <- as_hand(hand)
+  n <- max(length(x0), length(y0), length(x1), length(y1))
+  x0 <- rep_len(x0, n)
+  y0 <- rep_len(y0, n)
+  x1 <- rep_len(x1, n)
+  y1 <- rep_len(y1, n)
+
+  invisible(with_hand_seed(hand_spec$seed, {
+    for (i in seq_len(n)) {
+      draw_path_strokes(
+        list(x = c(x0[i], x1[i]), y = c(y0[i], y1[i])),
+        hand_spec,
+        graphics::lines,
+        ...
+      )
+    }
+    NULL
+  }))
+}
+
+#' Draw a rough polygon
+#'
+#' @param x,y Polygon coordinates.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param col Fill colour. When visible, a hachure fill is drawn.
+#' @param border Border colour.
+#' @param density Hatch density. When `NULL`, a default density is used.
+#' @param angle Hatch angle in degrees.
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_polygon(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
+#' @export
+draw_rough_polygon <- function(x, y = NULL, hand = hand(), col = NA, border = graphics::par("fg"),
+                               density = NULL, angle = 45, ...) {
+  hand_spec <- as_hand(hand)
+  xy <- grDevices::xy.coords(x, y)
+
+  invisible(with_hand_seed(hand_spec$seed, {
+    if (is_visible_col(col)) {
+      draw_rough_hachure_fill(
+        xy$x,
+        xy$y,
+        hand_spec,
+        col = col,
+        angle = angle,
+        density = density,
+        ...
+      )
+    }
+    if (is_visible_col(border)) {
+      draw_path_strokes(
+        list(x = xy$x, y = xy$y),
+        hand_spec,
+        graphics::lines,
+        col = border,
+        closed = TRUE,
+        ...
+      )
+    }
+    NULL
+  }))
+}
+
+#' Draw rough polygons
+#'
+#' Convenience alias for [draw_rough_polygon()].
+#'
+#' @inheritParams draw_rough_polygon
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
+#' @export
+draw_rough_polygons <- function(x, y = NULL, hand = hand(), col = NA, border = graphics::par("fg"),
+                                density = NULL, angle = 45, ...) {
+  draw_rough_polygon(
+    x = x,
+    y = y,
+    hand = hand,
+    col = col,
+    border = border,
+    density = density,
+    angle = angle,
+    ...
+  )
+}
+
+#' Draw a rough rectangle
+#'
+#' @param x0,y0 Rectangle corner.
+#' @param x1,y1 Opposite rectangle corner.
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param col Fill colour. When visible, a hachure fill is drawn.
+#' @param border Border colour.
+#' @param density Hatch density. When `NULL`, a default density is used.
+#' @param angle Hatch angle in degrees.
+#' @param ... Graphics parameters passed to [graphics::lines()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_rect(2, 2, 5, 6, col = "grey80")
+#' @export
+draw_rough_rect <- function(x0, y0, x1, y1, hand = hand(), col = NA, border = graphics::par("fg"),
+                            density = NULL, angle = 45, ...) {
+  x <- c(x0, x1, x1, x0)
+  y <- c(y0, y0, y1, y1)
+  draw_rough_polygon(x, y, hand = hand, col = col, border = border, density = density, angle = angle, ...)
+}
+
+#' Draw rough points
+#'
+#' @param x,y Point coordinates as for [graphics::points()].
+#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @param ... Graphics parameters passed to [graphics::points()].
+#' @return Draws on the current device and returns `NULL` invisibly.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' draw_rough_points(1:10, 1:10, pch = 16)
+#' @export
+draw_rough_points <- function(x, y = NULL, hand = hand(), ...) {
+  hand_spec <- as_hand(hand)
+  xy <- grDevices::xy.coords(x, y)
+  usr <- graphics::par("usr")
+  scale <- 0.01 * sqrt((usr[2] - usr[1]) * (usr[4] - usr[3]))
+
+  invisible(with_hand_seed(hand_spec$seed, {
+    for (i in seq_len(max(1L, hand_spec$multi_stroke))) {
+      graphics::points(
+        xy$x + stats::rnorm(length(xy$x), sd = hand_spec$endpoint_jitter * scale),
+        xy$y + stats::rnorm(length(xy$y), sd = hand_spec$endpoint_jitter * scale),
+        ...
+      )
+    }
+    NULL
+  }))
 }
 
 #' Built-in brush presets
