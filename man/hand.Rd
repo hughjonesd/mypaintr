@@ -8,7 +8,7 @@ hand(
   seed = NULL,
   bow = 0.015,
   wobble = 0.006,
-  multi_stroke = 2L,
+  multi_stroke = 1L,
   width_jitter = 0.08,
   endpoint_jitter = 0.01,
   hachure_gap = NULL,

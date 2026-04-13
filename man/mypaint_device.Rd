@@ -13,10 +13,13 @@ mypaint_device(
   bg = "white",
   brush = "ink",
   brush_settings = NULL,
-  stroke_style = c("brush", "solid"),
-  fill_style = c("solid", "brush"),
-  fill_brush = brush,
+  stroke_style = NULL,
+  fill_style = NULL,
+  fill_brush = NULL,
   fill_settings = NULL,
+  hand = NULL,
+  stroke_hand = NULL,
+  fill_hand = NULL,
   auto_solid_bg = TRUE
 )
 }
@@ -32,17 +35,30 @@ mypaint_device(
 \item{bg}{Background colour.}
 
 \item{brush}{Stroke brush preset, installed mypaint brush name,
-`.myb` file path, JSON brush string, or named settings.}
+`.myb` file path, JSON brush string, named settings, or `NULL` for solid
+strokes.}
 
 \item{brush_settings}{Named settings overriding `brush`.}
 
-\item{stroke_style}{Either `"brush"` or `"solid"`.}
+\item{stroke_style}{Legacy override for whether stroke drawing uses the brush
+backend or solid Cairo rendering. When `NULL`, this is inferred from
+whether `brush` is `NULL`.}
 
-\item{fill_style}{Either `"solid"` or `"brush"`.}
+\item{fill_style}{Legacy override for whether fill drawing uses the brush
+backend or solid Cairo rendering. When `NULL`, this is inferred from
+whether `fill_brush` is `NULL`.}
 
-\item{fill_brush}{Optional fill brush spec. Defaults to `brush`.}
+\item{fill_brush}{Optional fill brush spec. Defaults to `brush` when not
+supplied. Use explicit `NULL` for solid fills.}
 
 \item{fill_settings}{Named settings overriding `fill_brush`.}
+
+\item{hand}{Optional hand-drawn geometry spec applied to both stroke and
+fill primitives by default.}
+
+\item{stroke_hand}{Optional hand-drawn geometry spec for strokes.}
+
+\item{fill_hand}{Optional hand-drawn geometry spec for fills.}
 
 \item{auto_solid_bg}{Draw large fills that match the device background using
 normal Cairo rendering even when `fill_style = "brush"`.}
@@ -95,9 +111,9 @@ dev.off()
 unlink(Sys.glob(sub("\%d", "*", out, fixed = TRUE)))
 
 out <- tempfile("mypaint-mixed-", fileext = "-\%d.png")
-mypaint_device(out, width = 4, height = 3, stroke_style = "solid")
+mypaint_device(out, width = 4, height = 3, brush = NULL)
 plot(1:5, 1:5, type = "n", main = "Mixed Styles")
-mypaint_style(stroke_style = "brush", brush = "pencil")
+set_brush("pencil", type = "stroke")
 lines(1:5, c(1, 3, 2, 5, 4), lwd = 3)
 dev.off()
 unlink(Sys.glob(sub("\%d", "*", out, fixed = TRUE)))

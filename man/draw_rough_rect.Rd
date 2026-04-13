@@ -9,7 +9,7 @@ draw_rough_rect(
   y0,
   x1,
   y1,
-  hand = hand(),
+  hand = NULL,
   col = NA,
   border = graphics::par("fg"),
   density = NULL,

@@ -4,7 +4,7 @@
 \alias{draw_rough_line}
 \title{Draw a rough single segment}
 \usage{
-draw_rough_line(x0, y0, x1, y1, hand = hand(), ...)
+draw_rough_line(x0, y0, x1, y1, hand = NULL, ...)
 }
 \arguments{
 \item{x0, y0}{Segment start.}

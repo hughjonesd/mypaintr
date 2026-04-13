@@ -7,7 +7,7 @@
 draw_rough_polygon(
   x,
   y = NULL,
-  hand = hand(),
+  hand = NULL,
   col = NA,
   border = graphics::par("fg"),
   density = NULL,

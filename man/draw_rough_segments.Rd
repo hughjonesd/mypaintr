@@ -4,7 +4,7 @@
 \alias{draw_rough_segments}
 \title{Draw rough segments}
 \usage{
-draw_rough_segments(x0, y0, x1, y1, hand = hand(), ...)
+draw_rough_segments(x0, y0, x1, y1, hand = NULL, ...)
 }
 \arguments{
 \item{x0, y0}{Segment starts.}

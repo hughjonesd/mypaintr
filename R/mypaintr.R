@@ -347,6 +347,13 @@ normalize_render_style <- function(style) {
   match(style, c("solid", "brush")) - 1L
 }
 
+normalize_hand_spec <- function(x) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  as_hand(x)
+}
+
 rgba_int <- function(col) {
   rgba <- grDevices::col2rgb(col, alpha = TRUE)
   as.integer(rgba[, 1L])
@@ -360,12 +367,22 @@ rgba_int <- function(col) {
 #' @param pointsize Base pointsize.
 #' @param bg Background colour.
 #' @param brush Stroke brush preset, installed mypaint brush name,
-#'   `.myb` file path, JSON brush string, or named settings.
+#'   `.myb` file path, JSON brush string, named settings, or `NULL` for solid
+#'   strokes.
 #' @param brush_settings Named settings overriding `brush`.
-#' @param stroke_style Either `"brush"` or `"solid"`.
-#' @param fill_style Either `"solid"` or `"brush"`.
-#' @param fill_brush Optional fill brush spec. Defaults to `brush`.
+#' @param stroke_style Legacy override for whether stroke drawing uses the brush
+#'   backend or solid Cairo rendering. When `NULL`, this is inferred from
+#'   whether `brush` is `NULL`.
+#' @param fill_style Legacy override for whether fill drawing uses the brush
+#'   backend or solid Cairo rendering. When `NULL`, this is inferred from
+#'   whether `fill_brush` is `NULL`.
+#' @param fill_brush Optional fill brush spec. Defaults to `brush` when not
+#'   supplied. Use explicit `NULL` for solid fills.
 #' @param fill_settings Named settings overriding `fill_brush`.
+#' @param hand Optional hand-drawn geometry spec applied to both stroke and
+#'   fill primitives by default.
+#' @param stroke_hand Optional hand-drawn geometry spec for strokes.
+#' @param fill_hand Optional hand-drawn geometry spec for fills.
 #' @param auto_solid_bg Draw large fills that match the device background using
 #'   normal Cairo rendering even when `fill_style = "brush"`.
 #' @return Opens a graphics device and returns `NULL` invisibly.
@@ -411,9 +428,9 @@ rgba_int <- function(col) {
 #' unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 #'
 #' out <- tempfile("mypaint-mixed-", fileext = "-%d.png")
-#' mypaint_device(out, width = 4, height = 3, stroke_style = "solid")
+#' mypaint_device(out, width = 4, height = 3, brush = NULL)
 #' plot(1:5, 1:5, type = "n", main = "Mixed Styles")
-#' mypaint_style(stroke_style = "brush", brush = "pencil")
+#' set_brush("pencil", type = "stroke")
 #' lines(1:5, c(1, 3, 2, 5, 4), lwd = 3)
 #' dev.off()
 #' unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
@@ -426,10 +443,13 @@ mypaint_device <- function(file,
                            bg = "white",
                            brush = "ink",
                            brush_settings = NULL,
-                           stroke_style = c("brush", "solid"),
-                           fill_style = c("solid", "brush"),
-                           fill_brush = brush,
+                           stroke_style = NULL,
+                           fill_style = NULL,
+                           fill_brush = NULL,
                            fill_settings = NULL,
+                           hand = NULL,
+                           stroke_hand = NULL,
+                           fill_hand = NULL,
                            auto_solid_bg = TRUE) {
   stopifnot(
     is.character(file), length(file) == 1L,
@@ -439,10 +459,34 @@ mypaint_device <- function(file,
     is.numeric(pointsize), length(pointsize) == 1L, pointsize > 0
   )
 
-  stroke_style <- match.arg(stroke_style)
-  fill_style <- match.arg(fill_style)
-  stroke_spec <- normalize_brush_spec(brush, brush_settings)
-  fill_spec <- normalize_brush_spec(fill_brush, fill_settings)
+  if (is.null(brush) && !is.null(brush_settings)) {
+    stop("brush_settings requires brush", call. = FALSE)
+  }
+  if (missing(fill_brush)) {
+    fill_brush <- brush
+  }
+  if (is.null(fill_brush) && !is.null(fill_settings)) {
+    stop("fill_settings requires fill_brush", call. = FALSE)
+  }
+  if (missing(stroke_hand)) {
+    stroke_hand <- hand
+  }
+  if (missing(fill_hand)) {
+    fill_hand <- hand
+  }
+
+  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
+  fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
+  stroke_style <- if (is.null(stroke_style)) {
+    if (is.null(brush)) 0L else 1L
+  } else {
+    normalize_render_style(stroke_style)
+  }
+  fill_style <- if (is.null(fill_style)) {
+    if (is.null(fill_brush)) 0L else 1L
+  } else {
+    normalize_render_style(fill_style)
+  }
 
   invisible(.Call(
     mypaintr_device_open,
@@ -454,9 +498,69 @@ mypaint_device <- function(file,
     rgba_int(bg),
     stroke_spec,
     fill_spec,
-    match(stroke_style, c("solid", "brush")) - 1L,
-    match(fill_style, c("solid", "brush")) - 1L,
-    isTRUE(auto_solid_bg)
+    stroke_style,
+    fill_style,
+    isTRUE(auto_solid_bg),
+    normalize_hand_spec(stroke_hand),
+    normalize_hand_spec(fill_hand)
+  ))
+}
+
+#' Set the active mypaintr brush
+#'
+#' @param brush Brush preset, installed brush name, JSON brush string, named
+#'   settings, or `NULL` to switch the selected type back to solid rendering.
+#' @param settings Named settings overriding `brush`.
+#' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
+#'   `"fill"`.
+#' @param auto_solid_bg Optional override for background-like fills.
+#' @return `NULL`, invisibly.
+#' @export
+set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
+  type <- match.arg(type)
+  if (is.null(brush) && !is.null(settings)) {
+    stop("settings requires brush", call. = FALSE)
+  }
+
+  spec <- if (is.null(brush) && is.null(settings)) NULL else normalize_brush_spec(brush, settings)
+  stroke_spec <- fill_spec <- NULL
+  stroke_style <- fill_style <- NULL
+
+  if (type %in% c("both", "stroke")) {
+    stroke_spec <- spec
+    stroke_style <- !is.null(spec)
+  }
+  if (type %in% c("both", "fill")) {
+    fill_spec <- spec
+    fill_style <- !is.null(spec)
+  }
+
+  invisible(.Call(
+    mypaintr_device_set_brush,
+    stroke_spec,
+    fill_spec,
+    if (is.null(stroke_style)) NULL else as.integer(stroke_style),
+    if (is.null(fill_style)) NULL else as.integer(fill_style),
+    if (is.null(auto_solid_bg)) NULL else isTRUE(auto_solid_bg)
+  ))
+}
+
+#' Set the active mypaintr hand-drawn geometry
+#'
+#' @param hand Hand-drawn geometry created with [hand()], or `NULL` to disable
+#'   it for the selected type.
+#' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
+#'   `"fill"`.
+#' @return `NULL`, invisibly.
+#' @export
+set_hand <- function(hand = NULL, type = c("both", "stroke", "fill")) {
+  type <- match.arg(type)
+  invisible(.Call(
+    mypaintr_device_set_hand,
+    if (type %in% c("both", "stroke")) normalize_hand_spec(hand) else NULL,
+    if (type %in% c("both", "fill")) normalize_hand_spec(hand) else NULL,
+    type %in% c("both", "stroke"),
+    type %in% c("both", "fill")
   ))
 }
 
@@ -531,7 +635,7 @@ mypaint_style <- function(brush = NULL,
 hand <- function(seed = NULL,
                  bow = 0.015,
                  wobble = 0.006,
-                 multi_stroke = 2L,
+                 multi_stroke = 1L,
                  width_jitter = 0.08,
                  endpoint_jitter = 0.01,
                  hachure_gap = NULL,
@@ -570,7 +674,7 @@ hand <- function(seed = NULL,
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_line(1, 1, 10, 9)
 #' @export
-draw_rough_line <- function(x0, y0, x1, y1, hand = hand(), ...) {
+draw_rough_line <- function(x0, y0, x1, y1, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
 
   invisible(with_hand_seed(hand_spec$seed, {
@@ -594,7 +698,7 @@ draw_rough_line <- function(x0, y0, x1, y1, hand = hand(), ...) {
 #' plot(1:10, cumsum(rnorm(10)), type = "n")
 #' draw_rough_lines(1:10, cumsum(rnorm(10)))
 #' @export
-draw_rough_lines <- function(x, y = NULL, hand = hand(), ...) {
+draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
   ok <- stats::complete.cases(xy$x, xy$y)
@@ -627,7 +731,7 @@ draw_rough_lines <- function(x, y = NULL, hand = hand(), ...) {
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_segments(1:3, 1:3, 2:4, 3:1)
 #' @export
-draw_rough_segments <- function(x0, y0, x1, y1, hand = hand(), ...) {
+draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
   n <- max(length(x0), length(y0), length(x1), length(y1))
   x0 <- rep_len(x0, n)
@@ -662,7 +766,7 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = hand(), ...) {
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polygon(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
 #' @export
-draw_rough_polygon <- function(x, y = NULL, hand = hand(), col = NA, border = graphics::par("fg"),
+draw_rough_polygon <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
                                density = NULL, angle = 45, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
@@ -703,7 +807,7 @@ draw_rough_polygon <- function(x, y = NULL, hand = hand(), col = NA, border = gr
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
 #' @export
-draw_rough_polygons <- function(x, y = NULL, hand = hand(), col = NA, border = graphics::par("fg"),
+draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
                                 density = NULL, angle = 45, ...) {
   draw_rough_polygon(
     x = x,
@@ -732,7 +836,7 @@ draw_rough_polygons <- function(x, y = NULL, hand = hand(), col = NA, border = g
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_rect(2, 2, 5, 6, col = "grey80")
 #' @export
-draw_rough_rect <- function(x0, y0, x1, y1, hand = hand(), col = NA, border = graphics::par("fg"),
+draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = graphics::par("fg"),
                             density = NULL, angle = 45, ...) {
   x <- c(x0, x1, x1, x0)
   y <- c(y0, y0, y1, y1)
@@ -749,7 +853,7 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = hand(), col = NA, border = gr
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_points(1:10, 1:10, pch = 16)
 #' @export
-draw_rough_points <- function(x, y = NULL, hand = hand(), ...) {
+draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
   usr <- graphics::par("usr")

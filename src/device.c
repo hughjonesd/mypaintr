@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <time.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -39,6 +41,27 @@ typedef struct {
 } HatchIntersection;
 
 typedef struct {
+  int enabled;
+  uint64_t rng_state;
+  double bow;
+  double wobble;
+  int multi_stroke;
+  double width_jitter;
+  double endpoint_jitter;
+  double hachure_gap;
+  int has_hachure_gap;
+  double hachure_angle_jitter;
+  double hachure_gap_jitter;
+  int hachure_cross;
+} MypaintrHand;
+
+typedef struct {
+  double *x;
+  double *y;
+  int n;
+} PointBuffer;
+
+typedef struct {
   MyPaintSurface surface;
   unsigned int magic;
   cairo_surface_t *image_surface;
@@ -61,6 +84,8 @@ typedef struct {
   double clip_top;
   MypaintrBrush stroke;
   MypaintrBrush fill;
+  MypaintrHand stroke_hand;
+  MypaintrHand fill_hand;
 } MypaintrDevice;
 
 static void configure_brush(MyPaintBrush *brush, SEXP spec);
@@ -83,6 +108,63 @@ static inline int colors_close(int lhs, int rhs, int tol) {
          abs(R_GREEN(lhs) - R_GREEN(rhs)) <= tol &&
          abs(R_BLUE(lhs) - R_BLUE(rhs)) <= tol &&
          abs(R_ALPHA(lhs) - R_ALPHA(rhs)) <= tol;
+}
+
+static uint64_t mix64(uint64_t x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+static double hand_uniform(MypaintrHand *hand) {
+  hand->rng_state = mix64(hand->rng_state ? hand->rng_state : 1ULL);
+  return (double) (hand->rng_state >> 11) * (1.0 / 9007199254740992.0);
+}
+
+static double hand_normal(MypaintrHand *hand, double sd) {
+  double u1;
+  double u2;
+  double r;
+  double theta;
+
+  if (sd <= 0.0) {
+    return 0.0;
+  }
+
+  u1 = fmax(hand_uniform(hand), 1e-12);
+  u2 = hand_uniform(hand);
+  r = sqrt(-2.0 * log(u1));
+  theta = 2.0 * M_PI * u2;
+  return sd * r * cos(theta);
+}
+
+static double hand_offset(double t, double c1, double c2) {
+  if (t <= 0.33) {
+    return c1 * (t / 0.33);
+  }
+  if (t <= 0.66) {
+    return c1 + (c2 - c1) * ((t - 0.33) / 0.33);
+  }
+  return c2 * (1.0 - (t - 0.66) / 0.34);
+}
+
+static void point_buffer_free(PointBuffer *buf) {
+  free(buf->x);
+  free(buf->y);
+  buf->x = NULL;
+  buf->y = NULL;
+  buf->n = 0;
+}
+
+static void point_buffer_alloc(PointBuffer *buf, int n) {
+  buf->x = (double *) malloc((size_t) n * sizeof(double));
+  buf->y = (double *) malloc((size_t) n * sizeof(double));
+  buf->n = n;
+  if (!buf->x || !buf->y) {
+    point_buffer_free(buf);
+    error("failed to allocate rough path buffer");
+  }
 }
 
 static char *mypaintr_strdup(const char *src) {
@@ -155,6 +237,171 @@ static void set_cairo_source(cairo_t *cr, int col) {
     R_BLUE(col) / 255.0,
     R_ALPHA(col) / 255.0
   );
+}
+
+static void init_hand_defaults(MypaintrHand *hand, uint64_t salt) {
+  memset(hand, 0, sizeof(*hand));
+  hand->rng_state = mix64(salt ? salt : 1ULL);
+  hand->bow = 0.015;
+  hand->wobble = 0.006;
+  hand->multi_stroke = 1;
+  hand->width_jitter = 0.08;
+  hand->endpoint_jitter = 0.01;
+  hand->hachure_angle_jitter = 12.0;
+  hand->hachure_gap_jitter = 0.15;
+}
+
+static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
+  SEXP value;
+  init_hand_defaults(hand, salt);
+
+  if (spec == R_NilValue) {
+    return;
+  }
+  if (TYPEOF(spec) != VECSXP) {
+    error("hand spec must be a hand() object or NULL");
+  }
+
+  hand->enabled = 1;
+  value = list_element(spec, "seed");
+  if (value != R_NilValue && XLENGTH(value) == 1) {
+    hand->rng_state = mix64((uint64_t) llround(asReal(value)) ^ salt);
+  }
+  value = list_element(spec, "bow");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->bow = asReal(value);
+  value = list_element(spec, "wobble");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->wobble = asReal(value);
+  value = list_element(spec, "multi_stroke");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->multi_stroke = asInteger(value);
+  value = list_element(spec, "width_jitter");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->width_jitter = asReal(value);
+  value = list_element(spec, "endpoint_jitter");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->endpoint_jitter = asReal(value);
+  value = list_element(spec, "hachure_gap");
+  if (value != R_NilValue && XLENGTH(value) == 1) {
+    hand->has_hachure_gap = 1;
+    hand->hachure_gap = asReal(value);
+  }
+  value = list_element(spec, "hachure_angle_jitter");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->hachure_angle_jitter = asReal(value);
+  value = list_element(spec, "hachure_gap_jitter");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->hachure_gap_jitter = asReal(value);
+  value = list_element(spec, "hachure_method");
+  if (TYPEOF(value) == STRSXP && XLENGTH(value) == 1) {
+    hand->hachure_cross = strcmp(CHAR(STRING_ELT(value, 0)), "cross") == 0;
+  }
+
+  if (hand->multi_stroke < 1) {
+    hand->multi_stroke = 1;
+  }
+}
+
+static void rough_segment_path(double x0, double y0, double x1, double y1, MypaintrHand *hand, PointBuffer *buf) {
+  double dx = x1 - x0;
+  double dy = y1 - y0;
+  double len = sqrt(dx * dx + dy * dy);
+  double ux;
+  double uy;
+  double px;
+  double py;
+  double endpoint_sd;
+  double bow_amp;
+  double wobble_amp;
+  double start_para;
+  double end_para;
+  double start_perp;
+  double end_perp;
+  double sx;
+  double sy;
+  double ex;
+  double ey;
+  double ctrl1;
+  double ctrl2;
+  int i;
+  int n;
+
+  if (!isfinite(len) || len <= 0.0) {
+    point_buffer_alloc(buf, 1);
+    buf->x[0] = x0;
+    buf->y[0] = y0;
+    return;
+  }
+
+  ux = dx / len;
+  uy = dy / len;
+  px = -uy;
+  py = ux;
+  endpoint_sd = hand->endpoint_jitter * len;
+  bow_amp = hand_normal(hand, hand->bow * len);
+  wobble_amp = hand->wobble * len;
+  start_para = hand_normal(hand, endpoint_sd);
+  end_para = hand_normal(hand, endpoint_sd);
+  start_perp = hand_normal(hand, endpoint_sd);
+  end_perp = hand_normal(hand, endpoint_sd);
+  sx = x0 + ux * start_para + px * start_perp;
+  sy = y0 + uy * start_para + py * start_perp;
+  ex = x1 + ux * end_para + px * end_perp;
+  ey = y1 + uy * end_para + py * end_perp;
+  ctrl1 = hand_normal(hand, wobble_amp);
+  ctrl2 = hand_normal(hand, wobble_amp);
+  n = (int) fmax(6.0, ceil(len * 12.0));
+
+  point_buffer_alloc(buf, n);
+  for (i = 0; i < n; ++i) {
+    double t = n == 1 ? 0.0 : (double) i / (double) (n - 1);
+    double base_x = sx + (ex - sx) * t;
+    double base_y = sy + (ey - sy) * t;
+    double offset = bow_amp * sin(M_PI * t) + hand_offset(t, ctrl1, ctrl2) * sin(M_PI * t);
+    buf->x[i] = base_x + px * offset;
+    buf->y[i] = base_y + py * offset;
+  }
+}
+
+static void roughen_vertex_path(const double *x, const double *y, int n, MypaintrHand *hand, int closed, PointBuffer *out) {
+  int seg_n;
+  int total = 0;
+  int offset = 0;
+  int i;
+
+  if (n < 2) {
+    point_buffer_alloc(out, n > 0 ? n : 1);
+    if (n > 0) {
+      memcpy(out->x, x, (size_t) n * sizeof(double));
+      memcpy(out->y, y, (size_t) n * sizeof(double));
+      out->n = n;
+    } else {
+      out->x[0] = 0.0;
+      out->y[0] = 0.0;
+      out->n = 1;
+    }
+    return;
+  }
+
+  seg_n = closed ? n : (n - 1);
+  for (i = 0; i < seg_n; ++i) {
+    int j = (i + 1 == n) ? 0 : (i + 1);
+    double dx = x[j] - x[i];
+    double dy = y[j] - y[i];
+    double len = sqrt(dx * dx + dy * dy);
+    int seg_pts = (int) fmax(6.0, ceil(len * 12.0));
+    total += seg_pts - (i > 0 ? 1 : 0);
+  }
+
+  point_buffer_alloc(out, total);
+  for (i = 0; i < seg_n; ++i) {
+    int j = (i + 1 == n) ? 0 : (i + 1);
+    PointBuffer seg = {0};
+    int start = (i > 0) ? 1 : 0;
+    int k;
+    rough_segment_path(x[i], y[i], x[j], y[j], hand, &seg);
+    for (k = start; k < seg.n; ++k) {
+      out->x[offset] = seg.x[k];
+      out->y[offset] = seg.y[k];
+      offset += 1;
+    }
+    point_buffer_free(&seg);
+  }
+  out->n = offset;
 }
 
 static double flip_y(const MypaintrDevice *dev, double y) {
@@ -655,6 +902,32 @@ static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const dou
   }
 }
 
+static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed) {
+  if (render_style == MYPAINTR_RENDER_BRUSH) {
+    render_polyline(dev, brush, x, y, n, col, lwd, lty);
+  } else {
+    solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed);
+  }
+}
+
+static void render_polyline_hand(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, MypaintrHand *hand) {
+  int i;
+
+  if (!hand->enabled) {
+    render_polyline_mode(dev, brush, render_style, x, y, n, col, lwd, lty, closed);
+    return;
+  }
+
+  for (i = 0; i < hand->multi_stroke; ++i) {
+    PointBuffer path = {0};
+    double jittered_lwd;
+    roughen_vertex_path(x, y, n, hand, closed, &path);
+    jittered_lwd = fmax(0.01, lwd * (1.0 + hand_normal(hand, hand->width_jitter)));
+    render_polyline_mode(dev, brush, render_style, path.x, path.y, path.n, col, jittered_lwd, lty, 0);
+    point_buffer_free(&path);
+  }
+}
+
 static void cairo_polygon_path(MypaintrDevice *dev, int n, const double *x, const double *y) {
   int i;
   cairo_new_path(dev->cr);
@@ -790,6 +1063,30 @@ static void hatch_fill_circle(MypaintrDevice *dev, MypaintrBrush *brush, double 
   }
 }
 
+static void fill_polygon_mode(MypaintrDevice *dev, int n, const double *x, const double *y, int fill, int rule, MypaintrHand *hand) {
+  if (R_ALPHA(fill) == 0) {
+    return;
+  }
+
+  if (hand->enabled) {
+    PointBuffer rough = {0};
+    roughen_vertex_path(x, y, n, hand, 1, &rough);
+    if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
+      hatch_fill_polygon(dev, &dev->fill, rough.n, rough.x, rough.y, fill);
+    } else {
+      solid_fill_polygon(dev, rough.n, rough.x, rough.y, fill, rule);
+    }
+    point_buffer_free(&rough);
+    return;
+  }
+
+  if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
+    hatch_fill_polygon(dev, &dev->fill, n, x, y, fill);
+  } else {
+    solid_fill_polygon(dev, n, x, y, fill, rule);
+  }
+}
+
 static int should_solid_fill_rect(const MypaintrDevice *dev, double x0, double y0, double x1, double y1, int fill) {
   double area;
   double device_area;
@@ -812,12 +1109,24 @@ static int should_solid_fill_rect(const MypaintrDevice *dev, double x0, double y
 }
 
 static void fill_rect(MypaintrDevice *dev, double x0, double y0, double x1, double y1, int fill) {
+  double xs[4] = {x0, x1, x1, x0};
+  double ys[4] = {y0, y0, y1, y1};
+
   if (R_ALPHA(fill) == 0) {
     return;
   }
 
   if (dev->fill_style == MYPAINTR_FILL_BRUSH && !should_solid_fill_rect(dev, x0, y0, x1, y1, fill)) {
-    hatch_fill_rect(dev, &dev->fill, x0, y0, x1, y1, fill);
+    if (dev->fill_hand.enabled) {
+      fill_polygon_mode(dev, 4, xs, ys, fill, R_GE_nonZeroWindingRule, &dev->fill_hand);
+    } else {
+      hatch_fill_rect(dev, &dev->fill, x0, y0, x1, y1, fill);
+    }
+    return;
+  }
+
+  if (dev->fill_hand.enabled) {
+    fill_polygon_mode(dev, 4, xs, ys, fill, R_GE_nonZeroWindingRule, &dev->fill_hand);
     return;
   }
 
@@ -834,7 +1143,32 @@ static void fill_rect(MypaintrDevice *dev, double x0, double y0, double x1, doub
 }
 
 static void fill_circle(MypaintrDevice *dev, double x, double y, double r, int fill) {
+  int i;
+  int segments;
+  double *xs;
+  double *ys;
+
   if (R_ALPHA(fill) == 0) {
+    return;
+  }
+
+  if (dev->fill_hand.enabled) {
+    segments = (int) fmax(24.0, ceil(2.0 * M_PI * r / 6.0));
+    xs = (double *) malloc((size_t) segments * sizeof(double));
+    ys = (double *) malloc((size_t) segments * sizeof(double));
+    if (!xs || !ys) {
+      free(xs);
+      free(ys);
+      error("failed to allocate circle fill buffer");
+    }
+    for (i = 0; i < segments; ++i) {
+      double t = 2.0 * M_PI * (double) i / (double) segments;
+      xs[i] = x + r * cos(t);
+      ys[i] = y + r * sin(t);
+    }
+    fill_polygon_mode(dev, segments, xs, ys, fill, R_GE_nonZeroWindingRule, &dev->fill_hand);
+    free(xs);
+    free(ys);
     return;
   }
 
@@ -899,6 +1233,11 @@ static void init_brushes(MypaintrDevice *dev, SEXP stroke_spec, SEXP fill_spec) 
 
   brush_apply_spec(&dev->stroke, stroke_spec);
   brush_apply_spec(&dev->fill, fill_spec == R_NilValue ? stroke_spec : fill_spec);
+}
+
+static void init_hands(MypaintrDevice *dev, SEXP stroke_hand, SEXP fill_hand) {
+  configure_hand(&dev->stroke_hand, stroke_hand, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
+  configure_hand(&dev->fill_hand, fill_hand, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
 }
 
 static MypaintrDevice *current_mypaintr_device(void) {
@@ -986,20 +1325,12 @@ static void mypaintr_line(double x1, double y1, double x2, double y2, const pGEc
   MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
   double xs[2] = {x1, x2};
   double ys[2] = {y1, y2};
-  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, &dev->stroke, xs, ys, 2, gc->col, gc->lwd, gc->lty);
-  } else {
-    solid_stroke_polyline(dev, xs, ys, 2, gc->col, gc->lwd, gc->lty, 0);
-  }
+  render_polyline_hand(dev, &dev->stroke, dev->stroke_style, xs, ys, 2, gc->col, gc->lwd, gc->lty, 0, &dev->stroke_hand);
 }
 
 static void mypaintr_polyline(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
   MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
-  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, &dev->stroke, x, y, n, gc->col, gc->lwd, gc->lty);
-  } else {
-    solid_stroke_polyline(dev, x, y, n, gc->col, gc->lwd, gc->lty, 0);
-  }
+  render_polyline_hand(dev, &dev->stroke, dev->stroke_style, x, y, n, gc->col, gc->lwd, gc->lty, 0, &dev->stroke_hand);
 }
 
 static void mypaintr_polygon(int n, double *x, double *y, const pGEcontext gc, pDevDesc dd) {
@@ -1010,11 +1341,7 @@ static void mypaintr_polygon(int n, double *x, double *y, const pGEcontext gc, p
   if (n < 2) return;
 
   if (gc->fill != NA_INTEGER) {
-    if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
-      hatch_fill_polygon(dev, &dev->fill, n, x, y, gc->fill);
-    } else {
-      solid_fill_polygon(dev, n, x, y, gc->fill, R_GE_nonZeroWindingRule);
-    }
+    fill_polygon_mode(dev, n, x, y, gc->fill, R_GE_nonZeroWindingRule, &dev->fill_hand);
   }
 
   if (gc->col == NA_INTEGER || R_ALPHA(gc->col) == 0) {
@@ -1033,11 +1360,7 @@ static void mypaintr_polygon(int n, double *x, double *y, const pGEcontext gc, p
   memcpy(cy, y, (size_t) n * sizeof(double));
   cx[n] = x[0];
   cy[n] = y[0];
-  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, &dev->stroke, cx, cy, n + 1, gc->col, gc->lwd, gc->lty);
-  } else {
-    solid_stroke_polyline(dev, cx, cy, n + 1, gc->col, gc->lwd, gc->lty, 1);
-  }
+  render_polyline_hand(dev, &dev->stroke, dev->stroke_style, cx, cy, n + 1, gc->col, gc->lwd, gc->lty, 1, &dev->stroke_hand);
   free(cx);
   free(cy);
 }
@@ -1050,11 +1373,7 @@ static void mypaintr_rect(double x0, double y0, double x1, double y1, const pGEc
   fill_rect(dev, x0, y0, x1, y1, gc->fill);
 
   if (gc->col != NA_INTEGER && R_ALPHA(gc->col) > 0) {
-    if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
-      render_polyline(dev, &dev->stroke, xs, ys, 5, gc->col, gc->lwd, gc->lty);
-    } else {
-      solid_stroke_polyline(dev, xs, ys, 5, gc->col, gc->lwd, gc->lty, 1);
-    }
+    render_polyline_hand(dev, &dev->stroke, dev->stroke_style, xs, ys, 5, gc->col, gc->lwd, gc->lty, 1, &dev->stroke_hand);
   }
 }
 
@@ -1086,11 +1405,7 @@ static void mypaintr_circle(double x, double y, double r, const pGEcontext gc, p
     ys[i] = y + r * sin(t);
   }
 
-  if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, &dev->stroke, xs, ys, segments + 1, gc->col, gc->lwd, gc->lty);
-  } else {
-    solid_stroke_polyline(dev, xs, ys, segments + 1, gc->col, gc->lwd, gc->lty, 1);
-  }
+  render_polyline_hand(dev, &dev->stroke, dev->stroke_style, xs, ys, segments + 1, gc->col, gc->lwd, gc->lty, 1, &dev->stroke_hand);
   free(xs);
   free(ys);
 }
@@ -1101,7 +1416,27 @@ static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean w
   int i;
 
   if (gc->fill != NA_INTEGER && R_ALPHA(gc->fill) > 0) {
-    if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
+    if (dev->fill_hand.enabled) {
+      if (npoly == 1) {
+        fill_polygon_mode(dev, nper[0], x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule, &dev->fill_hand);
+      } else if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
+        hatch_fill_path(dev, &dev->fill, npoly, nper, x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule);
+      } else {
+        cairo_new_path(dev->cr);
+        for (i = 0; i < npoly; ++i) {
+          int j;
+          cairo_move_to(dev->cr, x[offset], flip_y(dev, y[offset]));
+          for (j = 1; j < nper[i]; ++j) {
+            cairo_line_to(dev->cr, x[offset + j], flip_y(dev, y[offset + j]));
+          }
+          cairo_close_path(dev->cr);
+          offset += nper[i];
+        }
+        cairo_set_fill_rule(dev->cr, winding ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
+        set_cairo_source(dev->cr, gc->fill);
+        cairo_fill(dev->cr);
+      }
+    } else if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
       hatch_fill_path(dev, &dev->fill, npoly, nper, x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule);
     } else {
       cairo_new_path(dev->cr);
@@ -1135,11 +1470,7 @@ static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean w
       memcpy(cy, y + offset, (size_t) n * sizeof(double));
       cx[n] = x[offset];
       cy[n] = y[offset];
-      if (dev->stroke_style == MYPAINTR_RENDER_BRUSH) {
-        render_polyline(dev, &dev->stroke, cx, cy, n + 1, gc->col, gc->lwd, gc->lty);
-      } else {
-        solid_stroke_polyline(dev, cx, cy, n + 1, gc->col, gc->lwd, gc->lty, 1);
-      }
+      render_polyline_hand(dev, &dev->stroke, dev->stroke_style, cx, cy, n + 1, gc->col, gc->lwd, gc->lty, 1, &dev->stroke_hand);
       free(cx);
       free(cy);
       offset += n;
@@ -1427,7 +1758,7 @@ static void init_dev_desc(pDevDesc dd, MypaintrDevice *dev) {
   dd->capabilities = mypaintr_capabilities;
 }
 
-static MypaintrDevice *make_device(const char *filename, int width, int height, double res, double pointsize, int bg, int stroke_style, int fill_style, int auto_solid_bg, SEXP stroke_spec, SEXP fill_spec) {
+static MypaintrDevice *make_device(const char *filename, int width, int height, double res, double pointsize, int bg, int stroke_style, int fill_style, int auto_solid_bg, SEXP stroke_spec, SEXP fill_spec, SEXP stroke_hand, SEXP fill_hand) {
   MypaintrDevice *dev = (MypaintrDevice *) calloc(1, sizeof(MypaintrDevice));
   cairo_status_t status;
 
@@ -1470,11 +1801,12 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
 
   init_surface(dev);
   init_brushes(dev, stroke_spec, fill_spec);
+  init_hands(dev, stroke_hand, fill_hand);
   clear_device(dev, bg);
   return dev;
 }
 
-SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP pointsize, SEXP bg_rgba, SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg) {
+SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP pointsize, SEXP bg_rgba, SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg, SEXP stroke_hand, SEXP fill_hand) {
   pDevDesc dd;
   pGEDevDesc gdd;
   MypaintrDevice *dev;
@@ -1507,7 +1839,9 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
     asInteger(fill_style),
     asLogical(auto_solid_bg),
     stroke_spec,
-    fill_spec
+    fill_spec,
+    stroke_hand,
+    fill_hand
   );
 
   dd = (pDevDesc) calloc(1, sizeof(DevDesc));
@@ -1541,6 +1875,23 @@ SEXP mypaintr_device_set_style(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_sty
   }
   if (auto_solid_bg != R_NilValue) {
     dev->auto_solid_bg = asLogical(auto_solid_bg);
+  }
+
+  return R_NilValue;
+}
+
+SEXP mypaintr_device_set_brush(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg) {
+  return mypaintr_device_set_style(stroke_spec, fill_spec, stroke_style, fill_style, auto_solid_bg);
+}
+
+SEXP mypaintr_device_set_hand(SEXP stroke_hand, SEXP fill_hand, SEXP update_stroke, SEXP update_fill) {
+  MypaintrDevice *dev = current_mypaintr_device();
+
+  if (asLogical(update_stroke)) {
+    configure_hand(&dev->stroke_hand, stroke_hand, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
+  }
+  if (asLogical(update_fill)) {
+    configure_hand(&dev->fill_hand, fill_hand, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
   }
 
   return R_NilValue;

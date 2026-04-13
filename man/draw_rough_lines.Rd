@@ -4,7 +4,7 @@
 \alias{draw_rough_lines}
 \title{Draw rough connected lines}
 \usage{
-draw_rough_lines(x, y = NULL, hand = hand(), ...)
+draw_rough_lines(x, y = NULL, hand = NULL, ...)
 }
 \arguments{
 \item{x, y}{Coordinates as for [graphics::lines()].}

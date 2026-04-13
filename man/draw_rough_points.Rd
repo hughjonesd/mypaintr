@@ -4,7 +4,7 @@
 \alias{draw_rough_points}
 \title{Draw rough points}
 \usage{
-draw_rough_points(x, y = NULL, hand = hand(), ...)
+draw_rough_points(x, y = NULL, hand = NULL, ...)
 }
 \arguments{
 \item{x, y}{Point coordinates as for [graphics::points()].}
