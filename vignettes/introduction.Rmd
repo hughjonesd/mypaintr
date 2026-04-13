@@ -17,12 +17,12 @@ three components:
   library, which lets you create and import Mypaint brushes. There's a
   `mypaint_device()` graphics device.
 * R functions to draw lines and shapes with a "rough", hand-drawn look.
-* ggplot geoms and theme elements for ggplot graphs using Mypaint brushes 
-  and hand-drawn paths.
+* ggplot2 geoms and theme elements, so you can use Mypaint brushes 
+  and hand-drawn paths in ggplot graphs
   
 Here are some demos.
 
-```{r setup, include = FALSE}
+```{r setup}
 library(mypaintr)
 knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
 
@@ -34,19 +34,38 @@ knitr::opts_chunk$set(
 )
 ```
 
-Brushes are from the mypaint-brushes package which you can install via
-`brew` or your package manager.
+To use mypaintr from the command line, open the `mypaint_device()` graphics device:
+
+```r
+mypaint_device("output.png")
+```
+
+And close the device with `dev.off()` to print your plot to the output file:
+
+```r
+dev.off()
+```
+
+# Brushes 
+With the device active, you can use normal plot, grid and ggplot commands. 
+You can also customize how lines and fills are drawn, using brushes.
+
+Brushes are from the `mypaint-brushes` package, which you can install via
+your package manager (e.g. `apt` or `brew`).
 
 ```{r, mypaint=TRUE, fig.keep="none"}
-set_hand(hand(seed = 1))
+
 set_brush("tanda/marker-01")
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
-Set `hand` or `brush` to `NULL` to revert to the default:
+
+If you want different plot elements to look different, you can use
+`set_brush()` between calls. Here we set the brush to `NULL` to
+print an axis using (close to) standard R graphics:
 
 ```{r, mypaint=TRUE, fig.keep="none"}
-set_hand(NULL)
+
 set_brush("ramon/P._shade")
 barplot(VADeaths, axes = FALSE, 
         beside = TRUE, col = palette.colors(5), border = NA,
@@ -55,9 +74,59 @@ set_brush(NULL)
 axis(side = 2, at = seq(0, 60, 20))
 ```
 
+# Hands
+
+The other way to customize plotting is to set the "hand". While brushes change
+what is plotted along a given path, hands change the path itself, by 
+adding jitter, multiple lines and other human-like quirks:
+
+```{r, mypaint=TRUE, fig.keep="none"}
+set_hand(hand(bow = 0.03, wobble = 0))
+barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
+```
+
+```{r, mypaint=TRUE, fig.keep="none"}
+set_hand(hand(bow = 0, wobble = 0.01, multi_stroke = 2))
+barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
+```
+
+Combining brushes and hands, you can turn any R graphics into a sketch.
+
+```{r, mypaint=TRUE, fig.keep="none", fig.height=5, fig.width=5}
+
+set_brush("experimental/bubble")
+set_hand(hand(seed = 1))
+filled.contour(volcano, asp = 1, plot.title = "Maunga Whau",
+               xlab = "Metres North", ylab = "Metres West") 
+
+```
+
+
 # Rough lines and polygons
 
-These functions can be used with any graphics device, as in the next chunks:
+There is one glitch with the mypaint_device:as you may have spotted, borders
+and fills don't always match up. Below, both rectangle border and fills are
+plotted roughly, but the random roughness is computed separately for
+each of them.
+
+```{r, mypaint=TRUE, fig.keep="none"}
+
+
+set_hand(hand(seed = 1))
+plot(1:10, 1:10, type = "n")
+rect(2, 2, 8, 8, col = "green4", border = "black")
+
+```
+
+The `draw_rough_*` functions do two useful things:
+
+* They always fill roughly drawn shapes correctly.
+* They can be used with any graphics device, 
+
+However, note that while hands can work with any graphics device,
+mypaint brushes can only be used with the `mypaint_device()` graphics device. 
+
+The next chunks use knitr's standard `"png"` device.
 
 ```{r, dev="png", fig.width=5, fig.height=5}
 knitr::opts_chunk$get("dev")
@@ -69,7 +138,7 @@ draw_rough_rect(8, 4, 5, 8, col = "blue3", fill_pattern = hatch())
 draw_rough_arrows(1, 9, 8, 9, col = "grey40")
 ```
 
-Control lines and fills with the `hand()` function:
+Control lines and fills with the `hand` argument:
 
 
 ```{r, dev="png", fig.width=5, fig.height=5}
@@ -87,14 +156,15 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 
 ```{r, dev="png", fig.width=5, fig.height=5}
 
-plot(5:55, 5:55, type = "n", xlab = "bow", ylab = "wobble", axes = FALSE,
+plot(c(0.01, 0.11), c(0.01, 0.11), type = "n", 
+     xlab = "bow", ylab = "wobble", 
      mar = rep(0.1, 4))
 
-for (row in 1:5) for (col in 1:5) {
-  my_hand <- hand(wobble = 0.02 * row, bow = 0.02 * col)
+for (wobble in 1:5 * 0.02) for (bow in 1:5 * 0.02) {
+  my_hand <- hand(wobble = wobble, bow = bow)
   draw_rough_rect(
-    10 * col - 3, 10 * row - 3,
-    10 * col + 3, 10 * row + 3,
+    bow - 0.008, wobble - 0.008,
+    bow + 0.008, wobble + 0.008,
     hand = my_hand,
     col = "red"
   )
@@ -103,7 +173,8 @@ for (row in 1:5) for (col in 1:5) {
 
 # Fills
 
-There are four ways to fill a polygon. Again, these work with base graphics.
+Use the `fill_pattern` argument to fill a polygon using hand-sketched lines.
+mypaintr knows four ways to do this. Again, these work with base graphics devices via the `draw_rough_*` functions:
 
 ```{r, dev = "png", fig.width=5, fig.height=5}
 
@@ -118,6 +189,30 @@ text(c(2, 2, 8, 8), c(0.5, 5.5, 0.5, 5.5),
 
 ```
 
+
+# Rough drawing and `mypaint_device`
+
+You can still use the `draw_rough_*` functions with `mypaint_device` active.
+This lets you use both hands and brushes.
+
+The next chunk also shows how to use different brushes for stroke and fill:
+
+```{r, mypaint=TRUE, fig.keep="none", fig.width=5, fig.height=5}
+
+plot(1:10, 1:10, type = "n")
+
+set_brush("experimental/bubble", type = "fill")
+set_brush(NULL, type = "stroke")
+my_hand <- hand(wobble = 0.01, multi_stroke = 2)
+
+draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red", hand = my_hand)
+
+set_brush("deevad/ballpen")
+draw_rough_rect(8, 4, 5, 8, col = "blue3", hand = my_hand, fill_pattern = hatch())
+
+draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
+
+```
 
 # ggplot2
 
