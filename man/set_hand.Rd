@@ -8,7 +8,9 @@ set_hand(hand = NULL, type = c("both", "stroke", "fill"))
 }
 \arguments{
 \item{hand}{Hand-drawn geometry created with \code{\link[=hand]{hand()}}, or \code{NULL} to disable
-it for the selected type.}
+it for the selected type. This disables rough path perturbation only; it
+does not disable the active brush. Use \code{\link[=set_brush]{set_brush()}} as well if you want
+fully plain, solid rendering.}
 
 \item{type}{Which rendering channel to update: \code{"both"}, \code{"stroke"}, or
 \code{"fill"}.}

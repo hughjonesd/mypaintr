@@ -4,7 +4,7 @@
 \alias{jumble}
 \title{Jumble fill pattern}
 \usage{
-jumble(density = 5, strokes = NULL, step = NULL)
+jumble(density = 5, strokes = NULL, step = NULL, curl = 0.35)
 }
 \arguments{
 \item{density}{Approximate scribble density. Larger values give more strokes.}
@@ -13,6 +13,9 @@ jumble(density = 5, strokes = NULL, step = NULL)
 default based on the shape size is used.}
 
 \item{step}{Jumble step size in data units.}
+
+\item{curl}{How tightly the jumble curls as it wanders. Larger values produce
+rounder, loopier scribbles.}
 }
 \value{
 A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.

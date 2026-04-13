@@ -512,7 +512,8 @@ new_fill_pattern <- function(style,
                              angle = NULL,
                              clip = TRUE,
                              strokes = NULL,
-                             step = NULL) {
+                             step = NULL,
+                             curl = NULL) {
   structure(
     list(
       style = style,
@@ -520,7 +521,8 @@ new_fill_pattern <- function(style,
       angle = angle,
       clip = isTRUE(clip),
       strokes = strokes,
-      step = step
+      step = step,
+      curl = curl
     ),
     class = "mypaintr_fill_pattern"
   )
@@ -572,10 +574,12 @@ zigzag <- function(angle = 45, density = 6, clip = TRUE) {
 #' @param strokes Approximate number of jumble strokes. When `NULL`, a
 #'   default based on the shape size is used.
 #' @param step Jumble step size in data units.
+#' @param curl How tightly the jumble curls as it wanders. Larger values produce
+#'   rounder, loopier scribbles.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
 #' @export
-jumble <- function(density = 5, strokes = NULL, step = NULL) {
-  new_fill_pattern("jumble", density = density, strokes = strokes, step = step, clip = TRUE)
+jumble <- function(density = 5, strokes = NULL, step = NULL, curl = 0.35) {
+  new_fill_pattern("jumble", density = density, strokes = strokes, step = step, curl = curl, clip = TRUE)
 }
 
 as_fill_pattern <- function(fill_pattern = NULL, hand_spec = NULL, default_when_missing = FALSE) {
@@ -681,11 +685,25 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
     step <- fill_pattern$step %||% max(gap / 2, span / 35)
     n_strokes <- fill_pattern$strokes %||% max(1L, round(span / step))
     n_steps <- max(12L, round(2 * span / step))
+    curl <- fill_pattern$curl %||% 0.35
+    turn_sd <- max(0.03, 0.22 - 0.35 * pmin(curl, 0.45))
     polylines <- vector("list", n_strokes)
+
+    smooth_path <- function(x, y, passes = 2L) {
+      if (length(x) < 3L) {
+        return(list(x = x, y = y))
+      }
+      for (pass in seq_len(passes)) {
+        x[2:(length(x) - 1L)] <- (x[1:(length(x) - 2L)] + 2 * x[2:(length(x) - 1L)] + x[3:length(x)]) / 4
+        y[2:(length(y) - 1L)] <- (y[1:(length(y) - 2L)] + 2 * y[2:(length(y) - 1L)] + y[3:length(y)]) / 4
+      }
+      list(x = x, y = y)
+    }
 
     for (s in seq_len(n_strokes)) {
       p <- sample_point_in_paths(paths, rule = rule)
       theta <- stats::runif(1L, 0, 2 * pi)
+      omega <- sample(c(-1, 1), 1L) * stats::runif(1L, curl / 2, curl * 1.5)
       px <- numeric(n_steps)
       py <- numeric(n_steps)
       px[1] <- p[1]
@@ -693,11 +711,13 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
       for (i in 2:n_steps) {
         accepted <- FALSE
         for (attempt in seq_len(12L)) {
-          theta_try <- theta + stats::rnorm(1L, sd = pi / 5) + if (attempt > 1L) stats::runif(1L, pi / 2, 3 * pi / 2) else 0
+          omega_try <- 0.85 * omega + stats::rnorm(1L, mean = 0, sd = turn_sd)
+          theta_try <- theta + omega_try + if (attempt > 1L) stats::rnorm(1L, mean = 0, sd = pi / 5) else 0
           cand_x <- px[i - 1L] + step * cos(theta_try)
           cand_y <- py[i - 1L] + step * sin(theta_try)
           if (point_in_paths(paths, cand_x, cand_y, rule)) {
             theta <- theta_try
+            omega <- omega_try
             px[i] <- cand_x
             py[i] <- cand_y
             accepted <- TRUE
@@ -708,9 +728,11 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
           p <- sample_point_in_paths(paths, rule = rule)
           px[i] <- p[1]
           py[i] <- p[2]
+          theta <- stats::runif(1L, 0, 2 * pi)
+          omega <- -0.7 * omega
         }
       }
-      polylines[[s]] <- list(x = px, y = py)
+      polylines[[s]] <- smooth_path(px, py)
     }
 
     polyline_data(polylines, hand_spec = fill_hand)
@@ -1170,14 +1192,14 @@ rough_hachure_data <- function(paths, hand_spec = NULL, angle = 45, density = NU
   )
 }
 
-make_stroke_style <- function(brush = NULL, settings = NULL) {
+make_stroke_style <- function(brush = NULL, settings = NULL, hand = NULL) {
   spec <- if (is.null(brush) && is.null(settings)) NULL else normalize_brush_spec(brush, settings)
   make_style_override(
     update_stroke = TRUE,
     stroke_spec = spec,
     stroke_style = if (is.null(spec)) 0L else 1L,
-    stroke_hand = NULL,
-    update_stroke_hand = FALSE
+    stroke_hand = normalize_hand_spec(hand),
+    update_stroke_hand = !is.null(hand)
   )
 }
 
@@ -1239,7 +1261,7 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
         )
         child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
           hatch_grob,
-          make_stroke_style(fill_brush, fill_settings)
+          make_stroke_style(fill_brush, fill_settings, hand = hatch_hand)
         )
       }
     }
@@ -1253,7 +1275,7 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
       )
       child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
         border_grob,
-        make_stroke_style(border_brush, border_settings)
+        make_stroke_style(border_brush, border_settings, hand = outline_hand)
       )
     }
   }
@@ -1529,7 +1551,9 @@ set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", 
 #' Set the active mypaintr hand-drawn geometry
 #'
 #' @param hand Hand-drawn geometry created with [hand()], or `NULL` to disable
-#'   it for the selected type.
+#'   it for the selected type. This disables rough path perturbation only; it
+#'   does not disable the active brush. Use [set_brush()] as well if you want
+#'   fully plain, solid rendering.
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
 #' @return `NULL`, invisibly. If the active device is not `mypaintr`, the
@@ -2414,7 +2438,9 @@ geom_mypaint_bar <- function(mapping = NULL, data = NULL, stat = "count",
     data = data,
     mapping = mapping,
     stat = stat,
-    geom = GeomMypaintBar,
+    # GeomBar drops custom hand params on the panel path here; reuse the
+    # working rect/col renderer and let the stat supply bar counts.
+    geom = GeomMypaintCol,
     position = position,
     show.legend = show.legend,
     inherit.aes = inherit.aes,
