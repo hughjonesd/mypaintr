@@ -11,7 +11,7 @@ hand(
   wobble = 0.006,
   multi_stroke = 1L,
   width_jitter = 0.08,
-  endpoint_jitter = 0.01,
+  endpoint_jitter = 0,
   hachure_gap = NULL,
   hachure_angle = 45,
   hachure_angle_jitter = 12,
@@ -91,7 +91,7 @@ hand()
 #> [1] 0.08
 #> 
 #> $endpoint_jitter
-#> [1] 0.01
+#> [1] 0
 #> 
 #> $hachure_gap
 #> NULL
@@ -127,7 +127,7 @@ hand(seed = 1, bow = 0.02, wobble = 0.01)
 #> [1] 0.08
 #> 
 #> $endpoint_jitter
-#> [1] 0.01
+#> [1] 0
 #> 
 #> $hachure_gap
 #> NULL

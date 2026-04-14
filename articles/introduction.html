@@ -33,7 +33,8 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/introduction.html">Introduction to mypaintr</a></li>
+<li><a class="dropdown-item" href="../articles/hand-demo.html">Hand Demo</a></li>
+    <li><a class="dropdown-item" href="../articles/introduction.html">Introduction to mypaintr</a></li>
   </ul>
 </li>
       </ul>
@@ -118,6 +119,59 @@ graphics:</p>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span>side <span class="op">=</span> <span class="fl">2</span>, at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">60</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-2-1.png" alt="" width="480"></p>
+<div class="section level3">
+<h3 id="good-brushes">Good brushes<a class="anchor" aria-label="anchor" href="#good-brushes"></a>
+</h3>
+<p>Not all Mypaint brushes work well with mypaintr (yet). In particular,
+smudging isn’t fully implemented yet.</p>
+<p>Here are some brushes that I’ve found good to use, i.e. neither too
+crazy nor too similar to standard R:</p>
+<ul>
+<li>classic/charcoal</li>
+<li>classic/coarse_bulk_1 (and _2 and _3)</li>
+<li>classic/dry_brush</li>
+<li>classic/ink_blot</li>
+<li>classic/ink_eraser</li>
+<li>classic/kabura</li>
+<li>classic/pen</li>
+<li>classic/pencil</li>
+<li>classic/slow_ink</li>
+<li>classic/textured_ink</li>
+<li>deevad/2B_pencil</li>
+<li>deevad/4H_pencil</li>
+<li>deevad/chalk</li>
+<li>deevad/spray2</li>
+<li>Dieterle/HalfToneCMY#1</li>
+<li>Dieterle/Pencil-_Left_Handed</li>
+<li>Dieterle/Posterizer</li>
+<li>experimental/bubble</li>
+<li>experimental/track</li>
+<li>experimental/pixelblocking</li>
+<li>experimental/sewing</li>
+<li>experimental/small_blot</li>
+<li>experimental/spaced-blot</li>
+<li>experimental/speed_blot</li>
+<li>experimental/subtle_pencil</li>
+<li>experimental/track</li>
+<li>kaerhon_v1/inkster_l</li>
+<li>ramon/2B_pencil</li>
+<li>ramon/B-pencil</li>
+<li>ramon/P._Shade</li>
+<li>ramon/Pastel_1</li>
+<li>ramon/Pen</li>
+<li>ramon/Sketch_1</li>
+<li>ramon/Thin_Pen</li>
+<li>tanda/acrylic-05-paint</li>
+<li>tanda/charcoal-01</li>
+<li>tanda/charcoal-03</li>
+<li>tanda/charcoal-04</li>
+<li>tanda/marker-01</li>
+<li>tanda/marker-05</li>
+<li>tanda/oil-06-paint</li>
+<li>tanda/pencil-2b</li>
+<li>tanda/pencil-8b</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="hands">Hands<a class="anchor" aria-label="anchor" href="#hands"></a>
@@ -327,9 +381,21 @@ special hook:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/knit_hooks.html" class="external-link">knit_hooks</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>mypaint <span class="op">=</span> <span class="fu"><a href="../reference/knitr_mypaint_hook.html">knitr_mypaint_hook</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Then in chunks where you use <code>mypaint_device</code>, you need to
-set chunk options <code>mypaint=TRUE, fig.keep="none"</code>.</p>
+set chunk options <code>mypaint=TRUE, fig.keep="none"</code>. You can
+set them for all chunks like this:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
+<span>  mypaint <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  fig.keep <span class="op">=</span> <span class="st">"none"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Don’t set <code>dev</code> explicitly: the hook will do it for
 you.</p>
+<p>One limitation is that you cannot produce more than one plot per
+chunk. If you need to do this, try setting the following chunk
+options:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>dev<span class="ot">=</span><span class="st">'mypaint_device'</span>, fig.ext<span class="ot">=</span><span class="st">'png'</span>, fig.keep<span class="ot">=</span><span class="st">'high'</span>, mypaint<span class="ot">=</span><span class="cn">FALSE</span><span class="er">}</span></span></code></pre></div>
+<p>this may work, <em>so long as you don’t edit device options within a
+single plot</em>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -120,7 +120,7 @@ lines(1:10, col = "firebrick", lwd = 3)
 rect(2, 3, 5, 7, border = "black", col = rgb(0, 0.6, 0.3, 0.25))
 text(6, 8, "hello", col = "black")
 dev.off()
-#> agg_record_37046ffbc37 
+#> agg_record_37034d2db5c 
 #>                      2 
 unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 
@@ -147,7 +147,7 @@ lines(c(1, 9), c(1, 9), col = "firebrick", lwd = 4)
 title("Brush Fill")
 box()
 dev.off()
-#> agg_record_37046ffbc37 
+#> agg_record_37034d2db5c 
 #>                      2 
 unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 
@@ -157,7 +157,7 @@ plot(1:5, 1:5, type = "n", main = "Mixed Styles")
 set_brush("pencil", type = "stroke")
 lines(1:5, c(1, 3, 2, 5, 4), lwd = 3)
 dev.off()
-#> agg_record_37046ffbc37 
+#> agg_record_37034d2db5c 
 #>                      2 
 unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 ```
