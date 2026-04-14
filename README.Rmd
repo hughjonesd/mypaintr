@@ -6,7 +6,7 @@ output: github_document
 
 ```{r, include = FALSE}
 library(mypaintr)
-knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 
 knitr::opts_chunk$set(
   collapse = TRUE,

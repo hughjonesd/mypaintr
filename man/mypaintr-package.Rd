@@ -4,9 +4,18 @@
 \name{mypaintr-package}
 \alias{mypaintr}
 \alias{mypaintr-package}
-\title{mypaintr: Artistic Graphics Device Backed by libmypaint}
+\title{mypaintr: Plot R Graphics Like a Human}
 \description{
-Raster graphics device for base R graphics that renders stroked primitives with libmypaint and uses Cairo for text and solid fills on the same backing surface.
+R graphics device for human-like, sketched plotting. Uses libmypaint brushes to draw lines and polygons. Includes functions for plotting "rough" lines and polygons. Integrates with base and "ggplot" graphics.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/hughjonesd/mypaintr}
+  \item \url{https://hughjonesd.github.io/mypaintr/}
+  \item Report bugs at \url{https://github.com/hughjonesd/mypaintr/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: David Hugh-Jones \email{david@example.com}

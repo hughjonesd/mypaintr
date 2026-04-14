@@ -55,7 +55,7 @@ reference:
 
   - title: knitr
     contents:
-      - knitr_chunk_hook
+      - knitr_mypaint_hook
 
 navbar:
   structure:

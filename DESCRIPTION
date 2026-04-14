@@ -1,18 +1,18 @@
 Package: mypaintr
 Type: Package
-Title: Draw Human-style Graphics Using "libmypaint"
+Title: Plot R Graphics Like a Human
 Version: 0.0.1
 Authors@R: person("David", "Hugh-Jones", email = "david@example.com", role = c("aut", "cre"))
 Description: R graphics device for human-like, sketched plotting. Uses 
   libmypaint brushes to draw lines and polygons. Includes functions for
-  plotting "rough" lines and polygons.
+  plotting "rough" lines and polygons. Integrates with base and "ggplot" graphics.
 License: MIT + file LICENSE
 URL: https://github.com/hughjonesd/mypaintr,
     https://hughjonesd.github.io/mypaintr/
 BugReports: https://github.com/hughjonesd/mypaintr/issues
 Encoding: UTF-8
 LazyData: true
-SystemRequirements: cairo, json-c; optional system libmypaint and mypaint-brushes
+SystemRequirements: Optional system packages: libmypaint, mypaint-brushes
 Imports:
     grDevices,
     ggplot2

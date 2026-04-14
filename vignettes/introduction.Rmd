@@ -24,7 +24,7 @@ Here are some demos.
 
 ```{r setup}
 library(mypaintr)
-knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -294,7 +294,7 @@ ggplot(diamonds) +
 Knitr replays graphics on its own device. To make this work while dynamically updating the device within chunks, you must install a special hook:
 
 ```r
-knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 ```
 
 Then in chunks where you use `mypaint_device`, you need to set chunk options
