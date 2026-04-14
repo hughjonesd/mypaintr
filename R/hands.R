@@ -90,7 +90,7 @@ hand <- function(seed = NULL,
                  wobble = 0.006,
                  multi_stroke = 1L,
                  width_jitter = 0.08,
-                 endpoint_jitter = 0.01,
+                 endpoint_jitter = 0,
                  hachure_gap = NULL,
                  hachure_angle = 45,
                  hachure_angle_jitter = 12,
@@ -120,7 +120,8 @@ hand <- function(seed = NULL,
 #'
 #' @param hand Hand-drawn geometry created with [hand()], or `NULL` to disable
 #'   it for the selected type. This disables rough path perturbation only; it
-#'   does not disable the active brush. Use [set_brush()] as well if you want
+#'   does not disable the active brush, and note that some brushes have
+#'   their own internal wobbly pathing! Use [set_brush()] as well if you want
 #'   fully plain, solid rendering.
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
