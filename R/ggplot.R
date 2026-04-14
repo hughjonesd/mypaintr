@@ -45,8 +45,8 @@ GeomMypaintCol <- ggplot2::ggproto(
         brush_settings = brush_settings,
         fill_brush = fill_brush,
         fill_settings = fill_settings,
-        stroke_hand = as_optional_hand(stroke_hand),
-        fill_hand = as_optional_hand(fill_hand),
+        stroke_hand = normalize_hand_spec(stroke_hand),
+        fill_hand = normalize_hand_spec(fill_hand),
         auto_solid_bg = auto_solid_bg
       )
     )
@@ -396,6 +396,37 @@ line_gp <- function(colour, linewidth, linetype = 1, linejoin = "mitre", lineend
     linejoin = linejoin,
     lineend = lineend
   )
+}
+
+alpha_colour <- function(col, alpha = NA_real_) {
+  if (is.null(col) || all(is.na(col))) {
+    return(col)
+  }
+  if (is.list(col)) {
+    stop("pattern fills are not supported by mypaint geoms", call. = FALSE)
+  }
+  alpha <- rep_len(alpha, length(col))
+  out <- col
+  keep <- !is.na(col)
+  keep[keep] <- is.na(alpha[keep]) | alpha[keep] >= 0
+  out[keep] <- grDevices::adjustcolor(col[keep], alpha.f = ifelse(is.na(alpha[keep]), 1, alpha[keep]))
+  out
+}
+
+closed_rect_path <- function(xmin, xmax, ymin, ymax) {
+  list(
+    x = c(xmin, xmax, xmax, xmin, xmin),
+    y = c(ymin, ymin, ymax, ymax, ymin)
+  )
+}
+
+outline_path <- function(x, y, hand_spec = NULL, closed = TRUE) {
+  if (is.null(hand_spec)) {
+    return(list(x = x, y = y))
+  }
+  with_hand_seed(hand_spec$seed, {
+    roughen_vertex_path(x, y, hand_spec, closed = closed)
+  })
 }
 
 build_mypaint_rect_grob <- function(data, params, default.units = "native") {

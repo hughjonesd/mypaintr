@@ -1,4 +1,28 @@
 
+roughen_vertex_path <- function(x, y, hand_spec, closed = FALSE) {
+  n <- length(x)
+  if (n < 2) {
+    return(list(x = x, y = y))
+  }
+
+  seg_n <- if (closed) n else n - 1L
+  out_x <- numeric()
+  out_y <- numeric()
+
+  for (i in seq_len(seg_n)) {
+    j <- if (i == n) 1L else i + 1L
+    seg <- rough_segment_path(x[i], y[i], x[j], y[j], hand_spec)
+    if (length(out_x)) {
+      seg$x <- seg$x[-1L]
+      seg$y <- seg$y[-1L]
+    }
+    out_x <- c(out_x, seg$x)
+    out_y <- c(out_y, seg$y)
+  }
+
+  list(x = out_x, y = out_y)
+}
+
 with_hand_seed <- function(seed, expr) {
   if (is.null(seed)) {
     return(force(expr))

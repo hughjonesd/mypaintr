@@ -122,6 +122,36 @@ clipped_hatch_hand <- function(hand_spec, clip = TRUE) {
   hand_fill
 }
 
+rough_path_intersections <- function(paths, yy) {
+  cuts <- numeric()
+  delta <- integer()
+
+  for (path in paths) {
+    n <- length(path$x)
+    if (n < 2L) next
+    for (i in seq_len(n)) {
+      j <- if (i == n) 1L else i + 1L
+      y0 <- path$y[i]
+      y1 <- path$y[j]
+      if (y0 == y1) next
+      if (yy >= min(y0, y1) && yy < max(y0, y1)) {
+        x0 <- path$x[i]
+        x1 <- path$x[j]
+        cuts <- c(cuts, x0 + (yy - y0) * (x1 - x0) / (y1 - y0))
+        delta <- c(delta, if (y1 > y0) 1L else -1L)
+      }
+    }
+  }
+
+  if (!length(cuts)) {
+    return(list(x = numeric(), delta = integer()))
+  }
+
+  ord <- order(cuts)
+  list(x = cuts[ord], delta = delta[ord])
+}
+
+
 point_in_paths <- function(paths, x, y, rule = c("winding", "evenodd")) {
   rule <- match.arg(rule)
   x <- rep_len(x, max(length(x), length(y)))
@@ -164,6 +194,15 @@ sample_point_in_paths <- function(paths, rule = c("winding", "evenodd"), max_tri
   c(x = mean(c(box$xmin, box$xmax)), y = mean(c(box$ymin, box$ymax)))
 }
 
+rotate_xy <- function(x, y, angle_deg) {
+  theta <- angle_deg * pi / 180
+  cth <- cos(theta)
+  sth <- sin(theta)
+  list(
+    x = cth * x - sth * y,
+    y = sth * x + cth * y
+  )
+}
 
 scanline_intervals <- function(paths, angle = 45, gap = NULL, rule = c("winding", "evenodd"),
                                jitter_gap = 0) {
@@ -243,6 +282,13 @@ polyline_data <- function(paths, hand_spec = NULL) {
   list(x = out_x, y = out_y, id = out_id)
 }
 
+offset_id <- function(id, by = 0L) {
+  if (!length(id)) {
+    return(id)
+  }
+  as.integer(id + by)
+}
+
 combine_polyline_data <- function(parts) {
   parts <- Filter(function(x) !is.null(x) && length(x$x), parts)
   if (!length(parts)) {
@@ -259,6 +305,24 @@ combine_polyline_data <- function(parts) {
     next_id <- max(out$id)
   }
   out
+}
+
+segment_data <- function(x0, y0, x1, y1, hand_spec = NULL) {
+  n <- max(length(x0), length(y0), length(x1), length(y1))
+  x0 <- rep_len(x0, n)
+  y0 <- rep_len(y0, n)
+  x1 <- rep_len(x1, n)
+  y1 <- rep_len(y1, n)
+
+  if (is.null(hand_spec)) {
+    return(list(
+      x = c(rbind(x0, x1)),
+      y = c(rbind(y0, y1)),
+      id = rep(seq_len(n), each = 2L)
+    ))
+  }
+
+  rough_segments_data(x0, y0, x1, y1, hand_spec)
 }
 
 rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL,

@@ -1,3 +1,70 @@
+
+rough_control_offsets <- function(t, amplitude) {
+  ctrl_x <- c(0, 0.33, 0.66, 1)
+  ctrl_y <- c(0, stats::rnorm(2, sd = amplitude), 0)
+  stats::approx(ctrl_x, ctrl_y, xout = t, rule = 2)$y
+}
+
+rough_segment_path <- function(x0, y0, x1, y1, hand_spec) {
+  dx <- x1 - x0
+  dy <- y1 - y0
+  len <- sqrt(dx * dx + dy * dy)
+  if (!is.finite(len) || len <= 0) {
+    return(list(x = c(x0), y = c(y0)))
+  }
+
+  ux <- dx / len
+  uy <- dy / len
+  px <- -uy
+  py <- ux
+  endpoint_sd <- hand_spec$endpoint_jitter * len
+  bow_amp <- stats::rnorm(1, sd = hand_spec$bow * len)
+  wobble_amp <- hand_spec$wobble * len
+  n <- max(6L, ceiling(len * 12))
+  t <- seq(0, 1, length.out = n)
+
+  start_para <- stats::rnorm(1, sd = endpoint_sd)
+  end_para <- stats::rnorm(1, sd = endpoint_sd)
+  start_perp <- stats::rnorm(1, sd = endpoint_sd)
+  end_perp <- stats::rnorm(1, sd = endpoint_sd)
+
+  sx <- x0 + ux * start_para + px * start_perp
+  sy <- y0 + uy * start_para + py * start_perp
+  ex <- x1 + ux * end_para + px * end_perp
+  ey <- y1 + uy * end_para + py * end_perp
+
+  base_x <- sx + (ex - sx) * t
+  base_y <- sy + (ey - sy) * t
+  bow <- bow_amp * sin(pi * t)
+  wobble <- rough_control_offsets(t, wobble_amp) * sin(pi * t)
+  offset <- bow + wobble
+
+  list(
+    x = base_x + px * offset,
+    y = base_y + py * offset
+  )
+}
+
+rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
+  n <- max(length(x0), length(y0), length(x1), length(y1))
+  x0 <- rep_len(x0, n)
+  y0 <- rep_len(y0, n)
+  x1 <- rep_len(x1, n)
+  y1 <- rep_len(y1, n)
+
+  out_x <- numeric()
+  out_y <- numeric()
+  out_id <- integer()
+  for (i in seq_len(n)) {
+    seg <- rough_segment_path(x0[i], y0[i], x1[i], y1[i], hand_spec)
+    out_x <- c(out_x, seg$x)
+    out_y <- c(out_y, seg$y)
+    out_id <- c(out_id, rep.int(i, length(seg$x)))
+  }
+
+  list(x = out_x, y = out_y, id = out_id)
+}
+
 #' Compute a rough polygon outline
 #'
 #' @param x,y Polygon coordinates.
@@ -122,6 +189,20 @@ rough_polypath_data <- function(paths, hand_spec, rule) {
   list(x = out_x, y = out_y, id = out_id, rule = rule)
 }
 
+split_polypath <- function(x, y = NULL, id = NULL) {
+  xy <- grDevices::xy.coords(x, y)
+  if (is.null(id)) {
+    id <- rep.int(1L, length(xy$x))
+  }
+  id <- as.integer(id)
+  if (length(id) != length(xy$x)) {
+    stop("id must have the same length as x and y", call. = FALSE)
+  }
+
+  groups <- split(seq_along(id), id)
+  lapply(groups, function(idx) list(x = xy$x[idx], y = xy$y[idx]))
+}
+
 #' Compute a rough multipath outline
 #'
 #' @param x,y Coordinates as for [graphics::polypath()].
@@ -145,6 +226,26 @@ rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"
   with_hand_seed(hand_spec$seed, {
     rough_polypath_data(paths, hand_spec, rule)
   })
+}
+
+
+draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, base_path = NULL) {
+  args <- list(...)
+  strokes <- max(1L, as.integer(hand_spec$multi_stroke))
+  for (i in seq_len(strokes)) {
+    lwd <- args$lwd %||% graphics::par("lwd")
+    jittered_lwd <- max(0.01, lwd * (1 + stats::rnorm(1, sd = hand_spec$width_jitter)))
+    path_i <- if (i == 1L && !is.null(base_path)) {
+      base_path
+    } else {
+      roughen_vertex_path(path$x, path$y, hand_spec, closed = closed)
+    }
+    args_i <- args
+    args_i$x <- path_i$x
+    args_i$y <- path_i$y
+    args_i$lwd <- jittered_lwd
+    do.call(draw_fun, args_i)
+  }
 }
 
 #' Draw rough connected lines
@@ -234,6 +335,16 @@ draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 
     }
     NULL
   }))
+}
+
+join_polypath_na <- function(paths) {
+  x <- unlist(lapply(paths, function(path) c(path$x, NA_real_)), use.names = FALSE)
+  y <- unlist(lapply(paths, function(path) c(path$y, NA_real_)), use.names = FALSE)
+  if (length(x)) {
+    x <- x[-length(x)]
+    y <- y[-length(y)]
+  }
+  list(x = x, y = y)
 }
 
 #' Draw a rough multipath with optional holes

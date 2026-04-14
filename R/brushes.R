@@ -117,8 +117,120 @@ resolve_mypaint_brush_file <- function(brush, paths = default_mypaint_brush_dirs
   NULL
 }
 
+normalize_settings <- function(settings) {
+  if (is.null(settings)) {
+    return(numeric())
+  }
+  if (is.list(settings)) {
+    settings <- unlist(settings, recursive = FALSE, use.names = TRUE)
+  }
+  if (!is.numeric(settings) || is.null(names(settings)) || any(names(settings) == "")) {
+    stop("brush settings must be a named numeric vector or named list", call. = FALSE)
+  }
+  storage.mode(settings) <- "double"
+  settings
+}
+
+normalize_brush_spec <- function(brush, settings = NULL) {
+  base_settings <- numeric()
+  json <- NULL
+
+  if (is.null(brush)) {
+    NULL
+  } else if (is.character(brush) && length(brush) == 1L) {
+    if (brush %in% names(brush_preset_table)) {
+      base_settings <- brush_preset_table[[brush]]
+    } else if (startsWith(trimws(brush), "{")) {
+      json <- brush
+    } else {
+      brush_file <- resolve_mypaint_brush_file(brush)
+      if (is.null(brush_file)) {
+        stop("unknown brush preset or brush file: ", brush, call. = FALSE)
+      }
+      json <- read_mypaint_brush(brush_file)
+    }
+  } else if (is.numeric(brush) || is.list(brush)) {
+    base_settings <- normalize_settings(brush)
+  } else {
+    stop("brush must be NULL, a preset name, a JSON string, or named settings", call. = FALSE)
+  }
+
+  override_settings <- normalize_settings(settings)
+  if (length(override_settings)) {
+    base_settings[names(override_settings)] <- override_settings
+  }
+
+  spec <- list(
+    json = json,
+    settings = base_settings
+  )
+  spec
+}
+
 read_mypaint_brush <- function(path) {
   paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+}
+
+
+json_brush_base_value <- function(json, setting) {
+  pattern <- sprintf(
+    '"%s"[[:space:]]*:[[:space:]]*\\{[^}]*"base_value"[[:space:]]*:[[:space:]]*([-+0-9.eE]+)',
+    setting
+  )
+  match <- regexec(pattern, json, perl = TRUE)
+  captures <- regmatches(json, match)[[1L]]
+  if (length(captures) < 2L) {
+    return(NA_real_)
+  }
+  suppressWarnings(as.numeric(captures[[2L]]))
+}
+
+is_probably_pure_smudge_brush <- function(spec) {
+  if (is.null(spec)) {
+    return(FALSE)
+  }
+
+  settings <- spec$settings %||% numeric()
+  json <- spec$json %||% ""
+
+  value_for <- function(name, default = NA_real_) {
+    if (name %in% names(settings)) {
+      return(as.numeric(settings[[name]]))
+    }
+    value <- json_brush_base_value(json, name)
+    if (is.na(value)) default else value
+  }
+
+  smudge <- value_for("smudge", default = 0)
+  opaque_multiply <- value_for("opaque_multiply", default = 1)
+  colorize <- value_for("colorize", default = 0)
+  restore_color <- value_for("restore_color", default = 0)
+
+  isTRUE(smudge >= 0.8 &&
+           opaque_multiply <= 0.02 &&
+           colorize <= 0.02 &&
+           restore_color <= 0.02)
+}
+
+warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
+  type <- match.arg(type)
+  if (!is_probably_pure_smudge_brush(spec)) {
+    return(invisible(NULL))
+  }
+
+  if (type == "fill") {
+    warning(
+      "Pure smudge brush selected for fill: mypaintr falls back to solid fills; proper smudged fills are not supported.",
+      call. = FALSE
+    )
+  } else {
+    warning(
+      "Pure smudge brush selected for stroke: mypaintr approximates this as a surface-sampled paint stroke; proper smudging is not yet supported.",
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
 }
 
 #' Set the active mypaintr brush
