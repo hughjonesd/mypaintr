@@ -1,0 +1,112 @@
+---
+title: "Hand Demo"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Hand Demo}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+library(mypaintr)
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.ext = "png",
+  fig.width = 5,
+  fig.height = 4,
+  fig.keep = "none",
+  mypaint = TRUE
+)
+
+plot_with_hand <- function(..., null = FALSE) {
+  title <- deparse(substitute(list(...)))
+  title <- sub("list\\((.*)\\)",  "\\1", title)
+  plot.new()
+  plot.window(c(0, 10), c(0, 10))
+  title(title)
+  
+  set_brush(NULL)
+  if (null)
+    set_hand(NULL)
+  else 
+    set_hand(hand(seed = 1, ...))
+  rect(1, 1, 4, 4)
+  rect(6, 6, 9, 9, col = "green4")
+  rect(1, 6, 4, 9, col = "darkred", density = 5)
+  draw_rough_rect(6, 1, 9, 4, col = "orange2")
+  arrows(1, 5, 9, 5)
+}
+```
+
+```{r}
+plot_with_hand(NULL)
+```
+
+
+```{r}
+plot_with_hand()
+```
+
+
+```{r}
+plot_with_hand(bow = 0)
+```
+
+
+```{r}
+plot_with_hand(wobble = 0)
+```
+
+
+```{r}
+plot_with_hand(multi_stroke = 2)
+```
+
+
+```{r}
+plot_with_hand(width_jitter = 0.24, multi_stroke = 2)
+```
+
+
+```{r}
+plot_with_hand(endpoint_jitter = 0)
+```
+
+```{r}
+plot_with_hand(endpoint_jitter = 0.05)
+```
+
+
+
+```{r}
+plot_with_hand(hachure_gap = 0.1)
+```
+
+
+```{r}
+plot_with_hand(hachure_angle = 0)
+```
+
+
+```{r}
+plot_with_hand(hachure_angle_jitter = 0)
+```
+
+
+```{r}
+plot_with_hand(hachure_angle_jitter = 30)
+```
+
+
+
+```{r}
+plot_with_hand(hachure_gap_jitter = 0)
+```
+
+
+```{r}
+plot_with_hand(hachure_gap_jitter = 0.45)
+```
