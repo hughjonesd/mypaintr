@@ -74,6 +74,58 @@ set_brush(NULL)
 axis(side = 2, at = seq(0, 60, 20))
 ```
 
+## Good brushes
+
+Not all Mypaint brushes work well with mypaintr (yet). In particular,
+smudging isn't fully implemented yet.
+
+Here are some brushes that I've found good to use, i.e. neither
+too crazy nor too similar to standard R:
+
+* classic/charcoal
+* classic/coarse_bulk_1 (and _2 and _3) 
+* classic/dry_brush
+* classic/ink_blot
+* classic/ink_eraser
+* classic/kabura
+* classic/pen
+* classic/pencil
+* classic/slow_ink
+* classic/textured_ink
+* deevad/2B_pencil
+* deevad/4H_pencil
+* deevad/chalk
+* deevad/spray2
+* Dieterle/HalfToneCMY#1
+* Dieterle/Pencil-_Left_Handed
+* Dieterle/Posterizer
+* experimental/bubble
+* experimental/track
+* experimental/pixelblocking
+* experimental/sewing
+* experimental/small_blot
+* experimental/spaced-blot
+* experimental/speed_blot
+* experimental/subtle_pencil
+* experimental/track
+* kaerhon_v1/inkster_l
+* ramon/2B_pencil
+* ramon/B-pencil
+* ramon/P._Shade
+* ramon/Pastel_1
+* ramon/Pen
+* ramon/Sketch_1
+* ramon/Thin_Pen
+* tanda/acrylic-05-paint
+* tanda/charcoal-01
+* tanda/charcoal-03
+* tanda/charcoal-04
+* tanda/marker-01
+* tanda/marker-05
+* tanda/oil-06-paint
+* tanda/pencil-2b
+* tanda/pencil-8b
+
 # Hands
 
 The other way to customize plotting is to set the "hand". While brushes change
@@ -298,6 +350,22 @@ knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 ```
 
 Then in chunks where you use `mypaint_device`, you need to set chunk options
-`mypaint=TRUE, fig.keep="none"`. 
+`mypaint=TRUE, fig.keep="none"`. You can set them for all chunks like this:
+
+```r
+knitr::opts_chunk$set(
+  mypaint = TRUE,
+  fig.keep = "none"
+)
+```
 
 Don't set `dev` explicitly: the hook will do it for you.
+
+One limitation is that you cannot produce more than one plot per chunk. If
+you need to do this, try setting the following chunk options:
+
+```r
+dev='mypaint_device', fig.ext='png', fig.keep='high', mypaint=FALSE}
+```
+
+this may work, *so long as you don't edit device options within a single plot*.
