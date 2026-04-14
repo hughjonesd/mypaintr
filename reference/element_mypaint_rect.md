@@ -66,8 +66,8 @@ element_mypaint_rect(
 
   Optional override for background-like fills.
 
-- fill, colour, linewidth, linetype, color, linejoin, inherit.blank,
-  size:
+- fill, colour, color, linewidth, linetype, linejoin, inherit.blank,
+  size, ...:
 
   Passed through to
   [`ggplot2::element_rect()`](https://ggplot2.tidyverse.org/reference/element.html).

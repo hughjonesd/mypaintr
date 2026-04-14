@@ -16,7 +16,7 @@ Here are some demos.
 
 ``` r
 library(mypaintr)
-knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -324,7 +324,7 @@ dynamically updating the device within chunks, you must install a
 special hook:
 
 ``` r
-knitr::knit_hooks$set(mypaint = knitr_chunk_hook())
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 ```
 
 Then in chunks where you use `mypaint_device`, you need to set chunk

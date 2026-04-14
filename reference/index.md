@@ -74,5 +74,5 @@
 
 ## knitr
 
-- [`knitr_chunk_hook()`](https://hughjonesd.github.io/mypaintr/reference/knitr_chunk_hook.md)
+- [`knitr_mypaint_hook()`](https://hughjonesd.github.io/mypaintr/reference/knitr_mypaint_hook.md)
   : Create a knitr chunk hook for live mypaint rendering

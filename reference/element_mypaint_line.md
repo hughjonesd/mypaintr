@@ -42,8 +42,8 @@ element_mypaint_line(
   Optional hand-drawn geometry created with
   [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md).
 
-- colour, linewidth, linetype, lineend, linejoin, arrow, arrow.fill,
-  inherit.blank, size:
+- colour, color, linewidth, linetype, lineend, linejoin, arrow,
+  arrow.fill, inherit.blank, size, ...:
 
   Passed through to
   [`ggplot2::element_line()`](https://ggplot2.tidyverse.org/reference/element.html).

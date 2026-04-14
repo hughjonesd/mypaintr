@@ -12,7 +12,7 @@ and
 ## Usage
 
 ``` r
-knitr_chunk_hook(...)
+knitr_mypaint_hook(...)
 ```
 
 ## Arguments
@@ -31,8 +31,8 @@ A function suitable for `knitr::knit_hooks$set()`.
 ## Details
 
 Register it with
-`knitr::knit_hooks$set(mypaint = knitr_chunk_hook(...))` and then enable
-it for chunks with `mypaint = TRUE`. Chunks should also set
+`knitr::knit_hooks$set(mypaint = knitr_mypaint_hook(...))` and then
+enable it for chunks with `mypaint = TRUE`. Chunks should also set
 `fig.keep = "none"` and `fig.ext = "png"`. If a chunk explicitly sets
 `dev=`, the hook is skipped and knitr's normal device handling is used.
 
@@ -40,7 +40,7 @@ it for chunks with `mypaint = TRUE`. Chunks should also set
 
 ``` r
 if (requireNamespace("knitr", quietly = TRUE)) {
-  hook <- knitr_chunk_hook(brush = "deevad/2B_pencil")
+  hook <- knitr_mypaint_hook(brush = "deevad/2B_pencil")
   print(is.function(hook))
 }
 #> [1] TRUE

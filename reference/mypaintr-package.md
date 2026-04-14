@@ -1,8 +1,18 @@
-# mypaintr: Artistic Graphics Device Backed by libmypaint
+# mypaintr: Plot R Graphics Like a Human
 
-Raster graphics device for base R graphics that renders stroked
-primitives with libmypaint and uses Cairo for text and solid fills on
-the same backing surface.
+R graphics device for human-like, sketched plotting. Uses libmypaint
+brushes to draw lines and polygons. Includes functions for plotting
+"rough" lines and polygons. Integrates with base and "ggplot" graphics.
+
+## See also
+
+Useful links:
+
+- <https://github.com/hughjonesd/mypaintr>
+
+- <https://hughjonesd.github.io/mypaintr/>
+
+- Report bugs at <https://github.com/hughjonesd/mypaintr/issues>
 
 ## Author
 

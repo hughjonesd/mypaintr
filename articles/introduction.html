@@ -75,7 +75,7 @@ hand-drawn paths in ggplot graphs</li>
 <p>Here are some demos.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/hughjonesd/mypaintr" class="external-link">mypaintr</a></span><span class="op">)</span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/knit_hooks.html" class="external-link">knit_hooks</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>mypaint <span class="op">=</span> <span class="fu"><a href="../reference/knitr_chunk_hook.html">knitr_chunk_hook</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/knit_hooks.html" class="external-link">knit_hooks</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>mypaint <span class="op">=</span> <span class="fu"><a href="../reference/knitr_mypaint_hook.html">knitr_mypaint_hook</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
 <span>  collapse <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -325,7 +325,7 @@ straight grid lines:</p>
 dynamically updating the device within chunks, you must install a
 special hook:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/knit_hooks.html" class="external-link">knit_hooks</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>mypaint <span class="op">=</span> <span class="fu"><a href="../reference/knitr_chunk_hook.html">knitr_chunk_hook</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/knit_hooks.html" class="external-link">knit_hooks</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>mypaint <span class="op">=</span> <span class="fu"><a href="../reference/knitr_mypaint_hook.html">knitr_mypaint_hook</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Then in chunks where you use <code>mypaint_device</code>, you need to
 set chunk options <code>mypaint=TRUE, fig.keep="none"</code>.</p>
 <p>Don’t set <code>dev</code> explicitly: the hook will do it for
