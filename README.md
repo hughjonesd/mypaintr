@@ -24,6 +24,9 @@ A base R barplot using a custom brush, plus a hand-drawn axis:
 ``` r
 library(mypaintr)
 
+# on the command line, do: 
+# mypaint_device("output.png")
+
 set_brush("tanda/acrylic-05-paint")
 barplot(VADeaths, axes = FALSE, 
         beside = TRUE, col = palette.colors(5), border = NA,
@@ -32,6 +35,8 @@ barplot(VADeaths, axes = FALSE,
 set_brush(NULL)
 set_hand(hand(wobble = 0))
 axis(side = 2, at = seq(0, 60, 20))
+
+# dev.off()
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
@@ -49,6 +54,8 @@ ggplot(diamonds) +
     plot.background = element_mypaint_rect(fill = "white"),
     panel.grid = element_mypaint_line(colour = "grey")
   )
+
+# ggsave("output.png", device = mypaint_device)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
@@ -65,7 +72,7 @@ draw_rough_polygons(5 + 3 * sin(2*pi * 1:5/5), 5 + 3 * cos(2*pi * 1:5/5),
                     fill_pattern = crosshatch())
 
 draw_rough_arrows(8, 8.5, 5.5, 5.5, lwd = 2, hand = hand(bow = 0.05))
-text(8, 9, "A pentagon")
+text(8, 9, "A pentagon", family = "Chalkboard")
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
