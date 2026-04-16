@@ -292,6 +292,7 @@ library(ggplot2)
 
 # At the console, do this:
 # mypaint_device("output.png")
+
 set_hand(hand())
 set_brush("experimental/bubble")
 
@@ -368,6 +369,13 @@ ggplot(diamonds) +
 ```
 
 ![](introduction_files/figure-html/unnamed-chunk-15-1.png)
+
+To save your output, you can either use
+[`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
+and [`dev.off()`](https://rdrr.io/r/grDevices/dev.html) as usual, or run
+`ggsave("output.png", dev = mypaint_device)`. The latter has the
+advantage that you can preview your plot live, though it won’t have the
+mypaintr customizations until you save it.
 
 ## Using mypaintr in knitr
 

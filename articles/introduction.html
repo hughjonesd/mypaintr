@@ -312,6 +312,7 @@ fill:</p>
 <span></span>
 <span><span class="co"># At the console, do this:</span></span>
 <span><span class="co"># mypaint_device("output.png")</span></span>
+<span></span>
 <span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/bubble"</span><span class="op">)</span></span>
 <span></span>
@@ -371,6 +372,11 @@ straight grid lines:</p>
 <span>    panel.grid <span class="op">=</span> <span class="fu"><a href="../reference/element_mypaint_line.html">element_mypaint_line</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-15-1.png" alt="" width="480"></p>
+<p>To save your output, you can either use <code><a href="../reference/mypaint_device.html">mypaint_device()</a></code>
+and <code><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off()</a></code> as usual, or run
+<code>ggsave("output.png", dev = mypaint_device)</code>. The latter has
+the advantage that you can preview your plot live, though it won’t have
+the mypaintr customizations until you save it.</p>
 </div>
 <div class="section level2">
 <h2 id="using-mypaintr-in-knitr">Using mypaintr in knitr<a class="anchor" aria-label="anchor" href="#using-mypaintr-in-knitr"></a>
