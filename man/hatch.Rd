@@ -9,7 +9,8 @@ hatch(angle = 45, density = 8, clip = TRUE)
 \arguments{
 \item{angle}{Base hatch angle in degrees.}
 
-\item{density}{Approximate line density. Larger values give denser fills.}
+\item{density}{Approximate line density in lines per inch. Larger
+values give denser fills.}
 
 \item{clip}{When \code{TRUE}, hatch endpoints stay on the shape boundary to reduce
 overshoot.}

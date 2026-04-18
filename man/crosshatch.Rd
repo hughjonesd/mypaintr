@@ -10,7 +10,8 @@ crosshatch(angle = 45, density = 7, clip = TRUE)
 \item{angle}{One or two hatch angles in degrees. If a single angle is
 supplied, the second pass defaults to \code{angle + 90}.}
 
-\item{density}{Approximate line density. Larger values give denser fills.}
+\item{density}{Approximate line density in lines per inch. Larger
+values give denser fills.}
 
 \item{clip}{When \code{TRUE}, hatch endpoints stay on the shape boundary to reduce
 overshoot.}

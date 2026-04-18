@@ -4,18 +4,27 @@
 \alias{jumble}
 \title{Jumble fill pattern}
 \usage{
-jumble(density = 5, strokes = NULL, step = NULL, curl = 0.35)
+jumble(
+  angle = 0,
+  density = 10,
+  radius = 0.38/density,
+  wobble = 0.08,
+  clip = TRUE
+)
 }
 \arguments{
-\item{density}{Approximate scribble density. Larger values give more strokes.}
+\item{angle}{Base angle in degrees for the underlying guide lines.}
 
-\item{strokes}{Approximate number of jumble strokes. When \code{NULL}, a
-default based on the shape size is used.}
+\item{density}{Approximate line density in lines per inch. Larger
+values give denser fills.}
 
-\item{step}{Jumble step size in data units.}
+\item{radius}{Loop radius in inches. Defaults to \code{0.38 / density}, so the
+loops are sized as a fraction of the line spacing.}
 
-\item{curl}{How tightly the jumble curls as it wanders. Larger values produce
-rounder, loopier scribbles.}
+\item{wobble}{Amount of irregularity in the loop shapes. Larger values give
+less even circles.}
+
+\item{clip}{When \code{TRUE}, split loop paths at the shape boundary.}
 }
 \value{
 A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.

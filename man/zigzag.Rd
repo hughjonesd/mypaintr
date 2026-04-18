@@ -9,7 +9,8 @@ zigzag(angle = 45, density = 6, clip = TRUE)
 \arguments{
 \item{angle}{Base zigzag angle in degrees.}
 
-\item{density}{Approximate line density. Larger values give denser fills.}
+\item{density}{Approximate line density in lines per inch. Larger
+values give denser fills.}
 
 \item{clip}{When \code{TRUE}, zigzag endpoints stay on the shape boundary to
 reduce overshoot.}

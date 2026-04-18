@@ -292,17 +292,13 @@ element_mypaint_rect <- function(brush = NULL,
     stop("fill_settings requires fill_brush", call. = FALSE)
   }
 
-  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
-  fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
-  style <- make_style_override(
-    update_stroke = TRUE,
-    stroke_spec = stroke_spec,
-    stroke_style = if (is.null(stroke_spec)) 0L else 1L,
-    stroke_hand = normalize_hand_spec(stroke_hand),
-    update_fill = TRUE,
-    fill_spec = fill_spec,
-    fill_style = if (is.null(fill_spec)) 0L else 1L,
-    fill_hand = normalize_hand_spec(fill_hand),
+  style <- make_mypaintr_style(
+    brush = brush,
+    brush_settings = brush_settings,
+    fill_brush = fill_brush,
+    fill_settings = fill_settings,
+    stroke_hand = stroke_hand,
+    fill_hand = fill_hand,
     auto_solid_bg = auto_solid_bg
   )
   args <- list(
@@ -328,6 +324,127 @@ wrap_mypaintr_style_grob <- function(child, style) {
     mypaintr_style = style,
     cl = "mypaintr_style_grob"
   )
+}
+
+make_mypaintr_pattern_grob <- function(paths, hand_spec, fill_pattern, gp, default.units = "native") {
+  grid::gTree(
+    paths = paths,
+    hand_spec = hand_spec,
+    fill_pattern = fill_pattern,
+    gp = gp,
+    default.units = default.units,
+    cl = "mypaintr_pattern_grob"
+  )
+}
+
+wrap_mypaintr_style_output <- function(x, style) {
+  if (inherits(x, "grob")) {
+    return(wrap_mypaintr_style_grob(x, style))
+  }
+  if (is.list(x)) {
+    x[] <- lapply(x, wrap_mypaintr_style_output, style = style)
+  }
+  x
+}
+
+make_mypaintr_style <- function(brush = NULL,
+                                brush_settings = NULL,
+                                fill_brush = NULL,
+                                fill_settings = NULL,
+                                hand = NULL,
+                                stroke_hand = hand,
+                                fill_hand = hand,
+                                auto_solid_bg = NULL) {
+  if (is.null(brush) && !is.null(brush_settings)) {
+    stop("brush_settings requires brush", call. = FALSE)
+  }
+  if (is.null(fill_brush) && !is.null(fill_settings)) {
+    stop("fill_settings requires fill_brush", call. = FALSE)
+  }
+
+  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
+  fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
+  make_style_override(
+    update_stroke = TRUE,
+    stroke_spec = stroke_spec,
+    stroke_style = if (is.null(stroke_spec)) 0L else 1L,
+    stroke_hand = normalize_hand_spec(stroke_hand),
+    update_fill = TRUE,
+    fill_spec = fill_spec,
+    fill_style = if (is.null(fill_spec)) 0L else 1L,
+    fill_hand = normalize_hand_spec(fill_hand),
+    auto_solid_bg = auto_solid_bg
+  )
+}
+
+#' Wrap a grid grob or ggplot layer with scoped mypaint styling
+#'
+#' `mypaint_wrap()` applies temporary mypaintr brush and hand settings while the
+#' wrapped object is drawn, then restores the previous device style. It can wrap
+#' either a grid grob or a ggplot2 layer. This makes it useful both for direct
+#' `grid::grid.draw()` workflows and for ggplot calls such as
+#' `ggplot(...) + mypaint_wrap(geom_line(...), ...)`.
+#'
+#' @param object A grid grob or a ggplot2 layer object.
+#' @param brush Stroke brush preset, installed brush name, JSON brush string,
+#'   named settings, or `NULL` for solid strokes.
+#' @param brush_settings Named settings overriding `brush`.
+#' @param fill_brush Fill brush preset, installed brush name, JSON brush string,
+#'   named settings, or `NULL` for solid fills.
+#' @param fill_settings Named settings overriding `fill_brush`.
+#' @param hand Optional hand-drawn geometry applied to both stroke and fill by
+#'   default.
+#' @param stroke_hand Optional hand-drawn geometry for strokes.
+#' @param fill_hand Optional hand-drawn geometry for fills.
+#' @param auto_solid_bg Optional override for background-like fills.
+#' @return An object of the same general kind as `object`: a wrapped grob for
+#'   grid inputs or a wrapped layer for ggplot2 inputs.
+#' @examples
+#' line <- grid::linesGrob(c(0.1, 0.9), c(0.2, 0.8))
+#' wrapped <- mypaint_wrap(line, brush = "ink", hand = hand())
+#'
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+#'     mypaint_wrap(ggplot2::geom_line(), brush = "ink", hand = hand())
+#' }
+#' @export
+mypaint_wrap <- function(object,
+                         brush = NULL,
+                         brush_settings = NULL,
+                         fill_brush = NULL,
+                         fill_settings = NULL,
+                         hand = NULL,
+                         stroke_hand = hand,
+                         fill_hand = hand,
+                         auto_solid_bg = NULL) {
+  if (missing(fill_brush)) {
+    fill_brush <- brush
+  }
+
+  style <- make_mypaintr_style(
+    brush = brush,
+    brush_settings = brush_settings,
+    fill_brush = fill_brush,
+    fill_settings = fill_settings,
+    hand = hand,
+    stroke_hand = stroke_hand,
+    fill_hand = fill_hand,
+    auto_solid_bg = auto_solid_bg
+  )
+
+  if (inherits(object, "Layer")) {
+    old_draw_geom <- object$draw_geom
+    object$draw_geom <- function(self, data, layout) {
+      wrap_mypaintr_style_output(old_draw_geom(data, layout), style)
+    }
+    return(object)
+  }
+
+  if (inherits(object, "grob")) {
+    return(wrap_mypaintr_style_grob(object, style))
+  }
+
+  stop("object must be a grid grob or ggplot2 layer", call. = FALSE)
 }
 
 base_element <- function(element, class_name) {
@@ -373,6 +490,50 @@ postDrawDetails.mypaintr_style_grob <- function(x) {
   state <- mypaintr_env$style_stack[[n]]
   mypaintr_env$style_stack <- mypaintr_env$style_stack[-n]
   apply_device_style_state(state)
+}
+
+#' @exportS3Method grid::makeContent
+makeContent.mypaintr_pattern_grob <- function(x) {
+  inches_per_data_unit <- function(angle = 0) {
+    x_in_per_unit <- grid::convertWidth(grid::unit(1, "native"), "in", valueOnly = TRUE)
+    y_in_per_unit <- grid::convertHeight(grid::unit(1, "native"), "in", valueOnly = TRUE)
+    theta <- angle * pi / 180
+    sqrt((x_in_per_unit * sin(theta))^2 + (y_in_per_unit * cos(theta))^2)
+  }
+
+  hatch <- if (is.null(x$hand_spec)) {
+    rough_fill_pattern_data(
+      x$paths,
+      hand_spec = NULL,
+      fill_pattern = x$fill_pattern,
+      inches_per_data_unit = inches_per_data_unit
+    )
+  } else {
+    with_hand_seed(x$hand_spec$seed, {
+      rough_fill_pattern_data(
+        x$paths,
+        hand_spec = x$hand_spec,
+        fill_pattern = x$fill_pattern,
+        inches_per_data_unit = inches_per_data_unit
+      )
+    })
+  }
+
+  if (!length(hatch$x)) {
+    x$children <- grid::gList()
+    return(x)
+  }
+
+  x$children <- grid::gList(
+    grid::polylineGrob(
+      x = hatch$x,
+      y = hatch$y,
+      id = hatch$id,
+      default.units = x$default.units,
+      gp = x$gp
+    )
+  )
+  x
 }
 
 make_stroke_style <- function(brush = NULL, settings = NULL, hand = NULL) {
@@ -458,26 +619,17 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
     )
 
     if (is_visible_col(fill_col)) {
-      hatch <- if (is.null(hatch_hand)) {
-        rough_fill_pattern_data(list(path), hand_spec = NULL, fill_pattern = fill_pattern)
-      } else {
-        with_hand_seed(hatch_hand$seed, {
-          rough_fill_pattern_data(list(path), hand_spec = hatch_hand, fill_pattern = fill_pattern)
-        })
-      }
-      if (length(hatch$x)) {
-        hatch_grob <- grid::polylineGrob(
-          x = hatch$x,
-          y = hatch$y,
-          id = hatch$id,
-          default.units = default.units,
-          gp = line_gp(fill_col, linewidth, linetype, params$linejoin, params$lineend)
-        )
-        child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
-          hatch_grob,
-          make_stroke_style(fill_brush, fill_settings, hand = hatch_hand)
-        )
-      }
+      hatch_grob <- make_mypaintr_pattern_grob(
+        list(path),
+        hand_spec = hatch_hand,
+        fill_pattern = fill_pattern,
+        gp = line_gp(fill_col, linewidth, linetype, params$linejoin, params$lineend),
+        default.units = default.units
+      )
+      child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
+        hatch_grob,
+        make_stroke_style(fill_brush, fill_settings, hand = hatch_hand)
+      )
     }
 
     if (is_visible_col(border_col)) {

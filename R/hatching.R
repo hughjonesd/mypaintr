@@ -4,7 +4,9 @@ new_fill_pattern <- function(style,
                              clip = TRUE,
                              strokes = NULL,
                              step = NULL,
-                             curl = NULL) {
+                             curl = NULL,
+                             radius = NULL,
+                             wobble = NULL) {
   structure(
     list(
       style = style,
@@ -13,7 +15,9 @@ new_fill_pattern <- function(style,
       clip = isTRUE(clip),
       strokes = strokes,
       step = step,
-      curl = curl
+      curl = curl,
+      radius = radius,
+      wobble = wobble
     ),
     class = "mypaintr_fill_pattern"
   )
@@ -22,7 +26,8 @@ new_fill_pattern <- function(style,
 #' Hatch fill pattern
 #'
 #' @param angle Base hatch angle in degrees.
-#' @param density Approximate line density. Larger values give denser fills.
+#' @param density Approximate line density in lines per inch. Larger
+#'   values give denser fills.
 #' @param clip When `TRUE`, hatch endpoints stay on the shape boundary to reduce
 #'   overshoot.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
@@ -35,7 +40,8 @@ hatch <- function(angle = 45, density = 8, clip = TRUE) {
 #'
 #' @param angle One or two hatch angles in degrees. If a single angle is
 #'   supplied, the second pass defaults to `angle + 90`.
-#' @param density Approximate line density. Larger values give denser fills.
+#' @param density Approximate line density in lines per inch. Larger
+#'   values give denser fills.
 #' @param clip When `TRUE`, hatch endpoints stay on the shape boundary to reduce
 #'   overshoot.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
@@ -50,7 +56,8 @@ crosshatch <- function(angle = 45, density = 7, clip = TRUE) {
 #' Zigzag fill pattern
 #'
 #' @param angle Base zigzag angle in degrees.
-#' @param density Approximate line density. Larger values give denser fills.
+#' @param density Approximate line density in lines per inch. Larger
+#'   values give denser fills.
 #' @param clip When `TRUE`, zigzag endpoints stay on the shape boundary to
 #'   reduce overshoot.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
@@ -61,16 +68,25 @@ zigzag <- function(angle = 45, density = 6, clip = TRUE) {
 
 #' Jumble fill pattern
 #'
-#' @param density Approximate scribble density. Larger values give more strokes.
-#' @param strokes Approximate number of jumble strokes. When `NULL`, a
-#'   default based on the shape size is used.
-#' @param step Jumble step size in data units.
-#' @param curl How tightly the jumble curls as it wanders. Larger values produce
-#'   rounder, loopier scribbles.
+#' @param angle Base angle in degrees for the underlying guide lines.
+#' @param density Approximate line density in lines per inch. Larger
+#'   values give denser fills.
+#' @param radius Loop radius in inches. Defaults to `0.38 / density`, so the
+#'   loops are sized as a fraction of the line spacing.
+#' @param wobble Amount of irregularity in the loop shapes. Larger values give
+#'   less even circles.
+#' @param clip When `TRUE`, split loop paths at the shape boundary.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
 #' @export
-jumble <- function(density = 5, strokes = NULL, step = NULL, curl = 0.35) {
-  new_fill_pattern("jumble", density = density, strokes = strokes, step = step, curl = curl, clip = TRUE)
+jumble <- function(angle = 0, density = 10, radius = 0.38 / density, wobble = 0.08, clip = TRUE) {
+  new_fill_pattern(
+    "jumble",
+    density = density,
+    angle = angle,
+    clip = clip,
+    radius = radius,
+    wobble = wobble
+  )
 }
 
 as_fill_pattern <- function(fill_pattern = NULL, hand_spec = NULL, default_when_missing = FALSE) {
@@ -91,15 +107,49 @@ as_fill_pattern <- function(fill_pattern = NULL, hand_spec = NULL, default_when_
   fill_pattern
 }
 
-fill_pattern_gap <- function(fill_pattern, paths, hand_spec = NULL) {
-  box <- path_bbox(paths)
-  span <- max(box$xmax - box$xmin, box$ymax - box$ymin)
+gap_inches_per_data_unit <- function(angle = 0) {
+  metrics <- tryCatch(
+    list(usr = graphics::par("usr"), pin = graphics::par("pin")),
+    error = function(...) NULL
+  )
+  if (is.null(metrics)) {
+    return(1)
+  }
+
+  usr <- metrics$usr
+  pin <- metrics$pin
+  x_in_per_unit <- pin[1] / max(usr[2] - usr[1], .Machine$double.eps)
+  y_in_per_unit <- pin[2] / max(usr[4] - usr[3], .Machine$double.eps)
+  theta <- angle * pi / 180
+  sqrt((x_in_per_unit * sin(theta))^2 + (y_in_per_unit * cos(theta))^2)
+}
+
+resolve_inches_per_data_unit <- function(inches_per_data_unit, angle = 0) {
+  if (is.null(inches_per_data_unit)) {
+    return(NULL)
+  }
+  if (is.function(inches_per_data_unit)) {
+    return(inches_per_data_unit(angle))
+  }
+  inches_per_data_unit
+}
+
+fill_pattern_gap <- function(fill_pattern, paths, hand_spec = NULL, angle = NULL,
+                             inches_per_data_unit = NULL) {
   gap <- NULL
   if (!is.null(hand_spec) && !is.null(hand_spec$hachure_gap) && is.null(fill_pattern$density)) {
     gap <- hand_spec$hachure_gap
   }
   if (is.null(gap)) {
-    gap <- if (is.null(fill_pattern$density)) span / 25 else span / max(1, fill_pattern$density)
+    density <- fill_pattern$density %||% 25
+    gap <- 1 / max(1, density)
+    in_per_gap_unit <- resolve_inches_per_data_unit(inches_per_data_unit, angle %||% 0)
+    if (is.null(in_per_gap_unit) && !is.null(angle)) {
+      in_per_gap_unit <- gap_inches_per_data_unit(angle)
+    }
+    if (!is.null(in_per_gap_unit) && is.finite(in_per_gap_unit) && in_per_gap_unit > 0) {
+      gap <- gap / in_per_gap_unit
+    }
   }
   max(gap, .Machine$double.eps)
 }
@@ -282,6 +332,25 @@ polyline_data <- function(paths, hand_spec = NULL) {
   list(x = out_x, y = out_y, id = out_id)
 }
 
+clip_polyline_to_paths <- function(paths, x, y, rule = c("winding", "evenodd")) {
+  rule <- match.arg(rule)
+  keep <- point_in_paths(paths, x, y, rule = rule)
+  if (!any(keep)) {
+    return(list())
+  }
+
+  runs <- rle(keep)
+  ends <- cumsum(runs$lengths)
+  starts <- c(1L, head(ends, -1L) + 1L)
+  out <- list()
+  for (i in seq_along(runs$values)) {
+    if (!runs$values[i] || runs$lengths[i] < 2L) next
+    idx <- starts[i]:ends[i]
+    out[[length(out) + 1L]] <- list(x = x[idx], y = y[idx])
+  }
+  out
+}
+
 offset_id <- function(id, by = 0L) {
   if (!length(id)) {
     return(id)
@@ -326,7 +395,8 @@ segment_data <- function(x0, y0, x1, y1, hand_spec = NULL) {
 }
 
 rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL,
-                                    rule = c("winding", "evenodd")) {
+                                    rule = c("winding", "evenodd"),
+                                    inches_per_data_unit = NULL) {
   rule <- match.arg(rule)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec, default_when_missing = FALSE)
   if (is.null(fill_pattern)) {
@@ -334,11 +404,17 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
   }
 
   fill_hand <- if (is.null(hand_spec)) NULL else clipped_hatch_hand(hand_spec, clip = fill_pattern$clip)
-  gap <- fill_pattern_gap(fill_pattern, paths, hand_spec)
   jitter_gap <- if (is.null(hand_spec)) 0 else hand_spec$hachure_gap_jitter
   jitter_angle <- if (is.null(hand_spec)) 0 else hand_spec$hachure_angle_jitter
 
   build_lines <- function(base_angle) {
+    gap <- fill_pattern_gap(
+      fill_pattern,
+      paths,
+      hand_spec,
+      angle = base_angle,
+      inches_per_data_unit = inches_per_data_unit
+    )
     rows <- scanline_intervals(
       paths,
       angle = base_angle,
@@ -355,6 +431,13 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
   }
 
   build_zigzag <- function(base_angle) {
+    gap <- fill_pattern_gap(
+      fill_pattern,
+      paths,
+      hand_spec,
+      angle = base_angle,
+      inches_per_data_unit = inches_per_data_unit
+    )
     rows <- scanline_intervals(
       paths,
       angle = base_angle,
@@ -383,62 +466,71 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
   }
 
   build_jumble <- function() {
-    box <- path_bbox(paths)
-    span <- max(box$xmax - box$xmin, box$ymax - box$ymin)
-    step <- fill_pattern$step %||% max(gap / 2, span / 35)
-    n_strokes <- fill_pattern$strokes %||% max(1L, round(span / step))
-    n_steps <- max(12L, round(2 * span / step))
-    curl <- fill_pattern$curl %||% 0.35
-    turn_sd <- max(0.03, 0.22 - 0.35 * pmin(curl, 0.45))
-    polylines <- vector("list", n_strokes)
-
-    smooth_path <- function(x, y, passes = 2L) {
-      if (length(x) < 3L) {
-        return(list(x = x, y = y))
-      }
-      for (pass in seq_len(passes)) {
-        x[2:(length(x) - 1L)] <- (x[1:(length(x) - 2L)] + 2 * x[2:(length(x) - 1L)] + x[3:length(x)]) / 4
-        y[2:(length(y) - 1L)] <- (y[1:(length(y) - 2L)] + 2 * y[2:(length(y) - 1L)] + y[3:length(y)]) / 4
-      }
-      list(x = x, y = y)
+    base_angle <- fill_pattern$angle %||% 45
+    gap <- fill_pattern_gap(
+      fill_pattern,
+      paths,
+      hand_spec,
+      angle = base_angle,
+      inches_per_data_unit = inches_per_data_unit
+    )
+    rows <- scanline_intervals(
+      paths,
+      angle = base_angle,
+      gap = gap,
+      rule = rule,
+      jitter_gap = if (jitter_gap == 0) 0 else stats::rnorm(1, sd = jitter_gap)
+    )
+    if (!nrow(rows)) {
+      return(list(x = numeric(), y = numeric(), id = integer()))
     }
 
-    for (s in seq_len(n_strokes)) {
-      p <- sample_point_in_paths(paths, rule = rule)
-      theta <- stats::runif(1L, 0, 2 * pi)
-      omega <- sample(c(-1, 1), 1L) * stats::runif(1L, curl / 2, curl * 1.5)
-      px <- numeric(n_steps)
-      py <- numeric(n_steps)
-      px[1] <- p[1]
-      py[1] <- p[2]
-      for (i in 2:n_steps) {
-        accepted <- FALSE
-        for (attempt in seq_len(12L)) {
-          omega_try <- 0.85 * omega + stats::rnorm(1L, mean = 0, sd = turn_sd)
-          theta_try <- theta + omega_try + if (attempt > 1L) stats::rnorm(1L, mean = 0, sd = pi / 5) else 0
-          cand_x <- px[i - 1L] + step * cos(theta_try)
-          cand_y <- py[i - 1L] + step * sin(theta_try)
-          if (point_in_paths(paths, cand_x, cand_y, rule)) {
-            theta <- theta_try
-            omega <- omega_try
-            px[i] <- cand_x
-            py[i] <- cand_y
-            accepted <- TRUE
-            break
-          }
+    radius <- fill_pattern$radius
+    in_per_gap_unit <- resolve_inches_per_data_unit(inches_per_data_unit, base_angle)
+    if (is.null(in_per_gap_unit)) {
+      in_per_gap_unit <- gap_inches_per_data_unit(base_angle)
+    }
+    if (is.finite(in_per_gap_unit) && in_per_gap_unit > 0) {
+      radius <- radius / in_per_gap_unit
+    }
+    radius <- max(radius, .Machine$double.eps)
+    wobble <- fill_pattern$wobble %||% 0.08
+    advance <- max(1.6 * radius, 2 * radius * (1 - 0.35 * pmin(wobble, 0.8)))
+    parts <- list()
+
+    for (i in seq_len(nrow(rows))) {
+      row <- rows[i, , drop = FALSE]
+      length_row <- row$x1 - row$x0
+      usable <- length_row - 2 * radius
+      if (usable <= radius) next
+
+      n_loops <- max(1L, floor(usable / advance))
+      theta_max <- 2 * pi * n_loops
+      n_points <- max(40L, 24L * n_loops)
+      theta <- seq(0, theta_max, length.out = n_points)
+      phase1 <- stats::runif(1L, 0, 2 * pi)
+      phase2 <- stats::runif(1L, 0, 2 * pi)
+
+      local_x <- row$x0 + radius +
+        advance * theta / (2 * pi) +
+        radius * cos(theta) +
+        wobble * radius * 0.35 * sin(2 * theta + phase1)
+      local_y <- row$y +
+        radius * sin(theta) +
+        wobble * radius * 0.45 * sin(3 * theta + phase2)
+
+      xy <- rotate_xy(local_x, local_y, base_angle)
+      if (isTRUE(fill_pattern$clip)) {
+        clipped <- clip_polyline_to_paths(paths, xy$x, xy$y, rule = rule)
+        if (length(clipped)) {
+          parts[[length(parts) + 1L]] <- polyline_data(clipped, hand_spec = fill_hand)
         }
-        if (!accepted) {
-          p <- sample_point_in_paths(paths, rule = rule)
-          px[i] <- p[1]
-          py[i] <- p[2]
-          theta <- stats::runif(1L, 0, 2 * pi)
-          omega <- -0.7 * omega
-        }
+      } else {
+        parts[[length(parts) + 1L]] <- polyline_data(list(list(x = xy$x, y = xy$y)), hand_spec = fill_hand)
       }
-      polylines[[s]] <- smooth_path(px, py)
     }
 
-    polyline_data(polylines, hand_spec = fill_hand)
+    combine_polyline_data(parts)
   }
 
   if (identical(fill_pattern$style, "jumble")) {

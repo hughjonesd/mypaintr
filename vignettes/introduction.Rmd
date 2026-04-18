@@ -295,6 +295,17 @@ mypaintr provides `element_mypaint_line()`, `element_mypaint_rect()`,
 used for individual plot elements. By default these will use "normal"
 drawing. 
 
+```{r, mypaint=TRUE, fig.keep="none"}
+
+ggplot(diamonds) +
+  mypaint_wrap(
+    geom_smooth(aes(carat, price), se = TRUE),
+    brush = "deevad/ballpen",
+    hand = hand(multi_stroke = 2)
+  ) +
+  theme_minimal()
+```
+
 Here's the same picture as above but with a clean background and straight
 grid lines:
 
