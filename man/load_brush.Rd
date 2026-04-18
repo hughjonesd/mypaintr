@@ -24,3 +24,13 @@ if (length(brushes())) {
   stopifnot(is.character(x), length(x) == 1L)
 }
 }
+\seealso{
+Other brush management: 
+\code{\link{brush_dirs}()},
+\code{\link{brush_inputs}()},
+\code{\link{brush_presets}()},
+\code{\link{brush_settings}()},
+\code{\link{brushes}()},
+\code{\link{set_brush}()}
+}
+\concept{brush management}

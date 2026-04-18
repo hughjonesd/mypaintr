@@ -19,3 +19,13 @@ List installed mypaint brushes
 \examples{
 head(brushes())
 }
+\seealso{
+Other brush management: 
+\code{\link{brush_dirs}()},
+\code{\link{brush_inputs}()},
+\code{\link{brush_presets}()},
+\code{\link{brush_settings}()},
+\code{\link{load_brush}()},
+\code{\link{set_brush}()}
+}
+\concept{brush management}

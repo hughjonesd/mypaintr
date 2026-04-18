@@ -50,3 +50,13 @@ draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
                     rule = "evenodd",
                     col = "grey80")
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{draw_rough_arrows}()},
+\code{\link{draw_rough_lines}()},
+\code{\link{draw_rough_points}()},
+\code{\link{draw_rough_polygons}()},
+\code{\link{draw_rough_rect}()},
+\code{\link{draw_rough_segments}()}
+}
+\concept{rough drawing helpers}

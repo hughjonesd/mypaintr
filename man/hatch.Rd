@@ -21,3 +21,10 @@ A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.
 \description{
 Hatch fill pattern
 }
+\seealso{
+Other fill patterns: 
+\code{\link{crosshatch}()},
+\code{\link{jumble}()},
+\code{\link{zigzag}()}
+}
+\concept{fill patterns}

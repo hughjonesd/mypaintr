@@ -251,12 +251,13 @@ draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, ba
 #' Draw rough connected lines
 #'
 #' @param x,y Coordinates as for [graphics::lines()].
-#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @inheritParams mypaintr-rough-hand
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, cumsum(rnorm(10)), type = "n")
 #' draw_rough_lines(1:10, cumsum(rnorm(10)))
+#' @family rough drawing helpers
 #' @export
 draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
@@ -284,12 +285,13 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
 #'
 #' @param x0,y0 Segment starts.
 #' @param x1,y1 Segment ends.
-#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @inheritParams mypaintr-rough-hand
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_segments(1:3, 1:3, 2:4, 3:1)
+#' @family rough drawing helpers
 #' @export
 draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
@@ -313,13 +315,14 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
 #' @param angle Arrowhead angle in degrees.
 #' @param code Integer code indicating where heads are drawn:
 #'   `0` for none, `1` at the start, `2` at the end, `3` at both ends.
-#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @inheritParams mypaintr-rough-hand
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_arrows(2, 2, 8, 8)
 #' draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
+#' @family rough drawing helpers
 #' @export
 draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
                               hand = NULL, ...) {
@@ -353,12 +356,8 @@ join_polypath_na <- function(paths) {
 #' @param id Optional path ids. Consecutive points with the same `id` belong to
 #'   one closed ring.
 #' @param rule Fill rule, `"winding"` or `"evenodd"`.
-#' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible and `fill_pattern` is `NULL`, a solid
-#'   fill is drawn.
-#' @param border Border colour.
-#' @param fill_pattern Optional fill pattern created with [hatch()],
-#'   [crosshatch()], [zigzag()], or [jumble()].
+#' @inheritParams mypaintr-rough-hand
+#' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
@@ -368,6 +367,7 @@ join_polypath_na <- function(paths) {
 #'                     id = c(rep(1, 4), rep(2, 4)),
 #'                     rule = "evenodd",
 #'                     col = "grey80")
+#' @family rough drawing helpers
 #' @export
 draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"),
                                 hand = NULL, col = NA, border = graphics::par("fg"),
@@ -422,17 +422,14 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #' Draw rough polygons
 #'
 #' @param x,y Polygon coordinates.
-#' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible and `fill_pattern` is `NULL`, a solid
-#'   fill is drawn.
-#' @param border Border colour.
-#' @param fill_pattern Optional fill pattern created with [hatch()],
-#'   [crosshatch()], [zigzag()], or [jumble()].
+#' @inheritParams mypaintr-rough-hand
+#' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
+#' @family rough drawing helpers
 #' @export
 draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
                                 fill_pattern = NULL, ...) {
@@ -480,17 +477,14 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #'
 #' @param x0,y0 Rectangle corner.
 #' @param x1,y1 Opposite rectangle corner.
-#' @param hand Hand-drawn geometry settings created with [hand()].
-#' @param col Fill colour. When visible and `fill_pattern` is `NULL`, a solid
-#'   fill is drawn.
-#' @param border Border colour.
-#' @param fill_pattern Optional fill pattern created with [hatch()],
-#'   [crosshatch()], [zigzag()], or [jumble()].
+#' @inheritParams mypaintr-rough-hand
+#' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_rect(2, 2, 5, 6, col = "grey80")
+#' @family rough drawing helpers
 #' @export
 draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = graphics::par("fg"),
                             fill_pattern = NULL, ...) {
@@ -510,12 +504,13 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
 #' Draw rough points
 #'
 #' @param x,y Point coordinates as for [graphics::points()].
-#' @param hand Hand-drawn geometry settings created with [hand()].
+#' @inheritParams mypaintr-rough-hand
 #' @param ... Graphics parameters passed to [graphics::points()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_points(1:10, 1:10, pch = 16)
+#' @family rough drawing helpers
 #' @export
 draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {
   hand_spec <- as_hand(hand)

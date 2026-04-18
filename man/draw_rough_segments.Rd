@@ -25,3 +25,13 @@ Draw rough segments
 plot(1:10, 1:10, type = "n")
 draw_rough_segments(1:3, 1:3, 2:4, 3:1)
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{draw_rough_arrows}()},
+\code{\link{draw_rough_lines}()},
+\code{\link{draw_rough_points}()},
+\code{\link{draw_rough_polygons}()},
+\code{\link{draw_rough_polypath}()},
+\code{\link{draw_rough_rect}()}
+}
+\concept{rough drawing helpers}

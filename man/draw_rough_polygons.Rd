@@ -39,3 +39,13 @@ Draw rough polygons
 plot(1:10, 1:10, type = "n")
 draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{draw_rough_arrows}()},
+\code{\link{draw_rough_lines}()},
+\code{\link{draw_rough_points}()},
+\code{\link{draw_rough_polypath}()},
+\code{\link{draw_rough_rect}()},
+\code{\link{draw_rough_segments}()}
+}
+\concept{rough drawing helpers}

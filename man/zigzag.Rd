@@ -7,7 +7,7 @@
 zigzag(angle = 45, density = 6, clip = TRUE)
 }
 \arguments{
-\item{angle}{Base zigzag angle in degrees.}
+\item{angle}{Base hatch angle in degrees.}
 
 \item{density}{Approximate line density in lines per inch. Larger
 values give denser fills.}
@@ -21,3 +21,10 @@ A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.
 \description{
 Zigzag fill pattern
 }
+\seealso{
+Other fill patterns: 
+\code{\link{crosshatch}()},
+\code{\link{hatch}()},
+\code{\link{jumble}()}
+}
+\concept{fill patterns}

@@ -9,3 +9,13 @@ brush_settings()
 \description{
 libmypaint brush setting metadata
 }
+\seealso{
+Other brush management: 
+\code{\link{brush_dirs}()},
+\code{\link{brush_inputs}()},
+\code{\link{brush_presets}()},
+\code{\link{brushes}()},
+\code{\link{load_brush}()},
+\code{\link{set_brush}()}
+}
+\concept{brush management}

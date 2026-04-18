@@ -23,3 +23,13 @@ Draw rough connected lines
 plot(1:10, cumsum(rnorm(10)), type = "n")
 draw_rough_lines(1:10, cumsum(rnorm(10)))
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{draw_rough_arrows}()},
+\code{\link{draw_rough_points}()},
+\code{\link{draw_rough_polygons}()},
+\code{\link{draw_rough_polypath}()},
+\code{\link{draw_rough_rect}()},
+\code{\link{draw_rough_segments}()}
+}
+\concept{rough drawing helpers}

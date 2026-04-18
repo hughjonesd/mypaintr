@@ -235,15 +235,15 @@ warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
 
 #' Set the active mypaintr brush
 #'
-#' @param brush Brush preset, installed brush name, JSON brush string, named
-#'   settings, or `NULL` to switch the selected type back to solid rendering.
-#' @param settings Named settings overriding `brush`.
+#' @inheritParams mypaintr-brush-param
+#' @inheritParams mypaintr-brush-settings-param
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
 #' @param auto_solid_bg Optional override for background-like fills.
 #' @return `NULL`, invisibly. If the active device is not `mypaintr`, the
 #'   selected brush becomes the default for the next [mypaint_device()] opened
 #'   in this R session.
+#' @family brush management
 #' @export
 set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
   type <- match.arg(type)
@@ -295,6 +295,7 @@ set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", 
 
 #' Built-in brush presets
 #'
+#' @family brush management
 #' @export
 brush_presets <- function() {
   brush_preset_table
@@ -305,6 +306,7 @@ brush_presets <- function() {
 #' @return A character vector of directories containing `.myb` brushes.
 #' @examples
 #' brush_dirs()
+#' @family brush management
 #' @export
 brush_dirs <- function() {
   default_mypaint_brush_dirs()
@@ -312,11 +314,11 @@ brush_dirs <- function() {
 
 #' List installed mypaint brushes
 #'
-#' @param paths Optional brush directories. Defaults to locally discovered
-#'   `mypaint-brushes` locations.
+#' @inheritParams mypaintr-brush-paths-param
 #' @return A character vector of brush names, relative to the brush root.
 #' @examples
 #' head(brushes())
+#' @family brush management
 #' @export
 brushes <- function(paths = default_mypaint_brush_dirs()) {
   out <- character()
@@ -334,14 +336,14 @@ brushes <- function(paths = default_mypaint_brush_dirs()) {
 #' Load an installed mypaint brush
 #'
 #' @param brush Brush name like `"classic/pencil"` or a path to a `.myb` file.
-#' @param paths Optional brush directories. Defaults to locally discovered
-#'   `mypaint-brushes` locations.
+#' @inheritParams mypaintr-brush-paths-param
 #' @return A JSON brush string suitable for `mypaint_device(brush = ...)`.
 #' @examples
 #' if (length(brushes())) {
 #'   x <- load_brush(brushes()[[1]])
 #'   stopifnot(is.character(x), length(x) == 1L)
 #' }
+#' @family brush management
 #' @export
 load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
   stopifnot(is.character(brush), length(brush) == 1L, nzchar(brush))
@@ -356,6 +358,7 @@ load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
 
 #' libmypaint brush setting metadata
 #'
+#' @family brush management
 #' @export
 brush_settings <- function() {
   as.data.frame(.Call(mypaintr_brush_settings_info), stringsAsFactors = FALSE)
@@ -363,6 +366,7 @@ brush_settings <- function() {
 
 #' libmypaint brush input metadata
 #'
+#' @family brush management
 #' @export
 brush_inputs <- function() {
   as.data.frame(.Call(mypaintr_brush_inputs_info), stringsAsFactors = FALSE)

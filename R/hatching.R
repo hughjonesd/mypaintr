@@ -25,12 +25,9 @@ new_fill_pattern <- function(style,
 
 #' Hatch fill pattern
 #'
-#' @param angle Base hatch angle in degrees.
-#' @param density Approximate line density in lines per inch. Larger
-#'   values give denser fills.
-#' @param clip When `TRUE`, hatch endpoints stay on the shape boundary to reduce
-#'   overshoot.
+#' @inheritParams mypaintr-fill-pattern-params
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @family fill patterns
 #' @export
 hatch <- function(angle = 45, density = 8, clip = TRUE) {
   new_fill_pattern("lines", density = density, angle = angle, clip = clip)
@@ -38,13 +35,11 @@ hatch <- function(angle = 45, density = 8, clip = TRUE) {
 
 #' Cross-hatch fill pattern
 #'
+#' @inheritParams mypaintr-fill-pattern-params
 #' @param angle One or two hatch angles in degrees. If a single angle is
 #'   supplied, the second pass defaults to `angle + 90`.
-#' @param density Approximate line density in lines per inch. Larger
-#'   values give denser fills.
-#' @param clip When `TRUE`, hatch endpoints stay on the shape boundary to reduce
-#'   overshoot.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @family fill patterns
 #' @export
 crosshatch <- function(angle = 45, density = 7, clip = TRUE) {
   if (!length(angle) %in% c(1L, 2L)) {
@@ -55,12 +50,11 @@ crosshatch <- function(angle = 45, density = 7, clip = TRUE) {
 
 #' Zigzag fill pattern
 #'
-#' @param angle Base zigzag angle in degrees.
-#' @param density Approximate line density in lines per inch. Larger
-#'   values give denser fills.
+#' @inheritParams mypaintr-fill-pattern-params
 #' @param clip When `TRUE`, zigzag endpoints stay on the shape boundary to
 #'   reduce overshoot.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @family fill patterns
 #' @export
 zigzag <- function(angle = 45, density = 6, clip = TRUE) {
   new_fill_pattern("zigzag", density = density, angle = angle, clip = clip)
@@ -68,15 +62,9 @@ zigzag <- function(angle = 45, density = 6, clip = TRUE) {
 
 #' Jumble fill pattern
 #'
-#' @param angle Base angle in degrees for the underlying guide lines.
-#' @param density Approximate line density in lines per inch. Larger
-#'   values give denser fills.
-#' @param radius Loop radius in inches. Defaults to `0.38 / density`, so the
-#'   loops are sized as a fraction of the line spacing.
-#' @param wobble Amount of irregularity in the loop shapes. Larger values give
-#'   less even circles.
-#' @param clip When `TRUE`, split loop paths at the shape boundary.
+#' @inheritParams mypaintr-jumble-params
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @family fill patterns
 #' @export
 jumble <- function(angle = 0, density = 10, radius = 0.38 / density, wobble = 0.08, clip = TRUE) {
   new_fill_pattern(

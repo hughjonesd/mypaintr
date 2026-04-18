@@ -43,3 +43,13 @@ plot(1:10, 1:10, type = "n")
 draw_rough_arrows(2, 2, 8, 8)
 draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{draw_rough_lines}()},
+\code{\link{draw_rough_points}()},
+\code{\link{draw_rough_polygons}()},
+\code{\link{draw_rough_polypath}()},
+\code{\link{draw_rough_rect}()},
+\code{\link{draw_rough_segments}()}
+}
+\concept{rough drawing helpers}
