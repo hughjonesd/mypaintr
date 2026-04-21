@@ -328,12 +328,16 @@ wrap_mypaintr_style_grob <- function(child, style) {
 
 make_mypaintr_pattern_grob <- function(paths, hand_spec, fill_pattern, gp, default.units = "native") {
   grid::gTree(
-    paths = paths,
-    hand_spec = hand_spec,
-    fill_pattern = fill_pattern,
-    gp = gp,
-    default.units = default.units,
-    cl = "mypaintr_pattern_grob"
+    expr = quote(draw_fun(paths, hand_spec, fill_pattern, gp, default.units)),
+    list = list(
+      draw_fun = make_mypaintr_pattern_content,
+      paths = paths,
+      hand_spec = hand_spec,
+      fill_pattern = fill_pattern,
+      gp = gp,
+      default.units = default.units
+    ),
+    cl = "delayedgrob"
   )
 }
 
@@ -492,8 +496,7 @@ postDrawDetails.mypaintr_style_grob <- function(x) {
   apply_device_style_state(state)
 }
 
-#' @exportS3Method grid::makeContent
-makeContent.mypaintr_pattern_grob <- function(x) {
+make_mypaintr_pattern_content <- function(paths, hand_spec, fill_pattern, gp, default.units = "native") {
   inches_per_data_unit <- function(angle = 0) {
     x_in_per_unit <- grid::convertWidth(grid::unit(1, "native"), "in", valueOnly = TRUE)
     y_in_per_unit <- grid::convertHeight(grid::unit(1, "native"), "in", valueOnly = TRUE)
@@ -501,39 +504,35 @@ makeContent.mypaintr_pattern_grob <- function(x) {
     sqrt((x_in_per_unit * sin(theta))^2 + (y_in_per_unit * cos(theta))^2)
   }
 
-  hatch <- if (is.null(x$hand_spec)) {
+  hatch <- if (is.null(hand_spec)) {
     rough_fill_pattern_data(
-      x$paths,
+      paths,
       hand_spec = NULL,
-      fill_pattern = x$fill_pattern,
+      fill_pattern = fill_pattern,
       inches_per_data_unit = inches_per_data_unit
     )
   } else {
-    with_hand_seed(x$hand_spec$seed, {
+    with_hand_seed(hand_spec$seed, {
       rough_fill_pattern_data(
-        x$paths,
-        hand_spec = x$hand_spec,
-        fill_pattern = x$fill_pattern,
+        paths,
+        hand_spec = hand_spec,
+        fill_pattern = fill_pattern,
         inches_per_data_unit = inches_per_data_unit
       )
     })
   }
 
   if (!length(hatch$x)) {
-    x$children <- grid::gList()
-    return(x)
+    return(grid::nullGrob())
   }
 
-  x$children <- grid::gList(
-    grid::polylineGrob(
-      x = hatch$x,
-      y = hatch$y,
-      id = hatch$id,
-      default.units = x$default.units,
-      gp = x$gp
-    )
+  grid::polylineGrob(
+    x = hatch$x,
+    y = hatch$y,
+    id = hatch$id,
+    default.units = default.units,
+    gp = gp
   )
-  x
 }
 
 make_stroke_style <- function(brush = NULL, settings = NULL, hand = NULL) {

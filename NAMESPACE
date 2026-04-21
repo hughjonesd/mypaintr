@@ -2,7 +2,6 @@
 
 S3method(ggplot2::element_grob,mypaintr_element_line)
 S3method(ggplot2::element_grob,mypaintr_element_rect)
-S3method(grid::makeContent,mypaintr_pattern_grob)
 S3method(grid::postDrawDetails,mypaintr_style_grob)
 S3method(grid::preDrawDetails,mypaintr_style_grob)
 export(brush_dirs)
