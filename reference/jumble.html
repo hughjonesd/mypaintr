@@ -41,34 +41,58 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">jumble</span><span class="op">(</span>density <span class="op">=</span> <span class="fl">5</span>, strokes <span class="op">=</span> <span class="cn">NULL</span>, step <span class="op">=</span> <span class="cn">NULL</span>, curl <span class="op">=</span> <span class="fl">0.35</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">jumble</span><span class="op">(</span></span>
+<span>  angle <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  density <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  radius <span class="op">=</span> <span class="fl">0.76</span><span class="op">/</span><span class="va">density</span>,</span>
+<span>  wobble <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  clip <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  padding <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-density">density<a class="anchor" aria-label="anchor" href="#arg-density"></a></dt>
-<dd><p>Approximate scribble density. Larger values give more strokes.</p></dd>
+<dl><dt id="arg-angle">angle<a class="anchor" aria-label="anchor" href="#arg-angle"></a></dt>
+<dd><p>Base angle in degrees for the underlying guide lines.</p></dd>
 
 
-<dt id="arg-strokes">strokes<a class="anchor" aria-label="anchor" href="#arg-strokes"></a></dt>
-<dd><p>Approximate number of jumble strokes. When <code>NULL</code>, a
-default based on the shape size is used.</p></dd>
+<dt id="arg-density">density<a class="anchor" aria-label="anchor" href="#arg-density"></a></dt>
+<dd><p>Approximate line density in lines per inch. Larger
+values give denser fills.</p></dd>
 
 
-<dt id="arg-step">step<a class="anchor" aria-label="anchor" href="#arg-step"></a></dt>
-<dd><p>Jumble step size in data units.</p></dd>
+<dt id="arg-radius">radius<a class="anchor" aria-label="anchor" href="#arg-radius"></a></dt>
+<dd><p>Loop radius in inches. Defaults to <code>0.76 / density</code>, so the
+loops are sized as a fraction of the line spacing.</p></dd>
 
 
-<dt id="arg-curl">curl<a class="anchor" aria-label="anchor" href="#arg-curl"></a></dt>
-<dd><p>How tightly the jumble curls as it wanders. Larger values produce
-rounder, loopier scribbles.</p></dd>
+<dt id="arg-wobble">wobble<a class="anchor" aria-label="anchor" href="#arg-wobble"></a></dt>
+<dd><p>Amount of irregularity in the loop shapes, spacing, and size.
+Larger values give less even, more varied loops.</p></dd>
+
+
+<dt id="arg-clip">clip<a class="anchor" aria-label="anchor" href="#arg-clip"></a></dt>
+<dd><p>When <code>TRUE</code>, split loop paths at the shape boundary.</p></dd>
+
+
+<dt id="arg-padding">padding<a class="anchor" aria-label="anchor" href="#arg-padding"></a></dt>
+<dd><p>Inset from the polygon edge in inches. Positive values leave a
+small gap between the fill pattern and the boundary.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A fill-pattern object for <code>draw_rough_*()</code> helpers and mypaint geoms.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p>Other fill patterns:
+<code><a href="crosshatch.html">crosshatch()</a></code>,
+<code><a href="hatch.html">hatch()</a></code>,
+<code><a href="zigzag.html">zigzag()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

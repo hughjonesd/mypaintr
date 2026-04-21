@@ -318,6 +318,20 @@ mypaintr provides
 to modify the brush and hand used for individual plot elements. By
 default these will use “normal” drawing.
 
+``` r
+
+ggplot(diamonds) +
+  mypaint_wrap(
+    geom_smooth(aes(carat, price), se = TRUE),
+    brush = "deevad/ballpen",
+    hand = hand(multi_stroke = 2)
+  ) +
+  theme_minimal()
+#> `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+```
+
+![](introduction_files/figure-html/unnamed-chunk-13-1.png)
+
 Here’s the same picture as above but with a clean background and
 straight grid lines:
 
@@ -337,7 +351,7 @@ ggplot(diamonds) +
    )
 ```
 
-![](introduction_files/figure-html/unnamed-chunk-13-1.png)
+![](introduction_files/figure-html/unnamed-chunk-14-1.png)
 
 Or you can go the other way and only set `hand` and `brush` inside
 [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md):
@@ -353,7 +367,7 @@ ggplot(diamonds) +
    theme_minimal() 
 ```
 
-![](introduction_files/figure-html/unnamed-chunk-14-1.png)
+![](introduction_files/figure-html/unnamed-chunk-15-1.png)
 
 Some more fancy examples:
 
@@ -368,7 +382,7 @@ ggplot(diamonds) +
   )
 ```
 
-![](introduction_files/figure-html/unnamed-chunk-15-1.png)
+![](introduction_files/figure-html/unnamed-chunk-16-1.png)
 
 To save your output, you can either use
 [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)

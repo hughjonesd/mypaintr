@@ -38,3 +38,13 @@ set_brush(
 brush becomes the default for the next
 [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
 opened in this R session.
+
+## See also
+
+Other brush management:
+[`brush_dirs()`](https://hughjonesd.github.io/mypaintr/reference/brush_dirs.md),
+[`brush_inputs()`](https://hughjonesd.github.io/mypaintr/reference/brush_inputs.md),
+[`brush_presets()`](https://hughjonesd.github.io/mypaintr/reference/brush_presets.md),
+[`brush_settings()`](https://hughjonesd.github.io/mypaintr/reference/brush_settings.md),
+[`brushes()`](https://hughjonesd.github.io/mypaintr/reference/brushes.md),
+[`load_brush()`](https://hughjonesd.github.io/mypaintr/reference/load_brush.md)

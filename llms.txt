@@ -135,6 +135,8 @@ text(8, 9, "A pentagon", family = "Chalkboard")
 
 ## ggplot2 Integration
 
+- [`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md)
+  : Wrap a grid grob or ggplot layer with scoped mypaint styling
 - [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
   : Draw rough, brush-rendered bars in ggplot2
 - [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md)

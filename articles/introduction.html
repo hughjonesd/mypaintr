@@ -332,9 +332,20 @@ sketch elements.</li>
 <code><a href="../reference/geom_mypaint_col.html">geom_mypaint_col()</a></code> to modify the brush and hand used for
 individual plot elements. By default these will use “normal”
 drawing.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/mypaint_wrap.html">mypaint_wrap</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">carat</span>, <span class="va">price</span><span class="op">)</span>, se <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    brush <span class="op">=</span> <span class="st">"deevad/ballpen"</span>,</span>
+<span>    hand <span class="op">=</span> <span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span>multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'</span></span></code></pre></div>
+<p><img src="introduction_files/figure-html/unnamed-chunk-13-1.png" alt="" width="480"></p>
 <p>Here’s the same picture as above but with a clean background and
 straight grid lines:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/bubble"</span><span class="op">)</span></span>
@@ -348,10 +359,10 @@ straight grid lines:</p>
 <span>     <span class="co"># the same</span></span>
 <span>     panel.grid <span class="op">=</span> <span class="fu"><a href="../reference/element_mypaint_line.html">element_mypaint_line</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>   <span class="op">)</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/unnamed-chunk-13-1.png" alt="" width="480"></p>
+<p><img src="introduction_files/figure-html/unnamed-chunk-14-1.png" alt="" width="480"></p>
 <p>Or you can go the other way and only set <code>hand</code> and
 <code>brush</code> inside <code><a href="../reference/geom_mypaint_bar.html">geom_mypaint_bar()</a></code>:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -360,9 +371,9 @@ straight grid lines:</p>
 <span>                   fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/zigzag.html">zigzag</a></span><span class="op">(</span>density <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>,</span>
 <span>                   hand <span class="op">=</span> <span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span>multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="introduction_files/figure-html/unnamed-chunk-14-1.png" alt="" width="480"></p>
+<p><img src="introduction_files/figure-html/unnamed-chunk-15-1.png" alt="" width="480"></p>
 <p>Some more fancy examples:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/hard_blot"</span>, type <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -371,7 +382,7 @@ straight grid lines:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
 <span>    panel.grid <span class="op">=</span> <span class="fu"><a href="../reference/element_mypaint_line.html">element_mypaint_line</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="introduction_files/figure-html/unnamed-chunk-15-1.png" alt="" width="480"></p>
+<p><img src="introduction_files/figure-html/unnamed-chunk-16-1.png" alt="" width="480"></p>
 <p>To save your output, you can either use <code><a href="../reference/mypaint_device.html">mypaint_device()</a></code>
 and <code><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off()</a></code> as usual, or run
 <code>ggsave("output.png", dev = mypaint_device)</code>. The latter has
@@ -384,12 +395,12 @@ the mypaintr customizations until you save it.</p>
 <p>Knitr replays graphics on its own device. To make this work while
 dynamically updating the device within chunks, you must install a
 special hook:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/knit_hooks.html" class="external-link">knit_hooks</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>mypaint <span class="op">=</span> <span class="fu"><a href="../reference/knitr_mypaint_hook.html">knitr_mypaint_hook</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Then in chunks where you use <code>mypaint_device</code>, you need to
 set chunk options <code>mypaint=TRUE, fig.keep="none"</code>. You can
 set them for all chunks like this:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span></span>
 <span>  mypaint <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  fig.keep <span class="op">=</span> <span class="st">"none"</span></span>
@@ -399,7 +410,7 @@ you.</p>
 <p>One limitation is that you cannot produce more than one plot per
 chunk. If you need to do this, try setting the following chunk
 options:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>dev<span class="ot">=</span><span class="st">'mypaint_device'</span>, fig.ext<span class="ot">=</span><span class="st">'png'</span>, fig.keep<span class="ot">=</span><span class="st">'high'</span>, mypaint<span class="ot">=</span><span class="cn">FALSE</span><span class="er">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>dev<span class="ot">=</span><span class="st">'mypaint_device'</span>, fig.ext<span class="ot">=</span><span class="st">'png'</span>, fig.keep<span class="ot">=</span><span class="st">'high'</span>, mypaint<span class="ot">=</span><span class="cn">FALSE</span><span class="er">}</span></span></code></pre></div>
 <p>this may work, <em>so long as you don’t edit device options within a
 single plot</em>.</p>
 </div>
