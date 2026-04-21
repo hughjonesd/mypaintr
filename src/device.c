@@ -65,7 +65,7 @@ typedef struct {
 } PointBuffer;
 
 typedef struct {
-  MyPaintSurface surface;
+  MyPaintSurface2 surface;
   unsigned int magic;
   cairo_surface_t *image_surface;
   cairo_t *cr;
@@ -106,6 +106,18 @@ static void surface_get_color(
   float *color_b,
   float *color_a
 );
+static void surface_get_color_pigment(
+  MyPaintSurface2 *surface,
+  float x,
+  float y,
+  float radius,
+  float *color_r,
+  float *color_g,
+  float *color_b,
+  float *color_a,
+  float paint
+);
+static double flip_y(const MypaintrDevice *dev, double y);
 
 static inline double clamp01(double x) {
   if (x < 0.0) return 0.0;
@@ -265,6 +277,231 @@ static void rgb_to_hsv(double r, double g, double b, double *h, double *s, doubl
   hh /= 6.0;
   if (hh < 0.0) hh += 1.0;
   *h = hh;
+}
+
+static void hsv_to_rgb(double h, double s, double v, double *r, double *g, double *b) {
+  double hh;
+  double c;
+  double x;
+  double m;
+  double rr = 0.0;
+  double gg = 0.0;
+  double bb = 0.0;
+
+  if (s <= 0.0) {
+    *r = v;
+    *g = v;
+    *b = v;
+    return;
+  }
+
+  hh = h - floor(h);
+  c = v * s;
+  hh *= 6.0;
+  x = c * (1.0 - fabs(fmod(hh, 2.0) - 1.0));
+  m = v - c;
+
+  if (hh < 1.0) {
+    rr = c; gg = x; bb = 0.0;
+  } else if (hh < 2.0) {
+    rr = x; gg = c; bb = 0.0;
+  } else if (hh < 3.0) {
+    rr = 0.0; gg = c; bb = x;
+  } else if (hh < 4.0) {
+    rr = 0.0; gg = x; bb = c;
+  } else if (hh < 5.0) {
+    rr = x; gg = 0.0; bb = c;
+  } else {
+    rr = c; gg = 0.0; bb = x;
+  }
+
+  *r = rr + m;
+  *g = gg + m;
+  *b = bb + m;
+}
+
+static void load_pixel_rgba(const unsigned char *px, double *r, double *g, double *b, double *a) {
+  double pa = px[3] / 255.0;
+  double pr = px[2] / 255.0;
+  double pg = px[1] / 255.0;
+  double pb = px[0] / 255.0;
+
+  *a = pa;
+  if (pa <= 1e-6) {
+    *r = 0.0;
+    *g = 0.0;
+    *b = 0.0;
+    return;
+  }
+
+  *r = clamp01(pr / pa);
+  *g = clamp01(pg / pa);
+  *b = clamp01(pb / pa);
+}
+
+static void store_pixel_rgba(unsigned char *px, double r, double g, double b, double a) {
+  double pa = clamp01(a);
+  px[0] = unit_to_byte(clamp01(b) * pa);
+  px[1] = unit_to_byte(clamp01(g) * pa);
+  px[2] = unit_to_byte(clamp01(r) * pa);
+  px[3] = unit_to_byte(pa);
+}
+
+static void blend_dab_pixel(
+  double src_r,
+  double src_g,
+  double src_b,
+  double alpha,
+  double alpha_eraser,
+  double lock_alpha,
+  double colorize,
+  double *dst_r,
+  double *dst_g,
+  double *dst_b,
+  double *dst_a
+) {
+  double base_r = *dst_r;
+  double base_g = *dst_g;
+  double base_b = *dst_b;
+  double base_a = *dst_a;
+  double normal_a;
+  double normal_pr;
+  double normal_pg;
+  double normal_pb;
+  double normal_r = 0.0;
+  double normal_g = 0.0;
+  double normal_b = 0.0;
+  double final_a;
+  double final_r;
+  double final_g;
+  double final_b;
+
+  if (alpha_eraser > 0.0) {
+    double keep = 1.0 - clamp01(alpha * alpha_eraser);
+    base_a *= keep;
+  }
+
+  normal_a = alpha + base_a * (1.0 - alpha);
+  normal_pr = src_r * alpha + base_r * base_a * (1.0 - alpha);
+  normal_pg = src_g * alpha + base_g * base_a * (1.0 - alpha);
+  normal_pb = src_b * alpha + base_b * base_a * (1.0 - alpha);
+
+  if (normal_a > 1e-6) {
+    normal_r = clamp01(normal_pr / normal_a);
+    normal_g = clamp01(normal_pg / normal_a);
+    normal_b = clamp01(normal_pb / normal_a);
+  }
+
+  final_a = normal_a;
+  final_r = normal_r;
+  final_g = normal_g;
+  final_b = normal_b;
+
+  if (colorize > 0.0 && base_a > 1e-6) {
+    double src_h;
+    double src_s;
+    double src_v;
+    double dst_h;
+    double dst_s;
+    double dst_v;
+    double colorized_r;
+    double colorized_g;
+    double colorized_b;
+
+    rgb_to_hsv(src_r, src_g, src_b, &src_h, &src_s, &src_v);
+    rgb_to_hsv(base_r, base_g, base_b, &dst_h, &dst_s, &dst_v);
+    hsv_to_rgb(src_h, src_s, dst_v, &colorized_r, &colorized_g, &colorized_b);
+
+    final_r = (1.0 - colorize) * final_r + colorize * colorized_r;
+    final_g = (1.0 - colorize) * final_g + colorize * colorized_g;
+    final_b = (1.0 - colorize) * final_b + colorize * colorized_b;
+    final_a = (1.0 - colorize) * final_a + colorize * base_a;
+  }
+
+  if (lock_alpha > 0.0) {
+    final_a = (1.0 - lock_alpha) * final_a + lock_alpha * base_a;
+  }
+
+  *dst_r = clamp01(final_r);
+  *dst_g = clamp01(final_g);
+  *dst_b = clamp01(final_b);
+  *dst_a = clamp01(final_a);
+}
+
+static void sample_surface_color(
+  MypaintrDevice *dev,
+  float x,
+  float y,
+  float radius,
+  float *color_r,
+  float *color_g,
+  float *color_b,
+  float *color_a
+) {
+  int x0 = (int) floor(x - radius);
+  int x1 = (int) ceil(x + radius);
+  int y0 = (int) floor(flip_y(dev, y) - radius);
+  int y1 = (int) ceil(flip_y(dev, y) + radius);
+  double total = 0.0;
+  double sr = 0.0;
+  double sg = 0.0;
+  double sb = 0.0;
+  double sa = 0.0;
+  int ix, iy;
+
+  cairo_surface_flush(dev->image_surface);
+
+  for (iy = y0; iy <= y1; ++iy) {
+    if (iy < 0 || iy >= dev->height) continue;
+    for (ix = x0; ix <= x1; ++ix) {
+      unsigned char *px;
+      double dx;
+      double dy;
+      double d2;
+      double w;
+      double r;
+      double g;
+      double b;
+      double a;
+
+      if (ix < 0 || ix >= dev->width) continue;
+
+      dx = ((double) ix + 0.5) - x;
+      dy = ((double) iy + 0.5) - flip_y(dev, y);
+      d2 = dx * dx + dy * dy;
+      if (d2 > radius * radius) continue;
+
+      w = 1.0 - sqrt(d2) / fmax(radius, 1e-6);
+      px = dev->data + (size_t) iy * (size_t) dev->stride + (size_t) ix * 4U;
+      load_pixel_rgba(px, &r, &g, &b, &a);
+      sr += (r * a) * w;
+      sg += (g * a) * w;
+      sb += (b * a) * w;
+      sa += a * w;
+      total += w;
+    }
+  }
+
+  if (total <= 0.0) {
+    *color_r = 0.0f;
+    *color_g = 0.0f;
+    *color_b = 0.0f;
+    *color_a = 0.0f;
+    return;
+  }
+
+  *color_a = (float) (sa / total);
+  if (*color_a <= 1e-6f) {
+    *color_r = 0.0f;
+    *color_g = 0.0f;
+    *color_b = 0.0f;
+    *color_a = 0.0f;
+    return;
+  }
+
+  *color_r = (float) clamp01((sr / total) / *color_a);
+  *color_g = (float) clamp01((sg / total) / *color_a);
+  *color_b = (float) clamp01((sb / total) / *color_a);
 }
 
 static void set_cairo_source(cairo_t *cr, int col) {
@@ -594,7 +831,7 @@ static void brush_seed_from_surface(MypaintrDevice *dev, MypaintrBrush *brush, d
     sample_radius = 1.0;
   }
 
-  surface_get_color(&dev->surface, (float) x, (float) y, (float) sample_radius, &r, &g, &b, &a);
+  sample_surface_color(dev, (float) x, (float) y, (float) sample_radius, &r, &g, &b, &a);
   if (a <= 1e-6f) {
     r = g = b = 1.0f;
     a = 1.0f;
@@ -651,6 +888,9 @@ static int surface_draw_dab(
   float colorize
 ) {
   MypaintrDevice *dev = (MypaintrDevice *) surface;
+  double src_r = clamp01(color_r);
+  double src_g = clamp01(color_g);
+  double src_b = clamp01(color_b);
   int x0, x1, y0, y1;
   int ix, iy;
   double c = cos(angle);
@@ -660,9 +900,6 @@ static int surface_draw_dab(
   double ry = radius / a_ratio;
   double maxr = fmax(rx, ry);
   double py_center = flip_y(dev, y);
-
-  (void) lock_alpha;
-  (void) colorize;
 
   x0 = (int) floor(x - maxr - 1.0);
   x1 = (int) ceil(x + maxr + 1.0);
@@ -696,9 +933,10 @@ static int surface_draw_dab(
       double dist;
       double cover;
       double alpha;
-      double dst_b, dst_g, dst_r, dst_a;
-      double src_rp, src_gp, src_bp;
-      double out_a;
+      double dst_b;
+      double dst_g;
+      double dst_r;
+      double dst_a;
 
       if (ix < 0 || ix >= dev->width) continue;
       if (ix < (int) floor(dev->clip_left) || ix > (int) ceil(dev->clip_right)) continue;
@@ -719,33 +957,66 @@ static int surface_draw_dab(
       if (alpha <= 0.0) continue;
 
       px = row + (size_t) ix * 4U;
-      dst_b = px[0] / 255.0;
-      dst_g = px[1] / 255.0;
-      dst_r = px[2] / 255.0;
-      dst_a = px[3] / 255.0;
-
-      if (alpha_eraser > 0.0f) {
-        double keep = 1.0 - clamp01(alpha * alpha_eraser);
-        dst_b *= keep;
-        dst_g *= keep;
-        dst_r *= keep;
-        dst_a *= keep;
-      }
-
-      src_rp = color_r * alpha;
-      src_gp = color_g * alpha;
-      src_bp = color_b * alpha;
-      out_a = alpha + dst_a * (1.0 - alpha);
-
-      px[0] = unit_to_byte(src_bp + dst_b * (1.0 - alpha));
-      px[1] = unit_to_byte(src_gp + dst_g * (1.0 - alpha));
-      px[2] = unit_to_byte(src_rp + dst_r * (1.0 - alpha));
-      px[3] = unit_to_byte(out_a);
+      load_pixel_rgba(px, &dst_r, &dst_g, &dst_b, &dst_a);
+      blend_dab_pixel(
+        src_r,
+        src_g,
+        src_b,
+        alpha,
+        alpha_eraser,
+        clamp01(lock_alpha),
+        clamp01(colorize),
+        &dst_r,
+        &dst_g,
+        &dst_b,
+        &dst_a
+      );
+      store_pixel_rgba(px, dst_r, dst_g, dst_b, dst_a);
     }
   }
 
   cairo_surface_mark_dirty(dev->image_surface);
   return 1;
+}
+
+static int surface_draw_dab_pigment(
+  MyPaintSurface2 *surface,
+  float x,
+  float y,
+  float radius,
+  float color_r,
+  float color_g,
+  float color_b,
+  float opaque,
+  float hardness,
+  float alpha_eraser,
+  float aspect_ratio,
+  float angle,
+  float lock_alpha,
+  float colorize,
+  float posterize,
+  float posterize_num,
+  float paint
+) {
+  (void) posterize;
+  (void) posterize_num;
+  (void) paint;
+  return surface_draw_dab(
+    (MyPaintSurface *) surface,
+    x,
+    y,
+    radius,
+    color_r,
+    color_g,
+    color_b,
+    opaque,
+    hardness,
+    alpha_eraser,
+    aspect_ratio,
+    angle,
+    lock_alpha,
+    colorize
+  );
 }
 
 static void surface_get_color(
@@ -759,54 +1030,22 @@ static void surface_get_color(
   float *color_a
 ) {
   MypaintrDevice *dev = (MypaintrDevice *) surface;
-  int x0 = (int) floor(x - radius);
-  int x1 = (int) ceil(x + radius);
-  int y0 = (int) floor(flip_y(dev, y) - radius);
-  int y1 = (int) ceil(flip_y(dev, y) + radius);
-  double total = 0.0;
-  double sr = 0.0;
-  double sg = 0.0;
-  double sb = 0.0;
-  double sa = 0.0;
-  int ix, iy;
+  sample_surface_color(dev, x, y, radius, color_r, color_g, color_b, color_a);
+}
 
-  cairo_surface_flush(dev->image_surface);
-
-  for (iy = y0; iy <= y1; ++iy) {
-    if (iy < 0 || iy >= dev->height) continue;
-    for (ix = x0; ix <= x1; ++ix) {
-      unsigned char *px;
-      double dx, dy, d2;
-      double w;
-      if (ix < 0 || ix >= dev->width) continue;
-
-      dx = ((double) ix + 0.5) - x;
-      dy = ((double) iy + 0.5) - flip_y(dev, y);
-      d2 = dx * dx + dy * dy;
-      if (d2 > radius * radius) continue;
-
-      w = 1.0 - sqrt(d2) / fmax(radius, 1e-6);
-      px = dev->data + (size_t) iy * (size_t) dev->stride + (size_t) ix * 4U;
-      sb += (px[0] / 255.0) * w;
-      sg += (px[1] / 255.0) * w;
-      sr += (px[2] / 255.0) * w;
-      sa += (px[3] / 255.0) * w;
-      total += w;
-    }
-  }
-
-  if (total <= 0.0) {
-    *color_r = 0.0f;
-    *color_g = 0.0f;
-    *color_b = 0.0f;
-    *color_a = 0.0f;
-    return;
-  }
-
-  *color_b = (float) (sb / total);
-  *color_g = (float) (sg / total);
-  *color_r = (float) (sr / total);
-  *color_a = (float) (sa / total);
+static void surface_get_color_pigment(
+  MyPaintSurface2 *surface,
+  float x,
+  float y,
+  float radius,
+  float *color_r,
+  float *color_g,
+  float *color_b,
+  float *color_a,
+  float paint
+) {
+  (void) paint;
+  sample_surface_color((MypaintrDevice *) surface, x, y, radius, color_r, color_g, color_b, color_a);
 }
 
 static void surface_begin_atomic(MyPaintSurface *surface) {
@@ -820,17 +1059,26 @@ static void surface_end_atomic(MyPaintSurface *surface, MyPaintRectangle *roi) {
   cairo_surface_mark_dirty(dev->image_surface);
 }
 
+static void surface_end_atomic_multi(MyPaintSurface2 *surface, MyPaintRectangles *roi) {
+  MypaintrDevice *dev = (MypaintrDevice *) surface;
+  (void) roi;
+  cairo_surface_mark_dirty(dev->image_surface);
+}
+
 static void surface_destroy(MyPaintSurface *surface) {
   (void) surface;
 }
 
 static void init_surface(MypaintrDevice *dev) {
-  mypaint_surface_init(&dev->surface);
-  dev->surface.draw_dab = surface_draw_dab;
-  dev->surface.get_color = surface_get_color;
-  dev->surface.begin_atomic = surface_begin_atomic;
-  dev->surface.end_atomic = surface_end_atomic;
-  dev->surface.destroy = surface_destroy;
+  mypaint_surface_init(&dev->surface.parent);
+  dev->surface.parent.draw_dab = surface_draw_dab;
+  dev->surface.parent.get_color = surface_get_color;
+  dev->surface.parent.begin_atomic = surface_begin_atomic;
+  dev->surface.parent.end_atomic = surface_end_atomic;
+  dev->surface.parent.destroy = surface_destroy;
+  dev->surface.draw_dab_pigment = surface_draw_dab_pigment;
+  dev->surface.get_color_pigment = surface_get_color_pigment;
+  dev->surface.end_atomic_multi = surface_end_atomic_multi;
 }
 
 static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd) {
@@ -866,23 +1114,23 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   if (brush->pure_smudge) {
     brush_seed_from_surface(dev, brush, x[0], y[0]);
   }
-  mypaint_surface_begin_atomic(&dev->surface);
-  mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) start_x, (float) start_y, 0.0f, 0.0f, 0.0f, 0.01);
+  mypaint_surface_begin_atomic((MyPaintSurface *) &dev->surface);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) start_x, (float) start_y, 0.0f, 0.0f, 0.0f, 0.01, 1.0f, 0.0f, 0.0f);
   if (start_len > 1e-9) {
     double dt0 = fmax(preroll / 240.0, 0.001);
-    mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, 0.0f, 0.0f, dt0);
+    mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, 0.0f, 0.0f, dt0, 1.0f, 0.0f, 0.0f);
   }
-  mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[0], (float) y[0], 1.0f, 0.0f, 0.0f, 0.001);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 1.0f, 0.0f, 0.0f, 0.001, 1.0f, 0.0f, 0.0f);
 
   for (i = 1; i < n; ++i) {
     double dx = x[i] - x[i - 1];
     double dy = y[i] - y[i - 1];
     double dt = fmax(sqrt(dx * dx + dy * dy) / 240.0, 0.001);
-    mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[i], (float) y[i], 1.0f, 0.0f, 0.0f, dt);
+    mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[i], (float) y[i], 1.0f, 0.0f, 0.0f, dt, 1.0f, 0.0f, 0.0f);
   }
 
-  mypaint_brush_stroke_to(brush->brush, &dev->surface, (float) x[n - 1], (float) y[n - 1], 0.0f, 0.0f, 0.0f, 0.01);
-  mypaint_surface_end_atomic(&dev->surface, NULL);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[n - 1], (float) y[n - 1], 0.0f, 0.0f, 0.0f, 0.01, 1.0f, 0.0f, 0.0f);
+  mypaint_surface_end_atomic((MyPaintSurface *) &dev->surface, NULL);
 }
 
 static int decode_lty(int lty, double lwd, double *pattern, int max_pattern) {
