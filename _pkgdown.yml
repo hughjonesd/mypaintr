@@ -48,6 +48,7 @@ reference:
 
   - title: ggplot2 Integration
     contents:
+      - mypaint_wrap
       - geom_mypaint_bar
       - geom_mypaint_col
       - element_mypaint_line
