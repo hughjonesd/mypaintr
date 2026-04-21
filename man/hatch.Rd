@@ -4,7 +4,7 @@
 \alias{hatch}
 \title{Hatch fill pattern}
 \usage{
-hatch(angle = 45, density = 8, clip = TRUE)
+hatch(angle = 45, density = 8, clip = TRUE, padding = 0)
 }
 \arguments{
 \item{angle}{Base hatch angle in degrees.}
@@ -14,6 +14,9 @@ values give denser fills.}
 
 \item{clip}{When \code{TRUE}, hatch endpoints stay on the shape boundary to reduce
 overshoot.}
+
+\item{padding}{Inset from the polygon edge in inches. Positive values leave a
+small gap between the fill pattern and the boundary.}
 }
 \value{
 A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.

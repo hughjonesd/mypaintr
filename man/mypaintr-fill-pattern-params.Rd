@@ -9,6 +9,9 @@
 \item{density}{Approximate line density in lines per inch. Larger
 values give denser fills.}
 
+\item{padding}{Inset from the polygon edge in inches. Positive values leave a
+small gap between the fill pattern and the boundary.}
+
 \item{clip}{When \code{TRUE}, hatch endpoints stay on the shape boundary to reduce
 overshoot.}
 }

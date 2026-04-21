@@ -4,7 +4,7 @@
 \alias{zigzag}
 \title{Zigzag fill pattern}
 \usage{
-zigzag(angle = 45, density = 6, clip = TRUE)
+zigzag(angle = 45, density = 6, clip = TRUE, padding = 0)
 }
 \arguments{
 \item{angle}{Base hatch angle in degrees.}
@@ -14,6 +14,9 @@ values give denser fills.}
 
 \item{clip}{When \code{TRUE}, zigzag endpoints stay on the shape boundary to
 reduce overshoot.}
+
+\item{padding}{Inset from the polygon edge in inches. Positive values leave a
+small gap between the fill pattern and the boundary.}
 }
 \value{
 A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.

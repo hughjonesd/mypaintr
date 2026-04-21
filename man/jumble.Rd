@@ -6,10 +6,11 @@
 \usage{
 jumble(
   angle = 0,
-  density = 10,
-  radius = 0.38/density,
-  wobble = 0.08,
-  clip = TRUE
+  density = 5,
+  radius = 0.76/density,
+  wobble = 0.2,
+  clip = TRUE,
+  padding = 0
 )
 }
 \arguments{
@@ -18,13 +19,16 @@ jumble(
 \item{density}{Approximate line density in lines per inch. Larger
 values give denser fills.}
 
-\item{radius}{Loop radius in inches. Defaults to \code{0.38 / density}, so the
+\item{radius}{Loop radius in inches. Defaults to \code{0.76 / density}, so the
 loops are sized as a fraction of the line spacing.}
 
-\item{wobble}{Amount of irregularity in the loop shapes. Larger values give
-less even circles.}
+\item{wobble}{Amount of irregularity in the loop shapes, spacing, and size.
+Larger values give less even, more varied loops.}
 
 \item{clip}{When \code{TRUE}, split loop paths at the shape boundary.}
+
+\item{padding}{Inset from the polygon edge in inches. Positive values leave a
+small gap between the fill pattern and the boundary.}
 }
 \value{
 A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.
