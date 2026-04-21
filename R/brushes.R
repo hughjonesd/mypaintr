@@ -235,8 +235,9 @@ warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
 
 #' Set the active mypaintr brush
 #'
-#' @inheritParams mypaintr-brush-param
-#' @inheritParams mypaintr-brush-settings-param
+#' @param brush Brush preset, installed brush name, JSON brush string, named
+#'   settings, or `NULL` to switch the selected type back to solid rendering.
+#' @param settings Named settings overriding `brush`.
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
 #' @param auto_solid_bg Optional override for background-like fills.
