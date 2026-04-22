@@ -58,6 +58,10 @@ reference:
     contents:
       - knitr_mypaint_hook
 
+  - title: internal
+    contents:
+      - starts_with("element_mypaint_")
+
 navbar:
   structure:
     left: [reference, articles]
