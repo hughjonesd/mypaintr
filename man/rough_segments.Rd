@@ -2,9 +2,12 @@
 % Please edit documentation in R/draw-rough.R
 \name{rough_segments}
 \alias{rough_segments}
-\title{Compute rough segment geometry}
+\alias{draw_rough_segments}
+\title{Compute or draw rough segments}
 \usage{
 rough_segments(x0, y0, x1, y1, hand = NULL)
+
+draw_rough_segments(x0, y0, x1, y1, hand = NULL, ...)
 }
 \arguments{
 \item{x0, y0}{Segment starts.}
@@ -12,14 +15,28 @@ rough_segments(x0, y0, x1, y1, hand = NULL)
 \item{x1, y1}{Segment ends.}
 
 \item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
+
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
 A list with \code{x}, \code{y}, and \code{id} components describing roughened
 polyline geometry for each segment.
 }
 \description{
-Compute rough segment geometry
+Compute or draw rough segments
 }
 \examples{
 rough_segments(1:2, 1:2, 2:3, 3:2)
+plot(1:10, 1:10, type = "n")
+draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), lwd = 2)
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{rough_arrows}()},
+\code{\link{rough_lines}()},
+\code{\link{rough_points}()},
+\code{\link{rough_polygons}()},
+\code{\link{rough_polypath}()},
+\code{\link{rough_rect}()}
+}
+\concept{rough drawing helpers}

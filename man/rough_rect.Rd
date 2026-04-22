@@ -2,9 +2,22 @@
 % Please edit documentation in R/draw-rough.R
 \name{rough_rect}
 \alias{rough_rect}
-\title{Compute a rough rectangle outline}
+\alias{draw_rough_rect}
+\title{Compute or draw a rough rectangle}
 \usage{
 rough_rect(x0, y0, x1, y1, hand = NULL)
+
+draw_rough_rect(
+  x0,
+  y0,
+  x1,
+  y1,
+  hand = NULL,
+  col = NA,
+  border = graphics::par("fg"),
+  fill_pattern = NULL,
+  ...
+)
 }
 \arguments{
 \item{x0, y0}{Rectangle corner.}
@@ -12,14 +25,37 @@ rough_rect(x0, y0, x1, y1, hand = NULL)
 \item{x1, y1}{Opposite rectangle corner.}
 
 \item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
+
+\item{col}{Fill colour. When visible and \code{fill_pattern} is \code{NULL}, a solid
+fill is drawn.}
+
+\item{border}{Border colour.}
+
+\item{fill_pattern}{Optional fill pattern created with \code{\link[=hatch]{hatch()}},
+\code{\link[=crosshatch]{crosshatch()}}, \code{\link[=zigzag]{zigzag()}}, or \code{\link[=jumble]{jumble()}}.}
+
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
 A list with \code{x} and \code{y} components containing a roughened closed
 outline suitable for plotting with \code{\link[graphics:lines]{graphics::lines()}}.
 }
 \description{
-Compute a rough rectangle outline
+Compute or draw a rough rectangle
 }
 \examples{
 rough_rect(2, 2, 5, 6)
+plot(1:10, 1:10, type = "n")
+draw_rough_rect(2, 2, 8, 7, col = "grey90",
+                fill_pattern = crosshatch(padding = 0.05))
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{rough_arrows}()},
+\code{\link{rough_lines}()},
+\code{\link{rough_points}()},
+\code{\link{rough_polygons}()},
+\code{\link{rough_polypath}()},
+\code{\link{rough_segments}()}
+}
+\concept{rough drawing helpers}

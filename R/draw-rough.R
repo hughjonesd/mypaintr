@@ -65,16 +65,16 @@ rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
   list(x = out_x, y = out_y, id = out_id)
 }
 
-#' Compute a rough polygon outline
+#' Compute or draw rough polygons
 #'
 #' @param x,y Polygon coordinates.
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x` and `y` components containing a roughened closed
 #'   outline suitable for plotting with [graphics::lines()].
 #' @examples
-#' rough_polygon(c(2, 5, 8, 3), c(2, 7, 5, 1))
+#' rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1))
 #' @export
-rough_polygon <- function(x, y = NULL, hand = NULL) {
+rough_polygons <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
 
@@ -83,7 +83,13 @@ rough_polygon <- function(x, y = NULL, hand = NULL) {
   })
 }
 
-#' Compute a rough rectangle outline
+#' @rdname rough_polygons
+#' @export
+rough_polygon <- function(x, y = NULL, hand = NULL) {
+  rough_polygons(x, y, hand = hand)
+}
+
+#' Compute or draw a rough rectangle
 #'
 #' @param x0,y0 Rectangle corner.
 #' @param x1,y1 Opposite rectangle corner.
@@ -94,14 +100,14 @@ rough_polygon <- function(x, y = NULL, hand = NULL) {
 #' rough_rect(2, 2, 5, 6)
 #' @export
 rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
-  rough_polygon(
+  rough_polygons(
     c(x0, x1, x1, x0),
     c(y0, y0, y1, y1),
     hand = hand
   )
 }
 
-#' Compute rough segment geometry
+#' Compute or draw rough segments
 #'
 #' @param x0,y0 Segment starts.
 #' @param x1,y1 Segment ends.
@@ -115,6 +121,44 @@ rough_segments <- function(x0, y0, x1, y1, hand = NULL) {
   hand_spec <- as_hand(hand)
   with_hand_seed(hand_spec$seed, {
     rough_segments_data(x0, y0, x1, y1, hand_spec)
+  })
+}
+
+rough_lines_data <- function(x, y = NULL, hand_spec) {
+  xy <- grDevices::xy.coords(x, y)
+  ok <- stats::complete.cases(xy$x, xy$y)
+  groups <- cumsum(!ok)
+  keep_groups <- unique(groups[ok])
+
+  out_x <- numeric()
+  out_y <- numeric()
+  out_id <- integer()
+  for (i in seq_along(keep_groups)) {
+    keep <- ok & groups == keep_groups[[i]]
+    if (sum(keep) >= 2L) {
+      out_x <- c(out_x, xy$x[keep])
+      out_y <- c(out_y, xy$y[keep])
+      out_id <- c(out_id, rep.int(i, sum(keep)))
+    }
+  }
+
+  list(x = out_x, y = out_y, id = out_id)
+}
+
+#' Compute or draw rough connected lines
+#'
+#' @param x,y Coordinates as for [graphics::lines()].
+#' @inheritParams mypaintr-rough-hand
+#' @return A list with `x`, `y`, and `id` components describing roughened
+#'   polyline geometry for each connected run.
+#' @examples
+#' y <- c(2, 5, 4, 7, 6, 8)
+#' rough_lines(1:6, y, hand = hand(multi_stroke = 2))
+#' @export
+rough_lines <- function(x, y = NULL, hand = NULL) {
+  hand_spec <- as_hand(hand)
+  with_hand_seed(hand_spec$seed, {
+    rough_lines_data(x, y, hand_spec)
   })
 }
 
@@ -176,6 +220,39 @@ arrowhead_segments <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code =
   list(x0 = seg_x0, y0 = seg_y0, x1 = seg_x1, y1 = seg_y1)
 }
 
+#' Compute or draw rough arrows
+#'
+#' @param x0,y0 Arrow starts.
+#' @param x1,y1 Arrow ends.
+#' @param length Arrowhead length in inches, as in [graphics::arrows()].
+#' @param angle Arrowhead angle in degrees.
+#' @param code Integer code indicating where heads are drawn:
+#'   `0` for none, `1` at the start, `2` at the end, `3` at both ends.
+#' @inheritParams mypaintr-rough-hand
+#' @return A list with `x`, `y`, and `id` components describing roughened
+#'   polyline geometry for arrow shafts and heads.
+#' @examples
+#' plot(1:10, 1:10, type = "n")
+#' rough_arrows(2, 2, 8, 8, hand = hand(multi_stroke = 2))
+#' @export
+rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
+                         hand = NULL) {
+  hand_spec <- as_hand(hand)
+  with_hand_seed(hand_spec$seed, {
+    body <- rough_segments_data(x0, y0, x1, y1, hand_spec)
+    heads <- arrowhead_segments(x0, y0, x1, y1, length = length, angle = angle, code = code)
+    if (!base::length(heads$x0)) {
+      return(body)
+    }
+    heads_geom <- rough_segments_data(heads$x0, heads$y0, heads$x1, heads$y1, hand_spec)
+    list(
+      x = c(body$x, heads_geom$x),
+      y = c(body$y, heads_geom$y),
+      id = c(body$id, heads_geom$id + max(body$id, 0L))
+    )
+  })
+}
+
 rough_polypath_data <- function(paths, hand_spec, rule) {
   out_x <- numeric()
   out_y <- numeric()
@@ -203,7 +280,7 @@ split_polypath <- function(x, y = NULL, id = NULL) {
   lapply(groups, function(idx) list(x = xy$x[idx], y = xy$y[idx]))
 }
 
-#' Compute a rough multipath outline
+#' Compute or draw a rough multipath
 #'
 #' @param x,y Coordinates as for [graphics::polypath()].
 #' @param id Optional path ids. Consecutive points with the same `id` belong to
@@ -248,12 +325,8 @@ draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, ba
   }
 }
 
-#' Draw rough connected lines
-#'
-#' @param x,y Coordinates as for [graphics::lines()].
-#' @inheritParams mypaintr-rough-hand
+#' @rdname rough_lines
 #' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' y <- c(2, 5, 4, 7, 6, 8)
 #' plot(1:6, y, type = "n")
@@ -282,13 +355,8 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
   }))
 }
 
-#' Draw rough segments
-#'
-#' @param x0,y0 Segment starts.
-#' @param x1,y1 Segment ends.
-#' @inheritParams mypaintr-rough-hand
+#' @rdname rough_segments
 #' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), lwd = 2)
@@ -308,17 +376,8 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   }))
 }
 
-#' Draw rough arrows
-#'
-#' @param x0,y0 Arrow starts.
-#' @param x1,y1 Arrow ends.
-#' @param length Arrowhead length in inches, as in [graphics::arrows()].
-#' @param angle Arrowhead angle in degrees.
-#' @param code Integer code indicating where heads are drawn:
-#'   `0` for none, `1` at the start, `2` at the end, `3` at both ends.
-#' @inheritParams mypaintr-rough-hand
+#' @rdname rough_arrows
 #' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_arrows(2, 2, 8, 8, lwd = 2)
@@ -351,16 +410,18 @@ join_polypath_na <- function(paths) {
   list(x = x, y = y)
 }
 
-#' Draw a rough multipath with optional holes
-#'
-#' @param x,y Coordinates as for [graphics::polypath()].
-#' @param id Optional path ids. Consecutive points with the same `id` belong to
-#'   one closed ring.
-#' @param rule Fill rule, `"winding"` or `"evenodd"`.
-#' @inheritParams mypaintr-rough-hand
+warn_missing_fill_for_pattern <- function(fill_pattern, col) {
+  if (!is.null(fill_pattern) && !is_visible_col(col)) {
+    warning(
+      "fill_pattern was supplied but col is not visible; set col to a fill colour to draw the pattern",
+      call. = FALSE
+    )
+  }
+}
+
+#' @rdname rough_polypath
 #' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
@@ -378,6 +439,7 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   rule <- match.arg(rule)
   paths0 <- split_polypath(x, y, id)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
+  warn_missing_fill_for_pattern(fill_pattern, col)
 
   invisible(with_hand_seed(hand_spec$seed, {
     geom <- rough_polypath_data(paths0, hand_spec, rule)
@@ -421,13 +483,9 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   }))
 }
 
-#' Draw rough polygons
-#'
-#' @param x,y Polygon coordinates.
-#' @inheritParams mypaintr-rough-hand
+#' @rdname rough_polygons
 #' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
@@ -440,6 +498,7 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
+  warn_missing_fill_for_pattern(fill_pattern, col)
 
   invisible(with_hand_seed(hand_spec$seed, {
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
@@ -477,14 +536,9 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
   }))
 }
 
-#' Draw a rough rectangle
-#'
-#' @param x0,y0 Rectangle corner.
-#' @param x1,y1 Opposite rectangle corner.
-#' @inheritParams mypaintr-rough-hand
+#' @rdname rough_rect
 #' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_rect(2, 2, 8, 7, col = "grey90",
@@ -506,12 +560,31 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
 }
 
 
-#' Draw rough points
+#' Compute or draw rough points
 #'
 #' @param x,y Point coordinates as for [graphics::points()].
 #' @inheritParams mypaintr-rough-hand
+#' @return A list with jittered `x` and `y` point locations.
+#' @examples
+#' plot(1:5, 1:5, type = "n")
+#' rough_points(1:5, 1:5, hand = hand(endpoint_jitter = 0.02))
+#' @export
+rough_points <- function(x, y = NULL, hand = NULL) {
+  hand_spec <- as_hand(hand)
+  xy <- grDevices::xy.coords(x, y)
+  usr <- graphics::par("usr")
+  scale <- 0.01 * sqrt((usr[2] - usr[1]) * (usr[4] - usr[3]))
+
+  with_hand_seed(hand_spec$seed, {
+    list(
+      x = xy$x + stats::rnorm(length(xy$x), sd = hand_spec$endpoint_jitter * scale),
+      y = xy$y + stats::rnorm(length(xy$y), sd = hand_spec$endpoint_jitter * scale)
+    )
+  })
+}
+
+#' @rdname rough_points
 #' @param ... Graphics parameters passed to [graphics::points()].
-#' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_points(1:10, 1:10, pch = 16, cex = 1.4)

@@ -2,7 +2,8 @@
 % Please edit documentation in R/draw-rough.R
 \name{rough_polypath}
 \alias{rough_polypath}
-\title{Compute a rough multipath outline}
+\alias{draw_rough_polypath}
+\title{Compute or draw a rough multipath}
 \usage{
 rough_polypath(
   x,
@@ -10,6 +11,18 @@ rough_polypath(
   id = NULL,
   rule = c("winding", "evenodd"),
   hand = NULL
+)
+
+draw_rough_polypath(
+  x,
+  y = NULL,
+  id = NULL,
+  rule = c("winding", "evenodd"),
+  hand = NULL,
+  col = NA,
+  border = graphics::par("fg"),
+  fill_pattern = NULL,
+  ...
 )
 }
 \arguments{
@@ -21,17 +34,44 @@ one closed ring.}
 \item{rule}{Fill rule, \code{"winding"} or \code{"evenodd"}.}
 
 \item{hand}{Hand-drawn geometry settings created with \code{\link[=hand]{hand()}}.}
+
+\item{col}{Fill colour. When visible and \code{fill_pattern} is \code{NULL}, a solid
+fill is drawn.}
+
+\item{border}{Border colour.}
+
+\item{fill_pattern}{Optional fill pattern created with \code{\link[=hatch]{hatch()}},
+\code{\link[=crosshatch]{crosshatch()}}, \code{\link[=zigzag]{zigzag()}}, or \code{\link[=jumble]{jumble()}}.}
+
+\item{...}{Graphics parameters passed to \code{\link[graphics:lines]{graphics::lines()}}.}
 }
 \value{
 A list with \code{x}, \code{y}, \code{id}, and \code{rule} components describing
 roughened closed rings.
 }
 \description{
-Compute a rough multipath outline
+Compute or draw a rough multipath
 }
 \examples{
 rough_polypath(c(2, 4, 4, 2, 2.5, 3.5, 3.5, 2.5),
                c(2, 2, 4, 4, 2.5, 2.5, 3.5, 3.5),
                id = c(rep(1, 4), rep(2, 4)),
                rule = "evenodd")
+plot(1:10, 1:10, type = "n")
+draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
+                    c(2, 2, 8, 8, 4, 4, 6, 6),
+                    id = c(rep(1, 4), rep(2, 4)),
+                    rule = "evenodd",
+                    col = "grey90",
+                    fill_pattern = hatch(density = 9))
 }
+\seealso{
+Other rough drawing helpers: 
+\code{\link{rough_arrows}()},
+\code{\link{rough_lines}()},
+\code{\link{rough_points}()},
+\code{\link{rough_polygons}()},
+\code{\link{rough_rect}()},
+\code{\link{rough_segments}()}
+}
+\concept{rough drawing helpers}
