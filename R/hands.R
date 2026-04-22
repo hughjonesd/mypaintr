@@ -74,12 +74,6 @@ as_hand <- function(x = NULL) {
 #'   strokes.
 #' @param endpoint_jitter Relative endpoint jitter as a proportion of segment
 #'   length.
-#' @param hachure_gap Optional gap between hatch lines. When `NULL`, a default
-#'   based on polygon size is used.
-#' @param hachure_angle Base hatch angle in degrees.
-#' @param hachure_angle_jitter Random angle variation for hatch passes.
-#' @param hachure_gap_jitter Relative jitter in hatch spacing.
-#' @param hachure_method Either `"parallel"` or `"cross"`.
 #' @return An object describing how rough geometry should be generated.
 #' @examples
 #' hand()
@@ -90,14 +84,7 @@ hand <- function(seed = NULL,
                  wobble = 0.006,
                  multi_stroke = 1L,
                  width_jitter = 0.08,
-                 endpoint_jitter = 0,
-                 hachure_gap = NULL,
-                 hachure_angle = 45,
-                 hachure_angle_jitter = 12,
-                 hachure_gap_jitter = 0.15,
-                 hachure_method = c("parallel", "cross")) {
-  hachure_method <- match.arg(hachure_method)
-
+                 endpoint_jitter = 0) {
   structure(
     list(
       seed = seed,
@@ -105,12 +92,7 @@ hand <- function(seed = NULL,
       wobble = wobble,
       multi_stroke = as.integer(multi_stroke),
       width_jitter = width_jitter,
-      endpoint_jitter = endpoint_jitter,
-      hachure_gap = hachure_gap,
-      hachure_angle = hachure_angle,
-      hachure_angle_jitter = hachure_angle_jitter,
-      hachure_gap_jitter = hachure_gap_jitter,
-      hachure_method = hachure_method
+      endpoint_jitter = endpoint_jitter
     ),
     class = "mypaintr_hand"
   )

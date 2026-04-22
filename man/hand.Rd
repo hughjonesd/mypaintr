@@ -10,12 +10,7 @@ hand(
   wobble = 0.006,
   multi_stroke = 1L,
   width_jitter = 0.08,
-  endpoint_jitter = 0,
-  hachure_gap = NULL,
-  hachure_angle = 45,
-  hachure_angle_jitter = 12,
-  hachure_gap_jitter = 0.15,
-  hachure_method = c("parallel", "cross")
+  endpoint_jitter = 0
 )
 }
 \arguments{
@@ -32,17 +27,6 @@ strokes.}
 
 \item{endpoint_jitter}{Relative endpoint jitter as a proportion of segment
 length.}
-
-\item{hachure_gap}{Optional gap between hatch lines. When \code{NULL}, a default
-based on polygon size is used.}
-
-\item{hachure_angle}{Base hatch angle in degrees.}
-
-\item{hachure_angle_jitter}{Random angle variation for hatch passes.}
-
-\item{hachure_gap_jitter}{Relative jitter in hatch spacing.}
-
-\item{hachure_method}{Either \code{"parallel"} or \code{"cross"}.}
 }
 \value{
 An object describing how rough geometry should be generated.

@@ -597,11 +597,7 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
   fill_settings <- params$fill_settings
   outline_hand <- params$stroke_hand
   hatch_hand <- params$fill_hand %||% outline_hand
-  fill_pattern <- as_fill_pattern(
-    params$fill_pattern,
-    hand_spec = hatch_hand,
-    default_when_missing = TRUE
-  )
+  fill_pattern <- as_fill_pattern(params$fill_pattern, hand_spec = hatch_hand)
 
   for (i in seq_len(nrow(data))) {
     row <- data[i, , drop = FALSE]

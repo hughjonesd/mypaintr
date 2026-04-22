@@ -78,35 +78,3 @@ plot_with_hand(endpoint_jitter = 0)
 ```{r}
 plot_with_hand(endpoint_jitter = 0.05)
 ```
-
-
-
-```{r}
-plot_with_hand(hachure_gap = 0.1)
-```
-
-
-```{r}
-plot_with_hand(hachure_angle = 0)
-```
-
-
-```{r}
-plot_with_hand(hachure_angle_jitter = 0)
-```
-
-
-```{r}
-plot_with_hand(hachure_angle_jitter = 30)
-```
-
-
-
-```{r}
-plot_with_hand(hachure_gap_jitter = 0)
-```
-
-
-```{r}
-plot_with_hand(hachure_gap_jitter = 0.45)
-```

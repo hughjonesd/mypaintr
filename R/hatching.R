@@ -110,14 +110,8 @@ jumble <- function(angle = 0, density = 5, radius = 0.76 / density, wobble = 0.2
   )
 }
 
-as_fill_pattern <- function(fill_pattern = NULL, hand_spec = NULL, default_when_missing = FALSE) {
+as_fill_pattern <- function(fill_pattern = NULL, hand_spec = NULL) {
   if (is.null(fill_pattern)) {
-    if (default_when_missing) {
-      if (!is.null(hand_spec) && identical(hand_spec$hachure_method, "cross")) {
-        return(crosshatch(angle = hand_spec$hachure_angle))
-      }
-      return(hatch(angle = if (is.null(hand_spec)) 45 else hand_spec$hachure_angle))
-    }
     return(NULL)
   }
 
@@ -158,9 +152,6 @@ resolve_inches_per_data_unit <- function(inches_per_data_unit, angle = 0) {
 fill_pattern_gap <- function(fill_pattern, paths, hand_spec = NULL, angle = NULL,
                              inches_per_data_unit = NULL) {
   gap <- NULL
-  if (!is.null(hand_spec) && !is.null(hand_spec$hachure_gap) && is.null(fill_pattern$density)) {
-    gap <- hand_spec$hachure_gap
-  }
   if (is.null(gap)) {
     density <- fill_pattern$density %||% 25
     gap <- 1 / max(1, density)
@@ -441,14 +432,12 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
                                     rule = c("winding", "evenodd"),
                                     inches_per_data_unit = NULL) {
   rule <- match.arg(rule)
-  fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec, default_when_missing = FALSE)
+  fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   if (is.null(fill_pattern)) {
     return(list(x = numeric(), y = numeric(), id = integer()))
   }
 
   fill_hand <- if (is.null(hand_spec)) NULL else clipped_hatch_hand(hand_spec, clip = fill_pattern$clip)
-  jitter_gap <- if (is.null(hand_spec)) 0 else hand_spec$hachure_gap_jitter
-  jitter_angle <- if (is.null(hand_spec)) 0 else hand_spec$hachure_angle_jitter
 
   build_lines <- function(base_angle) {
     gap <- fill_pattern_gap(
@@ -465,7 +454,7 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
       angle = base_angle,
       gap = gap,
       rule = rule,
-      jitter_gap = if (jitter_gap == 0) 0 else stats::rnorm(1, sd = jitter_gap),
+      jitter_gap = 0,
       padding = padding_normal
     )
     if (!nrow(rows)) {
@@ -497,7 +486,7 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
       angle = base_angle,
       gap = gap,
       rule = rule,
-      jitter_gap = if (jitter_gap == 0) 0 else stats::rnorm(1, sd = jitter_gap),
+      jitter_gap = 0,
       padding = padding_normal
     )
     if (!nrow(rows)) {
@@ -542,7 +531,7 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
       angle = base_angle,
       gap = gap,
       rule = rule,
-      jitter_gap = if (jitter_gap == 0) 0 else stats::rnorm(1, sd = jitter_gap),
+      jitter_gap = 0,
       padding = padding_normal
     )
     if (!nrow(rows)) {
@@ -635,9 +624,6 @@ rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL
   parts <- lapply(
     line_fill_angles(fill_pattern),
     function(base_angle) {
-      if (jitter_angle != 0) {
-        base_angle <- base_angle + stats::rnorm(1, sd = jitter_angle)
-      }
       if (identical(fill_pattern$style, "zigzag")) build_zigzag(base_angle) else build_lines(base_angle)
     }
   )
