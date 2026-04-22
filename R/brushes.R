@@ -148,6 +148,9 @@ normalize_settings <- function(settings) {
   if (is.list(settings)) {
     settings <- unlist(settings, recursive = FALSE, use.names = TRUE)
   }
+  if (length(settings) == 0L) {
+    return(numeric())
+  }
   if (!is.numeric(settings) || is.null(names(settings)) || any(names(settings) == "")) {
     stop("brush settings must be a named numeric vector or named list", call. = FALSE)
   }
