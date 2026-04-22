@@ -6,16 +6,14 @@
 \usage{
 set_brush(
   brush = NULL,
-  settings = NULL,
   type = c("both", "stroke", "fill"),
   auto_solid_bg = NULL
 )
 }
 \arguments{
-\item{brush}{Brush preset, installed brush name, JSON brush string, named
-settings, or \code{NULL} to switch the selected type back to solid rendering.}
-
-\item{settings}{Named settings overriding \code{brush}.}
+\item{brush}{Brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an installed
+brush name, \code{.myb} file path, JSON brush string, or \code{NULL} to switch the
+selected type back to solid rendering.}
 
 \item{type}{Which rendering channel to update: \code{"both"}, \code{"stroke"}, or
 \code{"fill"}.}
@@ -34,9 +32,9 @@ Set the active mypaintr brush
 Other brush management: 
 \code{\link{brush_dirs}()},
 \code{\link{brush_inputs}()},
-\code{\link{brush_presets}()},
 \code{\link{brush_settings}()},
 \code{\link{brushes}()},
-\code{\link{load_brush}()}
+\code{\link{load_brush}()},
+\code{\link{tweak_brush}()}
 }
 \concept{brush management}

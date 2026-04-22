@@ -6,9 +6,7 @@
 \usage{
 element_mypaint_rect(
   brush = NULL,
-  brush_settings = NULL,
   fill_brush = NULL,
-  fill_settings = NULL,
   hand = NULL,
   stroke_hand = hand,
   fill_hand = hand,
@@ -25,15 +23,13 @@ element_mypaint_rect(
 )
 }
 \arguments{
-\item{brush}{Stroke brush preset, installed brush name, JSON brush string,
-named settings, or \code{NULL} for solid borders.}
+\item{brush}{Stroke brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
+installed mypaint brush name, \code{.myb} file path, JSON brush string, or
+\code{NULL} for solid borders.}
 
-\item{brush_settings}{Named settings overriding \code{brush}.}
-
-\item{fill_brush}{Fill brush preset, installed brush name, JSON brush string,
-named settings, or \code{NULL} for solid fills.}
-
-\item{fill_settings}{Named settings overriding \code{fill_brush}.}
+\item{fill_brush}{Fill brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
+installed mypaint brush name, \code{.myb} file path, JSON brush string, or
+\code{NULL} for solid fills.}
 
 \item{hand}{Optional hand-drawn geometry applied to both stroke and fill by
 default.}

@@ -1,42 +1,66 @@
 
-brush_preset_table <- list(
-  ink = c(
-    opaque = 1.0,
-    opaque_multiply = 1.0,
-    radius_logarithmic = log(1.05),
-    hardness = 0.92,
-    anti_aliasing = 1.0,
-    dabs_per_basic_radius = 2.2,
-    dabs_per_actual_radius = 2.4,
-    tracking_noise = 0.0,
-    offset_by_random = 0.0
-  ),
-  pencil = c(
-    opaque = 0.40,
-    opaque_multiply = 0.85,
-    radius_logarithmic = log(0.75),
-    hardness = 0.38,
-    anti_aliasing = 1.0,
-    dabs_per_basic_radius = 1.5,
-    dabs_per_actual_radius = 1.8,
-    radius_by_random = 0.12,
-    tracking_noise = 0.08,
-    offset_by_random = 0.04
-  ),
-  chalk = c(
-    opaque = 0.55,
-    opaque_multiply = 0.95,
-    radius_logarithmic = log(2.2),
-    hardness = 0.18,
-    anti_aliasing = 1.0,
-    dabs_per_basic_radius = 1.8,
-    dabs_per_actual_radius = 2.0,
-    radius_by_random = 0.42,
-    tracking_noise = 0.18,
-    offset_by_random = 0.22,
-    elliptical_dab_ratio = 1.25
+default_plot_brush_spec <- function() {
+  structure(
+    list(
+      json = NULL,
+      settings = c(
+        opaque = 1.0,
+        opaque_multiply = 1.0,
+        radius_logarithmic = log(1.05),
+        hardness = 0.92,
+        anti_aliasing = 1.0,
+        dabs_per_basic_radius = 2.2,
+        dabs_per_actual_radius = 2.4,
+        tracking_noise = 0.0,
+        offset_by_random = 0.0
+      ),
+      source = "mypaintr-default",
+      normalize = "none"
+    ),
+    class = "mypaintr_brush"
   )
-)
+}
+
+new_mypaintr_brush <- function(json = NULL, settings = numeric(), source = NULL, normalize = "none") {
+  structure(
+    list(
+      json = json,
+      settings = settings,
+      source = source,
+      normalize = normalize
+    ),
+    class = "mypaintr_brush"
+  )
+}
+
+normalize_mode <- function(normalize) {
+  normalize <- tolower(normalize)
+  if (!normalize %in% c("all", "size", "tracking", "none")) {
+    stop("normalize must be one of \"all\", \"size\", \"tracking\", or \"none\"", call. = FALSE)
+  }
+  normalize
+}
+
+normalize_brush_source <- function(brush) {
+  if (inherits(brush, "mypaintr_brush")) {
+    return(brush)
+  }
+  if (!(is.character(brush) && length(brush) == 1L && nzchar(brush))) {
+    stop("brush must be an installed brush name, .myb path, JSON brush string, or tweak_brush() object", call. = FALSE)
+  }
+  if (startsWith(trimws(brush), "{")) {
+    return(new_mypaintr_brush(json = brush, source = "json"))
+  }
+
+  brush_file <- resolve_mypaint_brush_file(brush)
+  if (is.null(brush_file)) {
+    stop("unknown brush file: ", brush, call. = FALSE)
+  }
+  new_mypaintr_brush(
+    json = read_mypaint_brush(brush_file),
+    source = normalizePath(brush_file, winslash = "/", mustWork = TRUE)
+  )
+}
 
 default_mypaint_brush_dirs <- function() {
   pkg_config_file <- system.file("mypaintr-config.dcf", package = "mypaintr", mustWork = FALSE)
@@ -131,42 +155,6 @@ normalize_settings <- function(settings) {
   settings
 }
 
-normalize_brush_spec <- function(brush, settings = NULL) {
-  base_settings <- numeric()
-  json <- NULL
-
-  if (is.null(brush)) {
-    NULL
-  } else if (is.character(brush) && length(brush) == 1L) {
-    if (brush %in% names(brush_preset_table)) {
-      base_settings <- brush_preset_table[[brush]]
-    } else if (startsWith(trimws(brush), "{")) {
-      json <- brush
-    } else {
-      brush_file <- resolve_mypaint_brush_file(brush)
-      if (is.null(brush_file)) {
-        stop("unknown brush preset or brush file: ", brush, call. = FALSE)
-      }
-      json <- read_mypaint_brush(brush_file)
-    }
-  } else if (is.numeric(brush) || is.list(brush)) {
-    base_settings <- normalize_settings(brush)
-  } else {
-    stop("brush must be NULL, a preset name, a JSON string, or named settings", call. = FALSE)
-  }
-
-  override_settings <- normalize_settings(settings)
-  if (length(override_settings)) {
-    base_settings[names(override_settings)] <- override_settings
-  }
-
-  spec <- list(
-    json = json,
-    settings = base_settings
-  )
-  spec
-}
-
 read_mypaint_brush <- function(path) {
   paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
 }
@@ -183,6 +171,70 @@ json_brush_base_value <- function(json, setting) {
     return(NA_real_)
   }
   suppressWarnings(as.numeric(captures[[2L]]))
+}
+
+normalize_adjustments <- function(brush, normalize = "none") {
+  normalize <- normalize_mode(normalize)
+  settings <- numeric()
+  if (normalize %in% c("all", "tracking")) {
+    settings[c("slow_tracking", "slow_tracking_per_dab")] <- 0
+  }
+  if (normalize %in% c("all", "size")) {
+    current_radius <- if ("radius_logarithmic" %in% names(brush$settings %||% numeric())) {
+      as.numeric(brush$settings[["radius_logarithmic"]])
+    } else {
+      json_brush_base_value(brush$json %||% "", "radius_logarithmic")
+    }
+    if (is.finite(current_radius) && current_radius > log(3)) {
+      settings["radius_logarithmic"] <- log(3)
+    }
+  }
+  settings
+}
+
+#' Create a reusable tweaked brush specification
+#'
+#' @param brush Installed brush name, `.myb` file path, JSON brush string, or
+#'   another [tweak_brush()] object.
+#' @param ... Named libmypaint base-value overrides.
+#' @param normalize One of `"all"`, `"size"`, `"tracking"`, or `"none"`.
+#' @return A reusable brush specification object.
+#' @examples
+#' if ("classic/pen" %in% brushes()) {
+#'   tweak_brush("classic/pen", normalize = "tracking", radius_logarithmic = log(1.2))
+#' }
+#' @family brush management
+#' @export
+tweak_brush <- function(brush, ..., normalize = "all") {
+  if (missing(brush) || is.null(brush)) {
+    stop("tweak_brush() requires an explicit brush", call. = FALSE)
+  }
+
+  brush <- normalize_brush_source(brush)
+  normalize <- normalize_mode(normalize)
+  settings <- brush$settings %||% numeric()
+  normalized <- normalize_adjustments(brush, normalize)
+  settings[names(normalized)] <- normalized
+  overrides <- normalize_settings(list(...))
+  settings[names(overrides)] <- overrides
+
+  new_mypaintr_brush(
+    json = brush$json,
+    settings = settings,
+    source = brush$source,
+    normalize = normalize
+  )
+}
+
+normalize_brush_spec <- function(brush) {
+  if (is.null(brush)) {
+    return(NULL)
+  }
+  brush <- normalize_brush_source(brush)
+  list(
+    json = brush$json,
+    settings = normalize_settings(brush$settings %||% numeric())
+  )
 }
 
 is_probably_pure_smudge_brush <- function(spec) {
@@ -235,9 +287,9 @@ warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
 
 #' Set the active mypaintr brush
 #'
-#' @param brush Brush preset, installed brush name, JSON brush string, named
-#'   settings, or `NULL` to switch the selected type back to solid rendering.
-#' @param settings Named settings overriding `brush`.
+#' @param brush Brush specification created with [tweak_brush()], an installed
+#'   brush name, `.myb` file path, JSON brush string, or `NULL` to switch the
+#'   selected type back to solid rendering.
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
 #' @param auto_solid_bg Optional override for background-like fills.
@@ -246,13 +298,9 @@ warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
 #'   in this R session.
 #' @family brush management
 #' @export
-set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
+set_brush <- function(brush = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
   type <- match.arg(type)
-  if (is.null(brush) && !is.null(settings)) {
-    stop("settings requires brush", call. = FALSE)
-  }
-
-  spec <- if (is.null(brush) && is.null(settings)) NULL else normalize_brush_spec(brush, settings)
+  spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
   if (type %in% c("both", "stroke")) {
     warn_if_pure_smudge_brush(spec, "stroke")
   }
@@ -294,14 +342,6 @@ set_brush <- function(brush = NULL, settings = NULL, type = c("both", "stroke", 
   ))
 }
 
-#' Built-in brush presets
-#'
-#' @family brush management
-#' @export
-brush_presets <- function() {
-  brush_preset_table
-}
-
 #' Discover installed mypaint brush directories
 #'
 #' @return A character vector of directories containing `.myb` brushes.
@@ -338,7 +378,8 @@ brushes <- function(paths = default_mypaint_brush_dirs()) {
 #'
 #' @param brush Brush name like `"classic/pencil"` or a path to a `.myb` file.
 #' @inheritParams mypaintr-brush-paths-param
-#' @return A JSON brush string suitable for `mypaint_device(brush = ...)`.
+#' @return A JSON brush string suitable for `tweak_brush()` or
+#'   `mypaint_device(brush = ...)`.
 #' @examples
 #' if (length(brushes())) {
 #'   x <- load_brush(brushes()[[1]])

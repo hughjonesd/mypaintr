@@ -6,7 +6,6 @@
 \usage{
 element_mypaint_line(
   brush = NULL,
-  brush_settings = NULL,
   hand = NULL,
   colour = NULL,
   linewidth = NULL,
@@ -22,10 +21,9 @@ element_mypaint_line(
 )
 }
 \arguments{
-\item{brush}{Stroke brush preset, installed brush name, JSON brush string,
-named settings, or \code{NULL} for solid strokes.}
-
-\item{brush_settings}{Named settings overriding \code{brush}.}
+\item{brush}{Stroke brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
+installed mypaint brush name, \code{.myb} file path, JSON brush string, or
+\code{NULL} for solid strokes.}
 
 \item{hand}{Optional hand-drawn geometry created with \code{\link[=hand]{hand()}}.}
 

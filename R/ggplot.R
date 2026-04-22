@@ -18,15 +18,15 @@ GeomMypaintCol <- ggplot2::ggproto(
   ggplot2::GeomCol,
   extra_params = c(
     "na.rm", "just", "orientation", "lineend", "linejoin",
-    "fill_pattern", "brush", "brush_settings",
-    "fill_brush", "fill_settings", "hand", "stroke_hand",
+    "fill_pattern", "brush",
+    "fill_brush", "hand", "stroke_hand",
     "fill_hand", "auto_solid_bg"
   ),
   draw_panel = function(self, data, panel_params, coord, lineend = "butt",
                         linejoin = "mitre", just = 0.5, na.rm = FALSE,
                         fill_pattern = NULL,
-                        brush = NULL, brush_settings = NULL,
-                        fill_brush = NULL, fill_settings = NULL,
+                        brush = NULL,
+                        fill_brush = NULL,
                         hand = NULL, stroke_hand = hand, fill_hand = hand,
                         auto_solid_bg = NULL) {
     if (!coord$is_linear()) {
@@ -42,9 +42,7 @@ GeomMypaintCol <- ggplot2::ggproto(
         lineend = lineend,
         linejoin = linejoin,
         brush = brush,
-        brush_settings = brush_settings,
         fill_brush = fill_brush,
-        fill_settings = fill_settings,
         stroke_hand = normalize_hand_spec(stroke_hand),
         fill_hand = normalize_hand_spec(fill_hand),
         auto_solid_bg = auto_solid_bg
@@ -70,10 +68,13 @@ GeomMypaintBar <- ggplot2::ggproto(
 #' @param mapping,data,position,just,lineend,linejoin,na.rm,show.legend,inherit.aes
 #'   As for [ggplot2::geom_col()].
 #' @param fill_pattern Optional fill pattern created with [hatch()],
-#'   [crosshatch()], [zigzag()], or [jumble()]. When omitted, bars use a simple
-#'   hatch fill by default.
-#' @param brush,brush_settings Stroke brush spec and overrides.
-#' @param fill_brush,fill_settings Fill-hatch brush spec and overrides.
+#'   [crosshatch()], [zigzag()], or [jumble()].
+#' @param brush Stroke brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid borders.
+#' @param fill_brush Fill brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid fills.
 #' @param hand Optional hand-drawn geometry applied to both outline and hatch by
 #'   default.
 #' @param stroke_hand Optional hand-drawn geometry for the outline.
@@ -92,11 +93,15 @@ geom_mypaint_col <- function(mapping = NULL, data = NULL, position = "stack",
                              ..., just = 0.5, lineend = "butt", linejoin = "mitre",
                              na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                              fill_pattern = NULL,
-                             brush = NULL, brush_settings = NULL,
-                             fill_brush = NULL, fill_settings = NULL,
+                             brush = NULL,
+                             fill_brush = NULL,
                              hand = NULL, stroke_hand = hand, fill_hand = hand,
                              auto_solid_bg = NULL) {
   require_ggplot2()
+  supplied_args <- names(match.call(expand.dots = FALSE))
+  if (!("fill_brush" %in% supplied_args)) {
+    fill_brush <- brush
+  }
   ggplot2::layer(
     data = data,
     mapping = mapping,
@@ -112,9 +117,7 @@ geom_mypaint_col <- function(mapping = NULL, data = NULL, position = "stack",
       na.rm = na.rm,
       fill_pattern = fill_pattern,
       brush = brush,
-      brush_settings = brush_settings,
       fill_brush = fill_brush,
-      fill_settings = fill_settings,
       hand = hand,
       stroke_hand = stroke_hand,
       fill_hand = fill_hand,
@@ -135,11 +138,15 @@ geom_mypaint_bar <- function(mapping = NULL, data = NULL, stat = "count",
                              lineend = "butt", linejoin = "mitre", na.rm = FALSE,
                              show.legend = NA, inherit.aes = TRUE,
                              fill_pattern = NULL,
-                             brush = NULL, brush_settings = NULL,
-                             fill_brush = NULL, fill_settings = NULL,
+                             brush = NULL,
+                             fill_brush = NULL,
                              hand = NULL, stroke_hand = hand, fill_hand = hand,
                              auto_solid_bg = NULL) {
   require_ggplot2()
+  supplied_args <- names(match.call(expand.dots = FALSE))
+  if (!("fill_brush" %in% supplied_args)) {
+    fill_brush <- brush
+  }
   ggplot2::layer(
     data = data,
     mapping = mapping,
@@ -157,9 +164,7 @@ geom_mypaint_bar <- function(mapping = NULL, data = NULL, stat = "count",
       na.rm = na.rm,
       fill_pattern = fill_pattern,
       brush = brush,
-      brush_settings = brush_settings,
       fill_brush = fill_brush,
-      fill_settings = fill_settings,
       hand = hand,
       stroke_hand = stroke_hand,
       fill_hand = fill_hand,
@@ -182,9 +187,9 @@ new_mypaintr_element <- function(element, class_name, style) {
 #' axes, ticks, or panel grid lines solid while data layers use rough or brush
 #' rendering.
 #'
-#' @param brush Stroke brush preset, installed brush name, JSON brush string,
-#'   named settings, or `NULL` for solid strokes.
-#' @param brush_settings Named settings overriding `brush`.
+#' @param brush Stroke brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid strokes.
 #' @param hand Optional hand-drawn geometry created with [hand()].
 #' @param colour,color,linewidth,linetype,lineend,linejoin,arrow,arrow.fill,inherit.blank,size,...
 #'   Passed through to [ggplot2::element_line()].
@@ -195,7 +200,6 @@ new_mypaintr_element <- function(element, class_name, style) {
 #' }
 #' @export
 element_mypaint_line <- function(brush = NULL,
-                                 brush_settings = NULL,
                                  hand = NULL,
                                  colour = NULL,
                                  linewidth = NULL,
@@ -209,11 +213,7 @@ element_mypaint_line <- function(brush = NULL,
                                  size = NULL,
                                  ...) {
   require_ggplot2()
-  if (is.null(brush) && !is.null(brush_settings)) {
-    stop("brush_settings requires brush", call. = FALSE)
-  }
-
-  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
+  stroke_spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
   style <- make_style_override(
     update_stroke = TRUE,
     stroke_spec = stroke_spec,
@@ -245,12 +245,12 @@ element_mypaint_line <- function(brush = NULL,
 #' stroke and fill settings while the rectangle is drawn. This is useful for
 #' panel backgrounds, panel borders, and legend keys in ggplot2 themes.
 #'
-#' @param brush Stroke brush preset, installed brush name, JSON brush string,
-#'   named settings, or `NULL` for solid borders.
-#' @param brush_settings Named settings overriding `brush`.
-#' @param fill_brush Fill brush preset, installed brush name, JSON brush string,
-#'   named settings, or `NULL` for solid fills.
-#' @param fill_settings Named settings overriding `fill_brush`.
+#' @param brush Stroke brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid borders.
+#' @param fill_brush Fill brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid fills.
 #' @param hand Optional hand-drawn geometry applied to both stroke and fill by
 #'   default.
 #' @param stroke_hand Optional hand-drawn geometry for the border.
@@ -265,9 +265,7 @@ element_mypaint_line <- function(brush = NULL,
 #' }
 #' @export
 element_mypaint_rect <- function(brush = NULL,
-                                 brush_settings = NULL,
                                  fill_brush = NULL,
-                                 fill_settings = NULL,
                                  hand = NULL,
                                  stroke_hand = hand,
                                  fill_hand = hand,
@@ -282,21 +280,14 @@ element_mypaint_rect <- function(brush = NULL,
                                  size = NULL,
                                  ...) {
   require_ggplot2()
-  if (missing(fill_brush)) {
+  supplied_args <- names(match.call(expand.dots = FALSE))
+  if (!("fill_brush" %in% supplied_args)) {
     fill_brush <- brush
-  }
-  if (is.null(brush) && !is.null(brush_settings)) {
-    stop("brush_settings requires brush", call. = FALSE)
-  }
-  if (is.null(fill_brush) && !is.null(fill_settings)) {
-    stop("fill_settings requires fill_brush", call. = FALSE)
   }
 
   style <- make_mypaintr_style(
     brush = brush,
-    brush_settings = brush_settings,
     fill_brush = fill_brush,
-    fill_settings = fill_settings,
     stroke_hand = stroke_hand,
     fill_hand = fill_hand,
     auto_solid_bg = auto_solid_bg
@@ -352,22 +343,13 @@ wrap_mypaintr_style_output <- function(x, style) {
 }
 
 make_mypaintr_style <- function(brush = NULL,
-                                brush_settings = NULL,
                                 fill_brush = NULL,
-                                fill_settings = NULL,
                                 hand = NULL,
                                 stroke_hand = hand,
                                 fill_hand = hand,
                                 auto_solid_bg = NULL) {
-  if (is.null(brush) && !is.null(brush_settings)) {
-    stop("brush_settings requires brush", call. = FALSE)
-  }
-  if (is.null(fill_brush) && !is.null(fill_settings)) {
-    stop("fill_settings requires fill_brush", call. = FALSE)
-  }
-
-  stroke_spec <- if (is.null(brush) && is.null(brush_settings)) NULL else normalize_brush_spec(brush, brush_settings)
-  fill_spec <- if (is.null(fill_brush) && is.null(fill_settings)) NULL else normalize_brush_spec(fill_brush, fill_settings)
+  stroke_spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
+  fill_spec <- if (is.null(fill_brush)) NULL else normalize_brush_spec(fill_brush)
   make_style_override(
     update_stroke = TRUE,
     stroke_spec = stroke_spec,
@@ -390,12 +372,12 @@ make_mypaintr_style <- function(brush = NULL,
 #' `ggplot(...) + mypaint_wrap(geom_line(...), ...)`.
 #'
 #' @param object A grid grob or a ggplot2 layer object.
-#' @param brush Stroke brush preset, installed brush name, JSON brush string,
-#'   named settings, or `NULL` for solid strokes.
-#' @param brush_settings Named settings overriding `brush`.
-#' @param fill_brush Fill brush preset, installed brush name, JSON brush string,
-#'   named settings, or `NULL` for solid fills.
-#' @param fill_settings Named settings overriding `fill_brush`.
+#' @param brush Stroke brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid strokes.
+#' @param fill_brush Fill brush specification created with [tweak_brush()], an
+#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
+#'   `NULL` for solid fills.
 #' @param hand Optional hand-drawn geometry applied to both stroke and fill by
 #'   default.
 #' @param stroke_hand Optional hand-drawn geometry for strokes.
@@ -405,31 +387,31 @@ make_mypaintr_style <- function(brush = NULL,
 #'   grid inputs or a wrapped layer for ggplot2 inputs.
 #' @examples
 #' line <- grid::linesGrob(c(0.1, 0.9), c(0.2, 0.8))
-#' wrapped <- mypaint_wrap(line, brush = "ink", hand = hand())
+#' if ("classic/pen" %in% brushes()) {
+#'   wrapped <- mypaint_wrap(line, brush = "classic/pen", hand = hand())
+#' }
 #'
-#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#' if (requireNamespace("ggplot2", quietly = TRUE) &&
+#'     "classic/pen" %in% brushes()) {
 #'   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
-#'     mypaint_wrap(ggplot2::geom_line(), brush = "ink", hand = hand())
+#'     mypaint_wrap(ggplot2::geom_line(), brush = "classic/pen", hand = hand())
 #' }
 #' @export
 mypaint_wrap <- function(object,
                          brush = NULL,
-                         brush_settings = NULL,
                          fill_brush = NULL,
-                         fill_settings = NULL,
                          hand = NULL,
                          stroke_hand = hand,
                          fill_hand = hand,
                          auto_solid_bg = NULL) {
-  if (missing(fill_brush)) {
+  supplied_args <- names(match.call(expand.dots = FALSE))
+  if (!("fill_brush" %in% supplied_args)) {
     fill_brush <- brush
   }
 
   style <- make_mypaintr_style(
     brush = brush,
-    brush_settings = brush_settings,
     fill_brush = fill_brush,
-    fill_settings = fill_settings,
     hand = hand,
     stroke_hand = stroke_hand,
     fill_hand = fill_hand,
@@ -535,8 +517,8 @@ make_mypaintr_pattern_content <- function(paths, hand_spec, fill_pattern, gp, de
   )
 }
 
-make_stroke_style <- function(brush = NULL, settings = NULL, hand = NULL) {
-  spec <- if (is.null(brush) && is.null(settings)) NULL else normalize_brush_spec(brush, settings)
+make_stroke_style <- function(brush = NULL, hand = NULL) {
+  spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
   make_style_override(
     update_stroke = TRUE,
     stroke_spec = spec,
@@ -592,9 +574,7 @@ outline_path <- function(x, y, hand_spec = NULL, closed = TRUE) {
 build_mypaint_rect_grob <- function(data, params, default.units = "native") {
   child_list <- list()
   border_brush <- params$brush
-  border_settings <- params$brush_settings
-  fill_brush <- if (is.null(params$fill_brush) && is.null(params$fill_settings)) params$brush else params$fill_brush
-  fill_settings <- params$fill_settings
+  fill_brush <- if (is.null(params$fill_brush)) params$brush else params$fill_brush
   outline_hand <- params$stroke_hand
   hatch_hand <- params$fill_hand %||% outline_hand
   fill_pattern <- as_fill_pattern(params$fill_pattern, hand_spec = hatch_hand)
@@ -623,7 +603,7 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
       )
       child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
         hatch_grob,
-        make_stroke_style(fill_brush, fill_settings, hand = hatch_hand)
+        make_stroke_style(fill_brush, hand = hatch_hand)
       )
     }
 
@@ -636,7 +616,7 @@ build_mypaint_rect_grob <- function(data, params, default.units = "native") {
       )
       child_list[[length(child_list) + 1L]] <- wrap_mypaintr_style_grob(
         border_grob,
-        make_stroke_style(border_brush, border_settings, hand = outline_hand)
+        make_stroke_style(border_brush, hand = outline_hand)
       )
     }
   }

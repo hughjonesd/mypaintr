@@ -13,7 +13,8 @@ load_brush(brush, paths = default_mypaint_brush_dirs())
 \code{mypaint-brushes} locations.}
 }
 \value{
-A JSON brush string suitable for \code{mypaint_device(brush = ...)}.
+A JSON brush string suitable for \code{tweak_brush()} or
+\code{mypaint_device(brush = ...)}.
 }
 \description{
 Load an installed mypaint brush
@@ -28,9 +29,9 @@ if (length(brushes())) {
 Other brush management: 
 \code{\link{brush_dirs}()},
 \code{\link{brush_inputs}()},
-\code{\link{brush_presets}()},
 \code{\link{brush_settings}()},
 \code{\link{brushes}()},
-\code{\link{set_brush}()}
+\code{\link{set_brush}()},
+\code{\link{tweak_brush}()}
 }
 \concept{brush management}

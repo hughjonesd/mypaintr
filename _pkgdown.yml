@@ -14,13 +14,12 @@ reference:
   - title: Devices and Styles
     contents:
       - mypaint_device
-      - mypaint_style
       - set_brush
+      - tweak_brush
       - set_hand
       - brush_dirs
       - brushes
       - load_brush
-      - brush_presets
       - brush_settings
       - brush_inputs
 
@@ -34,7 +33,10 @@ reference:
       - draw_rough_polygons
       - draw_rough_polypath
       - draw_rough_rect
-      - rough_polygon
+      - rough_lines
+      - rough_arrows
+      - rough_points
+      - rough_polygons
       - rough_polypath
       - rough_rect
       - rough_segments

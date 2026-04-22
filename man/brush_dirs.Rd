@@ -18,10 +18,10 @@ brush_dirs()
 \seealso{
 Other brush management: 
 \code{\link{brush_inputs}()},
-\code{\link{brush_presets}()},
 \code{\link{brush_settings}()},
 \code{\link{brushes}()},
 \code{\link{load_brush}()},
-\code{\link{set_brush}()}
+\code{\link{set_brush}()},
+\code{\link{tweak_brush}()}
 }
 \concept{brush management}

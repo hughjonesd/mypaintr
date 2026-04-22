@@ -18,9 +18,7 @@ geom_mypaint_bar(
   inherit.aes = TRUE,
   fill_pattern = NULL,
   brush = NULL,
-  brush_settings = NULL,
   fill_brush = NULL,
-  fill_settings = NULL,
   hand = NULL,
   stroke_hand = hand,
   fill_hand = hand,
@@ -35,12 +33,15 @@ geom_mypaint_bar(
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{fill_pattern}{Optional fill pattern created with \code{\link[=hatch]{hatch()}},
-\code{\link[=crosshatch]{crosshatch()}}, \code{\link[=zigzag]{zigzag()}}, or \code{\link[=jumble]{jumble()}}. When omitted, bars use a simple
-hatch fill by default.}
+\code{\link[=crosshatch]{crosshatch()}}, \code{\link[=zigzag]{zigzag()}}, or \code{\link[=jumble]{jumble()}}.}
 
-\item{brush, brush_settings}{Stroke brush spec and overrides.}
+\item{brush}{Stroke brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
+installed mypaint brush name, \code{.myb} file path, JSON brush string, or
+\code{NULL} for solid borders.}
 
-\item{fill_brush, fill_settings}{Fill-hatch brush spec and overrides.}
+\item{fill_brush}{Fill brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
+installed mypaint brush name, \code{.myb} file path, JSON brush string, or
+\code{NULL} for solid fills.}
 
 \item{hand}{Optional hand-drawn geometry applied to both outline and hatch by
 default.}

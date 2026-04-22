@@ -12,12 +12,10 @@ mypaint_device(
   res = 144,
   pointsize = 12,
   bg = "white",
-  brush = "ink",
-  brush_settings = NULL,
+  brush = NULL,
   stroke_style = NULL,
   fill_style = NULL,
   fill_brush = NULL,
-  fill_settings = NULL,
   hand = NULL,
   stroke_hand = NULL,
   fill_hand = NULL,
@@ -38,11 +36,10 @@ numbered.}
 
 \item{bg}{Background colour.}
 
-\item{brush}{Stroke brush preset, installed mypaint brush name,
-\code{.myb} file path, JSON brush string, named settings, or \code{NULL} for solid
-strokes.}
-
-\item{brush_settings}{Named settings overriding \code{brush}.}
+\item{brush}{Stroke brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
+installed mypaint brush name, \code{.myb} file path, JSON brush string, or
+\code{NULL} for solid strokes. If omitted, \code{mypaint_device()} uses an internal
+default plotting brush.}
 
 \item{stroke_style}{Legacy override for whether stroke drawing uses the brush
 backend or solid Cairo rendering. When \code{NULL}, this is inferred from
@@ -54,8 +51,6 @@ whether \code{fill_brush} is \code{NULL}.}
 
 \item{fill_brush}{Optional fill brush spec. Defaults to \code{brush} when not
 supplied. Use explicit \code{NULL} for solid fills.}
-
-\item{fill_settings}{Named settings overriding \code{fill_brush}.}
 
 \item{hand}{Optional hand-drawn geometry spec applied to both stroke and
 fill primitives by default.}
@@ -89,35 +84,37 @@ text(6, 8, "hello", col = "black")
 dev.off()
 unlink(Sys.glob(sub("\%d", "*", out, fixed = TRUE)))
 
-out <- tempfile("mypaint-brush-", fileext = "-\%d.png")
-mypaint_device(
-  out,
-  width = 4,
-  height = 3,
-  brush = "chalk",
-  brush_settings = c(tracking_noise = 0.12),
-  fill_style = "brush",
-  fill_brush = "pencil",
-  fill_settings = c(radius_by_random = 0.08)
-)
-plot.new()
-plot.window(xlim = c(0, 10), ylim = c(0, 10))
-polygon(
-  c(2, 5, 8, 6, 3),
-  c(2, 7, 6, 3, 1.5),
-  border = "black",
-  col = rgb(0.2, 0.7, 0.5, 0.6)
-)
-lines(c(1, 9), c(1, 9), col = "firebrick", lwd = 4)
-title("Brush Fill")
-box()
-dev.off()
-unlink(Sys.glob(sub("\%d", "*", out, fixed = TRUE)))
+if ("classic/pen" \%in\% brushes()) {
+  out <- tempfile("mypaint-brush-", fileext = "-\%d.png")
+  mypaint_device(
+    out,
+    width = 4,
+    height = 3,
+    brush = tweak_brush("classic/pen", tracking_noise = 0.12),
+    fill_style = "brush",
+    fill_brush = tweak_brush("classic/pen", normalize = "size", radius_by_random = 0.08)
+  )
+  plot.new()
+  plot.window(xlim = c(0, 10), ylim = c(0, 10))
+  polygon(
+    c(2, 5, 8, 6, 3),
+    c(2, 7, 6, 3, 1.5),
+    border = "black",
+    col = rgb(0.2, 0.7, 0.5, 0.6)
+  )
+  lines(c(1, 9), c(1, 9), col = "firebrick", lwd = 4)
+  title("Brush Fill")
+  box()
+  dev.off()
+  unlink(Sys.glob(sub("\%d", "*", out, fixed = TRUE)))
+}
 
 out <- tempfile("mypaint-mixed-", fileext = "-\%d.png")
 mypaint_device(out, width = 4, height = 3, brush = NULL)
 plot(1:5, 1:5, type = "n", main = "Mixed Styles")
-set_brush("pencil", type = "stroke")
+if ("classic/pencil" \%in\% brushes()) {
+  set_brush("classic/pencil", type = "stroke")
+}
 lines(1:5, c(1, 3, 2, 5, 4), lwd = 3)
 dev.off()
 unlink(Sys.glob(sub("\%d", "*", out, fixed = TRUE)))
