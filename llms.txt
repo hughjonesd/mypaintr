@@ -99,28 +99,28 @@ text(8, 9, "A pentagon", family = "Chalkboard")
 
 - [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md) :
   Hand-drawn geometry settings
-- [`draw_rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_lines.md)
-  : Draw rough connected lines
-- [`draw_rough_segments()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_segments.md)
-  : Draw rough segments
-- [`draw_rough_arrows()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_arrows.md)
-  : Draw rough arrows
-- [`draw_rough_points()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_points.md)
-  : Draw rough points
-- [`draw_rough_polygons()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_polygons.md)
-  : Draw rough polygons
-- [`draw_rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_polypath.md)
-  : Draw a rough multipath with optional holes
-- [`draw_rough_rect()`](https://hughjonesd.github.io/mypaintr/reference/draw_rough_rect.md)
-  : Draw a rough rectangle
-- [`rough_polygon()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygon.md)
-  : Compute a rough polygon outline
-- [`rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/rough_polypath.md)
-  : Compute a rough multipath outline
-- [`rough_rect()`](https://hughjonesd.github.io/mypaintr/reference/rough_rect.md)
-  : Compute a rough rectangle outline
+- [`rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/rough_lines.md)
+  [`draw_rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/rough_lines.md)
+  : Compute or draw rough connected lines
 - [`rough_segments()`](https://hughjonesd.github.io/mypaintr/reference/rough_segments.md)
-  : Compute rough segment geometry
+  [`draw_rough_segments()`](https://hughjonesd.github.io/mypaintr/reference/rough_segments.md)
+  : Compute or draw rough segments
+- [`rough_arrows()`](https://hughjonesd.github.io/mypaintr/reference/rough_arrows.md)
+  [`draw_rough_arrows()`](https://hughjonesd.github.io/mypaintr/reference/rough_arrows.md)
+  : Compute or draw rough arrows
+- [`rough_points()`](https://hughjonesd.github.io/mypaintr/reference/rough_points.md)
+  [`draw_rough_points()`](https://hughjonesd.github.io/mypaintr/reference/rough_points.md)
+  : Compute or draw rough points
+- [`rough_polygons()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygons.md)
+  [`rough_polygon()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygons.md)
+  [`draw_rough_polygons()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygons.md)
+  : Compute or draw rough polygons
+- [`rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/rough_polypath.md)
+  [`draw_rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/rough_polypath.md)
+  : Compute or draw a rough multipath
+- [`rough_rect()`](https://hughjonesd.github.io/mypaintr/reference/rough_rect.md)
+  [`draw_rough_rect()`](https://hughjonesd.github.io/mypaintr/reference/rough_rect.md)
+  : Compute or draw a rough rectangle
 
 ## Fill Patterns
 

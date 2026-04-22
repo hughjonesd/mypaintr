@@ -13,13 +13,6 @@
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/brush_settings.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/brushes.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/crosshatch.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_arrows.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_lines.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_points.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_polygons.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_polypath.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_rect.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/draw_rough_segments.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/element_mypaint_line.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/element_mypaint_rect.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.html</loc></url>
@@ -38,7 +31,10 @@
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/mypaintr-package.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/mypaintr-rough-fill.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/mypaintr-rough-hand.html</loc></url>
-<url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_polygon.html</loc></url>
+<url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_arrows.html</loc></url>
+<url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_lines.html</loc></url>
+<url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_points.html</loc></url>
+<url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_polygons.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_polypath.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_rect.html</loc></url>
 <url><loc>https://hughjonesd.github.io/mypaintr/reference/rough_segments.html</loc></url>
