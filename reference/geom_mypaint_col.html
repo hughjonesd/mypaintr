@@ -57,9 +57,7 @@ follow the same rough outline rather than the underlying true rectangle.</p>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  fill_pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  brush <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  brush_settings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fill_brush <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fill_settings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  hand <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stroke_hand <span class="op">=</span> <span class="va">hand</span>,</span>
 <span>  fill_hand <span class="op">=</span> <span class="va">hand</span>,</span>
@@ -81,16 +79,19 @@ follow the same rough outline rather than the underlying true rectangle.</p>
 
 <dt id="arg-fill-pattern">fill_pattern<a class="anchor" aria-label="anchor" href="#arg-fill-pattern"></a></dt>
 <dd><p>Optional fill pattern created with <code><a href="hatch.html">hatch()</a></code>,
-<code><a href="crosshatch.html">crosshatch()</a></code>, <code><a href="zigzag.html">zigzag()</a></code>, or <code><a href="jumble.html">jumble()</a></code>. When omitted, bars use a simple
-hatch fill by default.</p></dd>
+<code><a href="crosshatch.html">crosshatch()</a></code>, <code><a href="zigzag.html">zigzag()</a></code>, or <code><a href="jumble.html">jumble()</a></code>.</p></dd>
 
 
-<dt id="arg-brush-brush-settings">brush, brush_settings<a class="anchor" aria-label="anchor" href="#arg-brush-brush-settings"></a></dt>
-<dd><p>Stroke brush spec and overrides.</p></dd>
+<dt id="arg-brush">brush<a class="anchor" aria-label="anchor" href="#arg-brush"></a></dt>
+<dd><p>Stroke brush specification created with <code><a href="tweak_brush.html">tweak_brush()</a></code>, an
+installed mypaint brush name, <code>.myb</code> file path, JSON brush string, or
+<code>NULL</code> for solid borders.</p></dd>
 
 
-<dt id="arg-fill-brush-fill-settings">fill_brush, fill_settings<a class="anchor" aria-label="anchor" href="#arg-fill-brush-fill-settings"></a></dt>
-<dd><p>Fill-hatch brush spec and overrides.</p></dd>
+<dt id="arg-fill-brush">fill_brush<a class="anchor" aria-label="anchor" href="#arg-fill-brush"></a></dt>
+<dd><p>Fill brush specification created with <code><a href="tweak_brush.html">tweak_brush()</a></code>, an
+installed mypaint brush name, <code>.myb</code> file path, JSON brush string, or
+<code>NULL</code> for solid fills.</p></dd>
 
 
 <dt id="arg-hand">hand<a class="anchor" aria-label="anchor" href="#arg-hand"></a></dt>

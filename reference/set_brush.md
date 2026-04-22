@@ -7,7 +7,6 @@ Set the active mypaintr brush
 ``` r
 set_brush(
   brush = NULL,
-  settings = NULL,
   type = c("both", "stroke", "fill"),
   auto_solid_bg = NULL
 )
@@ -17,12 +16,10 @@ set_brush(
 
 - brush:
 
-  Brush preset, installed brush name, JSON brush string, named settings,
-  or `NULL` to switch the selected type back to solid rendering.
-
-- settings:
-
-  Named settings overriding `brush`.
+  Brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed brush name, `.myb` file path, JSON brush string, or
+  `NULL` to switch the selected type back to solid rendering.
 
 - type:
 
@@ -44,7 +41,7 @@ opened in this R session.
 Other brush management:
 [`brush_dirs()`](https://hughjonesd.github.io/mypaintr/reference/brush_dirs.md),
 [`brush_inputs()`](https://hughjonesd.github.io/mypaintr/reference/brush_inputs.md),
-[`brush_presets()`](https://hughjonesd.github.io/mypaintr/reference/brush_presets.md),
 [`brush_settings()`](https://hughjonesd.github.io/mypaintr/reference/brush_settings.md),
 [`brushes()`](https://hughjonesd.github.io/mypaintr/reference/brushes.md),
-[`load_brush()`](https://hughjonesd.github.io/mypaintr/reference/load_brush.md)
+[`load_brush()`](https://hughjonesd.github.io/mypaintr/reference/load_brush.md),
+[`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md)

@@ -10,9 +10,7 @@ themes.
 ``` r
 element_mypaint_rect(
   brush = NULL,
-  brush_settings = NULL,
   fill_brush = NULL,
-  fill_settings = NULL,
   hand = NULL,
   stroke_hand = hand,
   fill_hand = hand,
@@ -33,21 +31,17 @@ element_mypaint_rect(
 
 - brush:
 
-  Stroke brush preset, installed brush name, JSON brush string, named
-  settings, or `NULL` for solid borders.
-
-- brush_settings:
-
-  Named settings overriding `brush`.
+  Stroke brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid borders.
 
 - fill_brush:
 
-  Fill brush preset, installed brush name, JSON brush string, named
-  settings, or `NULL` for solid fills.
-
-- fill_settings:
-
-  Named settings overriding `fill_brush`.
+  Fill brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid fills.
 
 - hand:
 

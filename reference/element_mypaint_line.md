@@ -10,7 +10,6 @@ rough or brush rendering.
 ``` r
 element_mypaint_line(
   brush = NULL,
-  brush_settings = NULL,
   hand = NULL,
   colour = NULL,
   linewidth = NULL,
@@ -30,12 +29,10 @@ element_mypaint_line(
 
 - brush:
 
-  Stroke brush preset, installed brush name, JSON brush string, named
-  settings, or `NULL` for solid strokes.
-
-- brush_settings:
-
-  Named settings overriding `brush`.
+  Stroke brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid strokes.
 
 - hand:
 

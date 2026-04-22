@@ -19,9 +19,7 @@ geom_mypaint_bar(
   inherit.aes = TRUE,
   fill_pattern = NULL,
   brush = NULL,
-  brush_settings = NULL,
   fill_brush = NULL,
-  fill_settings = NULL,
   hand = NULL,
   stroke_hand = hand,
   fill_hand = hand,
@@ -54,15 +52,20 @@ geom_mypaint_bar(
   [`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md),
   or
   [`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
-  When omitted, bars use a simple hatch fill by default.
 
-- brush, brush_settings:
+- brush:
 
-  Stroke brush spec and overrides.
+  Stroke brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid borders.
 
-- fill_brush, fill_settings:
+- fill_brush:
 
-  Fill-hatch brush spec and overrides.
+  Fill brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid fills.
 
 - hand:
 

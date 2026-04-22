@@ -76,10 +76,10 @@ text(8, 9, "A pentagon", family = "Chalkboard")
 
 - [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
   : Open a libmypaint-backed graphics device
-- [`mypaint_style()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_style.md)
-  : Update the active mypaintr device style
 - [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
   : Set the active mypaintr brush
+- [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md)
+  : Create a reusable tweaked brush specification
 - [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
   : Set the active mypaintr hand-drawn geometry
 - [`brush_dirs()`](https://hughjonesd.github.io/mypaintr/reference/brush_dirs.md)
@@ -88,8 +88,6 @@ text(8, 9, "A pentagon", family = "Chalkboard")
   : List installed mypaint brushes
 - [`load_brush()`](https://hughjonesd.github.io/mypaintr/reference/load_brush.md)
   : Load an installed mypaint brush
-- [`brush_presets()`](https://hughjonesd.github.io/mypaintr/reference/brush_presets.md)
-  : Built-in brush presets
 - [`brush_settings()`](https://hughjonesd.github.io/mypaintr/reference/brush_settings.md)
   : libmypaint brush setting metadata
 - [`brush_inputs()`](https://hughjonesd.github.io/mypaintr/reference/brush_inputs.md)

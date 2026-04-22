@@ -14,9 +14,7 @@ and for ggplot calls such as
 mypaint_wrap(
   object,
   brush = NULL,
-  brush_settings = NULL,
   fill_brush = NULL,
-  fill_settings = NULL,
   hand = NULL,
   stroke_hand = hand,
   fill_hand = hand,
@@ -32,21 +30,17 @@ mypaint_wrap(
 
 - brush:
 
-  Stroke brush preset, installed brush name, JSON brush string, named
-  settings, or `NULL` for solid strokes.
-
-- brush_settings:
-
-  Named settings overriding `brush`.
+  Stroke brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid strokes.
 
 - fill_brush:
 
-  Fill brush preset, installed brush name, JSON brush string, named
-  settings, or `NULL` for solid fills.
-
-- fill_settings:
-
-  Named settings overriding `fill_brush`.
+  Fill brush specification created with
+  [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
+  an installed mypaint brush name, `.myb` file path, JSON brush string,
+  or `NULL` for solid fills.
 
 - hand:
 
@@ -74,10 +68,13 @@ inputs or a wrapped layer for ggplot2 inputs.
 
 ``` r
 line <- grid::linesGrob(c(0.1, 0.9), c(0.2, 0.8))
-wrapped <- mypaint_wrap(line, brush = "ink", hand = hand())
+if ("classic/pen" %in% brushes()) {
+  wrapped <- mypaint_wrap(line, brush = "classic/pen", hand = hand())
+}
 
-if (requireNamespace("ggplot2", quietly = TRUE)) {
+if (requireNamespace("ggplot2", quietly = TRUE) &&
+    "classic/pen" %in% brushes()) {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
-    mypaint_wrap(ggplot2::geom_line(), brush = "ink", hand = hand())
+    mypaint_wrap(ggplot2::geom_line(), brush = "classic/pen", hand = hand())
 }
 ```

@@ -47,39 +47,3 @@ plot_with_hand(endpoint_jitter = 0.05)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-9-1.png)
-
-``` r
-plot_with_hand(hachure_gap = 0.1)
-```
-
-![](hand-demo_files/figure-html/unnamed-chunk-10-1.png)
-
-``` r
-plot_with_hand(hachure_angle = 0)
-```
-
-![](hand-demo_files/figure-html/unnamed-chunk-11-1.png)
-
-``` r
-plot_with_hand(hachure_angle_jitter = 0)
-```
-
-![](hand-demo_files/figure-html/unnamed-chunk-12-1.png)
-
-``` r
-plot_with_hand(hachure_angle_jitter = 30)
-```
-
-![](hand-demo_files/figure-html/unnamed-chunk-13-1.png)
-
-``` r
-plot_with_hand(hachure_gap_jitter = 0)
-```
-
-![](hand-demo_files/figure-html/unnamed-chunk-14-1.png)
-
-``` r
-plot_with_hand(hachure_gap_jitter = 0.45)
-```
-
-![](hand-demo_files/figure-html/unnamed-chunk-15-1.png)

@@ -47,12 +47,7 @@
 <span>  wobble <span class="op">=</span> <span class="fl">0.006</span>,</span>
 <span>  multi_stroke <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  width_jitter <span class="op">=</span> <span class="fl">0.08</span>,</span>
-<span>  endpoint_jitter <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  hachure_gap <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  hachure_angle <span class="op">=</span> <span class="fl">45</span>,</span>
-<span>  hachure_angle_jitter <span class="op">=</span> <span class="fl">12</span>,</span>
-<span>  hachure_gap_jitter <span class="op">=</span> <span class="fl">0.15</span>,</span>
-<span>  hachure_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parallel"</span>, <span class="st">"cross"</span><span class="op">)</span></span>
+<span>  endpoint_jitter <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,27 +80,6 @@ strokes.</p></dd>
 <dd><p>Relative endpoint jitter as a proportion of segment
 length.</p></dd>
 
-
-<dt id="arg-hachure-gap">hachure_gap<a class="anchor" aria-label="anchor" href="#arg-hachure-gap"></a></dt>
-<dd><p>Optional gap between hatch lines. When <code>NULL</code>, a default
-based on polygon size is used.</p></dd>
-
-
-<dt id="arg-hachure-angle">hachure_angle<a class="anchor" aria-label="anchor" href="#arg-hachure-angle"></a></dt>
-<dd><p>Base hatch angle in degrees.</p></dd>
-
-
-<dt id="arg-hachure-angle-jitter">hachure_angle_jitter<a class="anchor" aria-label="anchor" href="#arg-hachure-angle-jitter"></a></dt>
-<dd><p>Random angle variation for hatch passes.</p></dd>
-
-
-<dt id="arg-hachure-gap-jitter">hachure_gap_jitter<a class="anchor" aria-label="anchor" href="#arg-hachure-gap-jitter"></a></dt>
-<dd><p>Relative jitter in hatch spacing.</p></dd>
-
-
-<dt id="arg-hachure-method">hachure_method<a class="anchor" aria-label="anchor" href="#arg-hachure-method"></a></dt>
-<dd><p>Either <code>"parallel"</code> or <code>"cross"</code>.</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -133,21 +107,6 @@ based on polygon size is used.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $endpoint_jitter</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_gap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_angle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_angle_jitter</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_gap_jitter</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "parallel"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mypaintr_hand"</span>
 <span class="r-in"><span><span class="fu">hand</span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">1</span>, bow <span class="op">=</span> <span class="fl">0.02</span>, wobble <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></span>
@@ -168,21 +127,6 @@ based on polygon size is used.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $endpoint_jitter</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_gap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_angle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_angle_jitter</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_gap_jitter</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $hachure_method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "parallel"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mypaintr_hand"</span>

@@ -11,12 +11,7 @@ hand(
   wobble = 0.006,
   multi_stroke = 1L,
   width_jitter = 0.08,
-  endpoint_jitter = 0,
-  hachure_gap = NULL,
-  hachure_angle = 45,
-  hachure_angle_jitter = 12,
-  hachure_gap_jitter = 0.15,
-  hachure_method = c("parallel", "cross")
+  endpoint_jitter = 0
 )
 ```
 
@@ -46,27 +41,6 @@ hand(
 
   Relative endpoint jitter as a proportion of segment length.
 
-- hachure_gap:
-
-  Optional gap between hatch lines. When `NULL`, a default based on
-  polygon size is used.
-
-- hachure_angle:
-
-  Base hatch angle in degrees.
-
-- hachure_angle_jitter:
-
-  Random angle variation for hatch passes.
-
-- hachure_gap_jitter:
-
-  Relative jitter in hatch spacing.
-
-- hachure_method:
-
-  Either `"parallel"` or `"cross"`.
-
 ## Value
 
 An object describing how rough geometry should be generated.
@@ -93,21 +67,6 @@ hand()
 #> $endpoint_jitter
 #> [1] 0
 #> 
-#> $hachure_gap
-#> NULL
-#> 
-#> $hachure_angle
-#> [1] 45
-#> 
-#> $hachure_angle_jitter
-#> [1] 12
-#> 
-#> $hachure_gap_jitter
-#> [1] 0.15
-#> 
-#> $hachure_method
-#> [1] "parallel"
-#> 
 #> attr(,"class")
 #> [1] "mypaintr_hand"
 hand(seed = 1, bow = 0.02, wobble = 0.01)
@@ -128,21 +87,6 @@ hand(seed = 1, bow = 0.02, wobble = 0.01)
 #> 
 #> $endpoint_jitter
 #> [1] 0
-#> 
-#> $hachure_gap
-#> NULL
-#> 
-#> $hachure_angle
-#> [1] 45
-#> 
-#> $hachure_angle_jitter
-#> [1] 12
-#> 
-#> $hachure_gap_jitter
-#> [1] 0.15
-#> 
-#> $hachure_method
-#> [1] "parallel"
 #> 
 #> attr(,"class")
 #> [1] "mypaintr_hand"

@@ -49,9 +49,7 @@ panel backgrounds, panel borders, and legend keys in ggplot2 themes.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">element_mypaint_rect</span><span class="op">(</span></span>
 <span>  brush <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  brush_settings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fill_brush <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  fill_settings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  hand <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stroke_hand <span class="op">=</span> <span class="va">hand</span>,</span>
 <span>  fill_hand <span class="op">=</span> <span class="va">hand</span>,</span>
@@ -73,21 +71,15 @@ panel backgrounds, panel borders, and legend keys in ggplot2 themes.</p>
 
 
 <dl><dt id="arg-brush">brush<a class="anchor" aria-label="anchor" href="#arg-brush"></a></dt>
-<dd><p>Stroke brush preset, installed brush name, JSON brush string,
-named settings, or <code>NULL</code> for solid borders.</p></dd>
-
-
-<dt id="arg-brush-settings">brush_settings<a class="anchor" aria-label="anchor" href="#arg-brush-settings"></a></dt>
-<dd><p>Named settings overriding <code>brush</code>.</p></dd>
+<dd><p>Stroke brush specification created with <code><a href="tweak_brush.html">tweak_brush()</a></code>, an
+installed mypaint brush name, <code>.myb</code> file path, JSON brush string, or
+<code>NULL</code> for solid borders.</p></dd>
 
 
 <dt id="arg-fill-brush">fill_brush<a class="anchor" aria-label="anchor" href="#arg-fill-brush"></a></dt>
-<dd><p>Fill brush preset, installed brush name, JSON brush string,
-named settings, or <code>NULL</code> for solid fills.</p></dd>
-
-
-<dt id="arg-fill-settings">fill_settings<a class="anchor" aria-label="anchor" href="#arg-fill-settings"></a></dt>
-<dd><p>Named settings overriding <code>fill_brush</code>.</p></dd>
+<dd><p>Fill brush specification created with <code><a href="tweak_brush.html">tweak_brush()</a></code>, an
+installed mypaint brush name, <code>.myb</code> file path, JSON brush string, or
+<code>NULL</code> for solid fills.</p></dd>
 
 
 <dt id="arg-hand">hand<a class="anchor" aria-label="anchor" href="#arg-hand"></a></dt>
