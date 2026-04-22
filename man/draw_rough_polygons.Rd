@@ -37,7 +37,9 @@ Draw rough polygons
 }
 \examples{
 plot(1:10, 1:10, type = "n")
-draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
+draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
+                    col = "grey90",
+                    fill_pattern = zigzag())
 }
 \seealso{
 Other rough drawing helpers: 

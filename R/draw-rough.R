@@ -255,8 +255,9 @@ draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, ba
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
-#' plot(1:10, cumsum(rnorm(10)), type = "n")
-#' draw_rough_lines(1:10, cumsum(rnorm(10)))
+#' y <- c(2, 5, 4, 7, 6, 8)
+#' plot(1:6, y, type = "n")
+#' draw_rough_lines(1:6, y, hand = hand(multi_stroke = 2), lwd = 2)
 #' @family rough drawing helpers
 #' @export
 draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
@@ -290,7 +291,7 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_segments(1:3, 1:3, 2:4, 3:1)
+#' draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), lwd = 2)
 #' @family rough drawing helpers
 #' @export
 draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
@@ -320,7 +321,7 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_arrows(2, 2, 8, 8)
+#' draw_rough_arrows(2, 2, 8, 8, lwd = 2)
 #' draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
 #' @family rough drawing helpers
 #' @export
@@ -366,7 +367,8 @@ join_polypath_na <- function(paths) {
 #'                     c(2, 2, 8, 8, 4, 4, 6, 6),
 #'                     id = c(rep(1, 4), rep(2, 4)),
 #'                     rule = "evenodd",
-#'                     col = "grey80")
+#'                     col = "grey90",
+#'                     fill_pattern = hatch(density = 9))
 #' @family rough drawing helpers
 #' @export
 draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"),
@@ -428,7 +430,9 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1), col = "grey80")
+#' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
+#'                     col = "grey90",
+#'                     fill_pattern = zigzag())
 #' @family rough drawing helpers
 #' @export
 draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = graphics::par("fg"),
@@ -483,7 +487,8 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_rect(2, 2, 5, 6, col = "grey80")
+#' draw_rough_rect(2, 2, 8, 7, col = "grey90",
+#'                 fill_pattern = crosshatch(padding = 0.05))
 #' @family rough drawing helpers
 #' @export
 draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = graphics::par("fg"),
@@ -509,7 +514,7 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
 #' @return Draws on the current device and returns `NULL` invisibly.
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_points(1:10, 1:10, pch = 16)
+#' draw_rough_points(1:10, 1:10, pch = 16, cex = 1.4)
 #' @family rough drawing helpers
 #' @export
 draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {

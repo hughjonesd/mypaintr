@@ -359,6 +359,8 @@ load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
 
 #' libmypaint brush setting metadata
 #'
+#' @examples
+#' head(brush_settings())
 #' @family brush management
 #' @export
 brush_settings <- function() {
@@ -367,6 +369,8 @@ brush_settings <- function() {
 
 #' libmypaint brush input metadata
 #'
+#' @examples
+#' head(brush_inputs())
 #' @family brush management
 #' @export
 brush_inputs <- function() {

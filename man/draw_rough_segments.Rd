@@ -23,7 +23,7 @@ Draw rough segments
 }
 \examples{
 plot(1:10, 1:10, type = "n")
-draw_rough_segments(1:3, 1:3, 2:4, 3:1)
+draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), lwd = 2)
 }
 \seealso{
 Other rough drawing helpers: 

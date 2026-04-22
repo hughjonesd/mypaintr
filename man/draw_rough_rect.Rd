@@ -41,7 +41,8 @@ Draw a rough rectangle
 }
 \examples{
 plot(1:10, 1:10, type = "n")
-draw_rough_rect(2, 2, 5, 6, col = "grey80")
+draw_rough_rect(2, 2, 8, 7, col = "grey90",
+                fill_pattern = crosshatch(padding = 0.05))
 }
 \seealso{
 Other rough drawing helpers: 

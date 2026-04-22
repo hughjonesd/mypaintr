@@ -9,6 +9,9 @@ brush_settings()
 \description{
 libmypaint brush setting metadata
 }
+\examples{
+head(brush_settings())
+}
 \seealso{
 Other brush management: 
 \code{\link{brush_dirs}()},

@@ -9,6 +9,9 @@ brush_inputs()
 \description{
 libmypaint brush input metadata
 }
+\examples{
+head(brush_inputs())
+}
 \seealso{
 Other brush management: 
 \code{\link{brush_dirs}()},

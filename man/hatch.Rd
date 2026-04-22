@@ -24,6 +24,11 @@ A fill-pattern object for \verb{draw_rough_*()} helpers and mypaint geoms.
 \description{
 Hatch fill pattern
 }
+\examples{
+plot.new()
+plot.window(xlim = c(0, 10), ylim = c(0, 10))
+draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = hatch(density = 10))
+}
 \seealso{
 Other fill patterns: 
 \code{\link{crosshatch}()},

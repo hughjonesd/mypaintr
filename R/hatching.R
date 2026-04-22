@@ -29,6 +29,10 @@ new_fill_pattern <- function(style,
 #'
 #' @inheritParams mypaintr-fill-pattern-params
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @examples
+#' plot.new()
+#' plot.window(xlim = c(0, 10), ylim = c(0, 10))
+#' draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = hatch(density = 10))
 #' @family fill patterns
 #' @export
 hatch <- function(angle = 45, density = 8, clip = TRUE, padding = 0) {
@@ -41,6 +45,14 @@ hatch <- function(angle = 45, density = 8, clip = TRUE, padding = 0) {
 #' @param angle One or two hatch angles in degrees. If a single angle is
 #'   supplied, the second pass defaults to `angle + 90`.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @examples
+#' plot.new()
+#' plot.window(xlim = c(0, 10), ylim = c(0, 10))
+#' draw_rough_rect(
+#'   2, 2, 8, 8,
+#'   col = "grey90",
+#'   fill_pattern = crosshatch(angle = c(30, 120), density = 9)
+#' )
 #' @family fill patterns
 #' @export
 crosshatch <- function(angle = 45, density = 7, clip = TRUE, padding = 0) {
@@ -56,6 +68,10 @@ crosshatch <- function(angle = 45, density = 7, clip = TRUE, padding = 0) {
 #' @param clip When `TRUE`, zigzag endpoints stay on the shape boundary to
 #'   reduce overshoot.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @examples
+#' plot.new()
+#' plot.window(xlim = c(0, 10), ylim = c(0, 10))
+#' draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = zigzag(density = 7))
 #' @family fill patterns
 #' @export
 zigzag <- function(angle = 45, density = 6, clip = TRUE, padding = 0) {
@@ -75,6 +91,10 @@ zigzag <- function(angle = 45, density = 6, clip = TRUE, padding = 0) {
 #'   small gap between the fill pattern and the boundary.
 #' @param clip When `TRUE`, split loop paths at the shape boundary.
 #' @return A fill-pattern object for `draw_rough_*()` helpers and mypaint geoms.
+#' @examples
+#' plot.new()
+#' plot.window(xlim = c(0, 10), ylim = c(0, 10))
+#' draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = jumble())
 #' @family fill patterns
 #' @export
 jumble <- function(angle = 0, density = 5, radius = 0.76 / density, wobble = 0.2,
