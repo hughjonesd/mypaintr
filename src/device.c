@@ -851,15 +851,8 @@ static void brush_seed_from_surface(MypaintrDevice *dev, MypaintrBrush *brush, d
 }
 
 static int brush_is_pure_smudge(const MypaintrBrush *brush) {
-  double smudge = mypaint_brush_get_base_value(brush->brush, MYPAINT_BRUSH_SETTING_SMUDGE);
-  double opaque_multiply = mypaint_brush_get_base_value(brush->brush, MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY);
-  double colorize = mypaint_brush_get_base_value(brush->brush, MYPAINT_BRUSH_SETTING_COLORIZE);
-  double restore_color = mypaint_brush_get_base_value(brush->brush, MYPAINT_BRUSH_SETTING_RESTORE_COLOR);
-
-  return smudge >= 0.8 &&
-         opaque_multiply <= 0.02 &&
-         colorize <= 0.02 &&
-         restore_color <= 0.02;
+  (void) brush;
+  return 0;
 }
 
 static void brush_apply_spec(MypaintrBrush *slot, SEXP spec) {

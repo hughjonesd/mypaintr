@@ -238,50 +238,11 @@ normalize_brush_spec <- function(brush) {
 }
 
 is_probably_pure_smudge_brush <- function(spec) {
-  if (is.null(spec)) {
-    return(FALSE)
-  }
-
-  settings <- spec$settings %||% numeric()
-  json <- spec$json %||% ""
-
-  value_for <- function(name, default = NA_real_) {
-    if (name %in% names(settings)) {
-      return(as.numeric(settings[[name]]))
-    }
-    value <- json_brush_base_value(json, name)
-    if (is.na(value)) default else value
-  }
-
-  smudge <- value_for("smudge", default = 0)
-  opaque_multiply <- value_for("opaque_multiply", default = 1)
-  colorize <- value_for("colorize", default = 0)
-  restore_color <- value_for("restore_color", default = 0)
-
-  isTRUE(smudge >= 0.8 &&
-           opaque_multiply <= 0.02 &&
-           colorize <= 0.02 &&
-           restore_color <= 0.02)
+  FALSE
 }
 
 warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
   type <- match.arg(type)
-  if (!is_probably_pure_smudge_brush(spec)) {
-    return(invisible(NULL))
-  }
-
-  if (type == "fill") {
-    warning(
-      "Pure smudge brush selected for fill: mypaintr falls back to solid fills; proper smudged fills are not supported.",
-      call. = FALSE
-    )
-  } else {
-    warning(
-      "Pure smudge brush selected for stroke: mypaintr approximates this as a surface-sampled paint stroke; proper smudging is not yet supported.",
-      call. = FALSE
-    )
-  }
-
   invisible(NULL)
 }
 
