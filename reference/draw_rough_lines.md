@@ -42,6 +42,7 @@ Other rough drawing helpers:
 ## Examples
 
 ``` r
-plot(1:10, cumsum(rnorm(10)), type = "n")
-draw_rough_lines(1:10, cumsum(rnorm(10)))
+y <- c(2, 5, 4, 7, 6, 8)
+plot(1:6, y, type = "n")
+draw_rough_lines(1:6, y, hand = hand(multi_stroke = 2), lwd = 2)
 ```

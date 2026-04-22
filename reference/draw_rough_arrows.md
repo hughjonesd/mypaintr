@@ -70,6 +70,6 @@ Other rough drawing helpers:
 
 ``` r
 plot(1:10, 1:10, type = "n")
-draw_rough_arrows(2, 2, 8, 8)
+draw_rough_arrows(2, 2, 8, 8, lwd = 2)
 draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
 ```

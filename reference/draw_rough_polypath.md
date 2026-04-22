@@ -84,5 +84,6 @@ draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
                     c(2, 2, 8, 8, 4, 4, 6, 6),
                     id = c(rep(1, 4), rep(2, 4)),
                     rule = "evenodd",
-                    col = "grey80")
+                    col = "grey90",
+                    fill_pattern = hatch(density = 9))
 ```
