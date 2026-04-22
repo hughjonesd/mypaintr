@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggplot.R
 \name{mypaint_wrap}
 \alias{mypaint_wrap}
-\title{Wrap a grid grob or ggplot layer with scoped mypaint styling}
+\title{Wrap a grid grob, ggplot layer, or ggplot theme element with scoped mypaint styling}
 \usage{
 mypaint_wrap(
   object,
@@ -15,7 +15,7 @@ mypaint_wrap(
 )
 }
 \arguments{
-\item{object}{A grid grob or a ggplot2 layer object.}
+\item{object}{A grid grob, ggplot2 layer, or ggplot2 theme element.}
 
 \item{brush}{Stroke brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
 installed mypaint brush name, \code{.myb} file path, JSON brush string, or
@@ -35,15 +35,15 @@ default.}
 \item{auto_solid_bg}{Optional override for background-like fills.}
 }
 \value{
-An object of the same general kind as \code{object}: a wrapped grob for
-grid inputs or a wrapped layer for ggplot2 inputs.
+An object of the same general kind as \code{object}.
 }
 \description{
 \code{mypaint_wrap()} applies temporary mypaintr brush and hand settings while the
 wrapped object is drawn, then restores the previous device style. It can wrap
-either a grid grob or a ggplot2 layer. This makes it useful both for direct
-\code{grid::grid.draw()} workflows and for ggplot calls such as
-\code{ggplot(...) + mypaint_wrap(geom_line(...), ...)}.
+grid grobs, ggplot2 layers, and ggplot2 theme elements. This makes it useful
+for direct \code{grid::grid.draw()} workflows, for ggplot calls such as
+\code{ggplot(...) + mypaint_wrap(geom_line(...), ...)}, and for theme elements such
+as \code{theme(panel.grid = mypaint_wrap(element_line(), ...))}.
 }
 \examples{
 line <- grid::linesGrob(c(0.1, 0.9), c(0.2, 0.8))
@@ -55,5 +55,9 @@ if (requireNamespace("ggplot2", quietly = TRUE) &&
     "classic/pen" \%in\% brushes()) {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     mypaint_wrap(ggplot2::geom_line(), brush = "classic/pen", hand = hand())
+
+  ggplot2::theme(
+    panel.grid = mypaint_wrap(ggplot2::element_line(), brush = "classic/pen")
+  )
 }
 }

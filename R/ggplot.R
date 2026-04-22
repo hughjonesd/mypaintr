@@ -180,135 +180,6 @@ new_mypaintr_element <- function(element, class_name, style) {
   element
 }
 
-#' Theme line element with scoped mypaint rendering
-#'
-#' Uses the current `mypaint` device for drawing, but temporarily overrides the
-#' stroke settings while the theme line is drawn. This is useful for keeping
-#' axes, ticks, or panel grid lines solid while data layers use rough or brush
-#' rendering.
-#'
-#' @param brush Stroke brush specification created with [tweak_brush()], an
-#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
-#'   `NULL` for solid strokes.
-#' @param hand Optional hand-drawn geometry created with [hand()].
-#' @param colour,color,linewidth,linetype,lineend,linejoin,arrow,arrow.fill,inherit.blank,size,...
-#'   Passed through to [ggplot2::element_line()].
-#' @return A ggplot theme element.
-#' @examples
-#' if (requireNamespace("ggplot2", quietly = TRUE)) {
-#'   ggplot2::theme(axis.line = element_mypaint_line())
-#' }
-#' @export
-element_mypaint_line <- function(brush = NULL,
-                                 hand = NULL,
-                                 colour = NULL,
-                                 linewidth = NULL,
-                                 linetype = NULL,
-                                 lineend = NULL,
-                                 color = NULL,
-                                 linejoin = NULL,
-                                 arrow = FALSE,
-                                 arrow.fill = NULL,
-                                 inherit.blank = FALSE,
-                                 size = NULL,
-                                 ...) {
-  require_ggplot2()
-  stroke_spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
-  style <- make_style_override(
-    update_stroke = TRUE,
-    stroke_spec = stroke_spec,
-    stroke_style = if (is.null(stroke_spec)) 0L else 1L,
-    stroke_hand = normalize_hand_spec(hand)
-  )
-  args <- list(
-    colour = colour,
-    linewidth = linewidth,
-    linetype = linetype,
-    lineend = lineend,
-    color = color,
-    linejoin = linejoin,
-    arrow = arrow,
-    arrow.fill = arrow.fill,
-    inherit.blank = inherit.blank,
-    ...
-  )
-  if (!is.null(size)) {
-    args$size <- size
-  }
-  element <- do.call(ggplot2::element_line, args)
-  new_mypaintr_element(element, "mypaintr_element_line", style)
-}
-
-#' Theme rectangle element with scoped mypaint rendering
-#'
-#' Uses the current `mypaint` device for drawing, but temporarily overrides the
-#' stroke and fill settings while the rectangle is drawn. This is useful for
-#' panel backgrounds, panel borders, and legend keys in ggplot2 themes.
-#'
-#' @param brush Stroke brush specification created with [tweak_brush()], an
-#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
-#'   `NULL` for solid borders.
-#' @param fill_brush Fill brush specification created with [tweak_brush()], an
-#'   installed mypaint brush name, `.myb` file path, JSON brush string, or
-#'   `NULL` for solid fills.
-#' @param hand Optional hand-drawn geometry applied to both stroke and fill by
-#'   default.
-#' @param stroke_hand Optional hand-drawn geometry for the border.
-#' @param fill_hand Optional hand-drawn geometry for the fill.
-#' @param auto_solid_bg Optional override for background-like fills.
-#' @param fill,colour,color,linewidth,linetype,linejoin,inherit.blank,size,...
-#'   Passed through to [ggplot2::element_rect()].
-#' @return A ggplot theme element.
-#' @examples
-#' if (requireNamespace("ggplot2", quietly = TRUE)) {
-#'   ggplot2::theme(panel.background = element_mypaint_rect())
-#' }
-#' @export
-element_mypaint_rect <- function(brush = NULL,
-                                 fill_brush = NULL,
-                                 hand = NULL,
-                                 stroke_hand = hand,
-                                 fill_hand = hand,
-                                 auto_solid_bg = NULL,
-                                 fill = NULL,
-                                 colour = NULL,
-                                 linewidth = NULL,
-                                 linetype = NULL,
-                                 color = NULL,
-                                 linejoin = NULL,
-                                 inherit.blank = FALSE,
-                                 size = NULL,
-                                 ...) {
-  require_ggplot2()
-  supplied_args <- names(match.call(expand.dots = FALSE))
-  if (!("fill_brush" %in% supplied_args)) {
-    fill_brush <- brush
-  }
-
-  style <- make_mypaintr_style(
-    brush = brush,
-    fill_brush = fill_brush,
-    stroke_hand = stroke_hand,
-    fill_hand = fill_hand,
-    auto_solid_bg = auto_solid_bg
-  )
-  args <- list(
-    fill = fill,
-    colour = colour,
-    linewidth = linewidth,
-    linetype = linetype,
-    color = color,
-    linejoin = linejoin,
-    inherit.blank = inherit.blank,
-    ...
-  )
-  if (!is.null(size)) {
-    args$size <- size
-  }
-  element <- do.call(ggplot2::element_rect, args)
-  new_mypaintr_element(element, "mypaintr_element_rect", style)
-}
-
 wrap_mypaintr_style_grob <- function(child, style) {
   grid::gTree(
     children = grid::gList(child),
@@ -363,15 +234,16 @@ make_mypaintr_style <- function(brush = NULL,
   )
 }
 
-#' Wrap a grid grob or ggplot layer with scoped mypaint styling
+#' Wrap a grid grob, ggplot layer, or ggplot theme element with scoped mypaint styling
 #'
 #' `mypaint_wrap()` applies temporary mypaintr brush and hand settings while the
 #' wrapped object is drawn, then restores the previous device style. It can wrap
-#' either a grid grob or a ggplot2 layer. This makes it useful both for direct
-#' `grid::grid.draw()` workflows and for ggplot calls such as
-#' `ggplot(...) + mypaint_wrap(geom_line(...), ...)`.
+#' grid grobs, ggplot2 layers, and ggplot2 theme elements. This makes it useful
+#' for direct `grid::grid.draw()` workflows, for ggplot calls such as
+#' `ggplot(...) + mypaint_wrap(geom_line(...), ...)`, and for theme elements such
+#' as `theme(panel.grid = mypaint_wrap(element_line(), ...))`.
 #'
-#' @param object A grid grob or a ggplot2 layer object.
+#' @param object A grid grob, ggplot2 layer, or ggplot2 theme element.
 #' @param brush Stroke brush specification created with [tweak_brush()], an
 #'   installed mypaint brush name, `.myb` file path, JSON brush string, or
 #'   `NULL` for solid strokes.
@@ -383,8 +255,7 @@ make_mypaintr_style <- function(brush = NULL,
 #' @param stroke_hand Optional hand-drawn geometry for strokes.
 #' @param fill_hand Optional hand-drawn geometry for fills.
 #' @param auto_solid_bg Optional override for background-like fills.
-#' @return An object of the same general kind as `object`: a wrapped grob for
-#'   grid inputs or a wrapped layer for ggplot2 inputs.
+#' @return An object of the same general kind as `object`.
 #' @examples
 #' line <- grid::linesGrob(c(0.1, 0.9), c(0.2, 0.8))
 #' if ("classic/pen" %in% brushes()) {
@@ -395,6 +266,10 @@ make_mypaintr_style <- function(brush = NULL,
 #'     "classic/pen" %in% brushes()) {
 #'   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
 #'     mypaint_wrap(ggplot2::geom_line(), brush = "classic/pen", hand = hand())
+#'
+#'   ggplot2::theme(
+#'     panel.grid = mypaint_wrap(ggplot2::element_line(), brush = "classic/pen")
+#'   )
 #' }
 #' @export
 mypaint_wrap <- function(object,
@@ -404,11 +279,34 @@ mypaint_wrap <- function(object,
                          stroke_hand = hand,
                          fill_hand = hand,
                          auto_solid_bg = NULL) {
+  UseMethod("mypaint_wrap")
+}
+
+wrap_mypaintr_element_line <- function(object,
+                                       brush = NULL,
+                                       hand = NULL,
+                                       stroke_hand = hand) {
+  stroke_spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
+  style <- make_style_override(
+    update_stroke = TRUE,
+    stroke_spec = stroke_spec,
+    stroke_style = if (is.null(stroke_spec)) 0L else 1L,
+    stroke_hand = normalize_hand_spec(stroke_hand)
+  )
+  new_mypaintr_element(object, "mypaintr_element_line", style)
+}
+
+wrap_mypaintr_element_rect <- function(object,
+                                       brush = NULL,
+                                       fill_brush = NULL,
+                                       hand = NULL,
+                                       stroke_hand = hand,
+                                       fill_hand = hand,
+                                       auto_solid_bg = NULL) {
   supplied_args <- names(match.call(expand.dots = FALSE))
   if (!("fill_brush" %in% supplied_args)) {
     fill_brush <- brush
   }
-
   style <- make_mypaintr_style(
     brush = brush,
     fill_brush = fill_brush,
@@ -417,20 +315,106 @@ mypaint_wrap <- function(object,
     fill_hand = fill_hand,
     auto_solid_bg = auto_solid_bg
   )
+  new_mypaintr_element(object, "mypaintr_element_rect", style)
+}
 
-  if (inherits(object, "Layer")) {
-    old_draw_geom <- object$draw_geom
-    object$draw_geom <- function(self, data, layout) {
-      wrap_mypaintr_style_output(old_draw_geom(data, layout), style)
-    }
-    return(object)
+#' @export
+mypaint_wrap.grob <- function(object,
+                              brush = NULL,
+                              fill_brush = NULL,
+                              hand = NULL,
+                              stroke_hand = hand,
+                              fill_hand = hand,
+                              auto_solid_bg = NULL) {
+  supplied_args <- names(match.call(expand.dots = FALSE))
+  if (!("fill_brush" %in% supplied_args)) {
+    fill_brush <- brush
   }
+  style <- make_mypaintr_style(
+    brush = brush,
+    fill_brush = fill_brush,
+    hand = hand,
+    stroke_hand = stroke_hand,
+    fill_hand = fill_hand,
+    auto_solid_bg = auto_solid_bg
+  )
+  wrap_mypaintr_style_grob(object, style)
+}
 
-  if (inherits(object, "grob")) {
-    return(wrap_mypaintr_style_grob(object, style))
+#' @export
+mypaint_wrap.LayerInstance <- function(object,
+                                       brush = NULL,
+                                       fill_brush = NULL,
+                                       hand = NULL,
+                                       stroke_hand = hand,
+                                       fill_hand = hand,
+                                       auto_solid_bg = NULL) {
+  supplied_args <- names(match.call(expand.dots = FALSE))
+  if (!("fill_brush" %in% supplied_args)) {
+    fill_brush <- brush
   }
+  style <- make_mypaintr_style(
+    brush = brush,
+    fill_brush = fill_brush,
+    hand = hand,
+    stroke_hand = stroke_hand,
+    fill_hand = fill_hand,
+    auto_solid_bg = auto_solid_bg
+  )
+  old_draw_geom <- object$draw_geom
+  object$draw_geom <- function(self, data, layout) {
+    wrap_mypaintr_style_output(old_draw_geom(data, layout), style)
+  }
+  object
+}
 
-  stop("object must be a grid grob or ggplot2 layer", call. = FALSE)
+#' @export
+mypaint_wrap.Layer <- mypaint_wrap.LayerInstance
+
+#' @export
+mypaint_wrap.element_line <- function(object,
+                                      brush = NULL,
+                                      fill_brush = NULL,
+                                      hand = NULL,
+                                      stroke_hand = hand,
+                                      fill_hand = hand,
+                                      auto_solid_bg = NULL) {
+  wrap_mypaintr_element_line(
+    object,
+    brush = brush,
+    hand = hand,
+    stroke_hand = stroke_hand
+  )
+}
+
+#' @export
+mypaint_wrap.element_rect <- function(object,
+                                      brush = NULL,
+                                      fill_brush = NULL,
+                                      hand = NULL,
+                                      stroke_hand = hand,
+                                      fill_hand = hand,
+                                      auto_solid_bg = NULL) {
+  wrap_mypaintr_element_rect(
+    object,
+    brush = brush,
+    fill_brush = fill_brush,
+    hand = hand,
+    stroke_hand = stroke_hand,
+    fill_hand = fill_hand,
+    auto_solid_bg = auto_solid_bg
+  )
+}
+
+#' @export
+mypaint_wrap.default <- function(object,
+                                 brush = NULL,
+                                 fill_brush = NULL,
+                                 hand = NULL,
+                                 stroke_hand = hand,
+                                 fill_hand = hand,
+                                 auto_solid_bg = NULL) {
+  stop("object must be a grid grob, ggplot2 layer, or ggplot2 theme element", call. = FALSE)
 }
 
 base_element <- function(element, class_name) {
