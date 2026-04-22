@@ -5,15 +5,6 @@
 
 mypaintr_env <- new.env(parent = emptyenv())
 mypaintr_env$style_stack <- list()
-mypaintr_env$default_style <- list(
-  stroke_spec = NULL,
-  fill_spec = NULL,
-  stroke_style = NULL,
-  fill_style = NULL,
-  auto_solid_bg = NULL,
-  stroke_hand = NULL,
-  fill_hand = NULL
-)
 
 is_mypaintr_device <- function() {
   identical(names(grDevices::dev.cur()), "mypaintr")
@@ -24,39 +15,6 @@ current_device_style <- function() {
     return(NULL)
   }
   .Call(mypaintr_device_get_style)
-}
-
-default_device_style <- function() {
-  mypaintr_env$default_style
-}
-
-update_default_device_style <- function(stroke_spec = NULL,
-                                        fill_spec = NULL,
-                                        stroke_style = NULL,
-                                        fill_style = NULL,
-                                        auto_solid_bg = NULL,
-                                        stroke_hand = NULL,
-                                        fill_hand = NULL,
-                                        update_stroke = FALSE,
-                                        update_fill = FALSE) {
-  defaults <- default_device_style()
-
-  if (update_stroke) {
-    defaults$stroke_spec <- stroke_spec
-    defaults$stroke_style <- stroke_style
-    defaults$stroke_hand <- stroke_hand
-  }
-  if (update_fill) {
-    defaults$fill_spec <- fill_spec
-    defaults$fill_style <- fill_style
-    defaults$fill_hand <- fill_hand
-  }
-  if (!is.null(auto_solid_bg)) {
-    defaults$auto_solid_bg <- isTRUE(auto_solid_bg)
-  }
-
-  mypaintr_env$default_style <- defaults
-  invisible(NULL)
 }
 
 apply_device_style_state <- function(state) {
@@ -251,7 +209,6 @@ mypaint_device <- function(filename = NULL,
   stroke_hand_missing <- !("stroke_hand" %in% supplied_args)
   fill_hand_missing <- !("fill_hand" %in% supplied_args)
   auto_solid_bg_missing <- !("auto_solid_bg" %in% supplied_args)
-  defaults <- default_device_style()
 
   stopifnot(
     is.character(filename), length(filename) == 1L,
@@ -271,20 +228,14 @@ mypaint_device <- function(filename = NULL,
     fill_hand <- hand
   }
 
-  stroke_spec <- if (brush_missing && (!is.null(defaults$stroke_spec) || !is.null(defaults$stroke_style))) {
-    defaults$stroke_spec
-  } else if (brush_missing) {
+  stroke_spec <- if (brush_missing) {
     normalize_brush_spec(default_plot_brush_spec())
   } else if (is.null(brush)) {
     NULL
   } else {
     normalize_brush_spec(brush)
   }
-  fill_spec <- if (fill_brush_missing && (!is.null(defaults$fill_spec) || !is.null(defaults$fill_style))) {
-    defaults$fill_spec
-  } else if (fill_brush_missing && brush_missing && !is.null(defaults$stroke_spec)) {
-    defaults$stroke_spec
-  } else if (fill_brush_missing && brush_missing) {
+  fill_spec <- if (fill_brush_missing && brush_missing) {
     stroke_spec
   } else if (fill_brush_missing) {
     stroke_spec
@@ -295,18 +246,12 @@ mypaint_device <- function(filename = NULL,
   }
   warn_if_pure_smudge_brush(stroke_spec, "stroke")
   warn_if_pure_smudge_brush(fill_spec, "fill")
-  stroke_style <- if (stroke_style_missing && !is.null(defaults$stroke_style)) {
-    defaults$stroke_style
-  } else if (stroke_style_missing || is.null(stroke_style)) {
+  stroke_style <- if (stroke_style_missing || is.null(stroke_style)) {
     if (brush_missing) 1L else if (is.null(brush)) 0L else 1L
   } else {
     normalize_render_style(stroke_style)
   }
-  fill_style <- if (fill_style_missing && !is.null(defaults$fill_style)) {
-    defaults$fill_style
-  } else if (fill_style_missing && fill_brush_missing && !is.null(defaults$stroke_style)) {
-    defaults$stroke_style
-  } else if (fill_style_missing || is.null(fill_style)) {
+  fill_style <- if (fill_style_missing || is.null(fill_style)) {
     if (fill_brush_missing) {
       if (stroke_style == 1L) 1L else 0L
     } else if (is.null(fill_brush)) {
@@ -317,15 +262,7 @@ mypaint_device <- function(filename = NULL,
   } else {
     normalize_render_style(fill_style)
   }
-  if (stroke_hand_missing && hand_missing && !is.null(defaults$stroke_hand)) {
-    stroke_hand <- defaults$stroke_hand
-  }
-  if (fill_hand_missing && hand_missing && !is.null(defaults$fill_hand)) {
-    fill_hand <- defaults$fill_hand
-  }
-  if (auto_solid_bg_missing && !is.null(defaults$auto_solid_bg)) {
-    auto_solid_bg <- defaults$auto_solid_bg
-  }
+
   invisible(.Call(
     mypaintr_device_open,
     enc2utf8(normalizePath(filename, winslash = "/", mustWork = FALSE)),
@@ -356,9 +293,7 @@ mypaint_device <- function(filename = NULL,
 #'   solid fills.
 #' @param auto_solid_bg Whether large fills matching the device background should
 #'   be drawn normally.
-#' @return `NULL`, invisibly. If the active device is not `mypaintr`, the style
-#'   becomes the default for the next [mypaint_device()] opened in this R
-#'   session.
+#' @return `NULL`, invisibly.
 #' @keywords internal
 #' @noRd
 mypaint_style <- function(brush = NULL,
@@ -376,15 +311,6 @@ mypaint_style <- function(brush = NULL,
   fill_style <- normalize_render_style(fill_style)
 
   if (!is_mypaintr_device()) {
-    update_default_device_style(
-      stroke_spec = stroke_spec,
-      fill_spec = fill_spec,
-      stroke_style = stroke_style,
-      fill_style = fill_style,
-      auto_solid_bg = auto_solid_bg,
-      update_stroke = !brush_missing || !is.null(stroke_style),
-      update_fill = !fill_brush_missing || !is.null(fill_style)
-    )
     return(invisible(NULL))
   }
 

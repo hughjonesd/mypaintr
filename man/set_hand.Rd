@@ -17,9 +17,8 @@ fully plain, solid rendering.}
 \code{"fill"}.}
 }
 \value{
-\code{NULL}, invisibly. If the active device is not \code{mypaintr}, the
-selected hand settings become the default for the next \code{\link[=mypaint_device]{mypaint_device()}}
-opened in this R session.
+\code{NULL}, invisibly. If the active graphics device is not
+\code{\link[=mypaint_device]{mypaint_device()}}, this emits a warning and has no effect.
 }
 \description{
 Set the active mypaintr hand-drawn geometry

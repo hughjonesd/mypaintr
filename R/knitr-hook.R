@@ -24,7 +24,10 @@ chunk_sets_dev_explicitly <- function(options) {
 #'
 #' @param ... Default arguments passed through to [mypaint_device()] when the
 #'   hook opens a device. Chunk-specific overrides can be supplied in the chunk
-#'   option `mypaint.args` as a named list.
+#'   option `mypaint.args` as a named list. Because these arguments are applied
+#'   when the device opens, use this hook or `mypaint.args` to set chunk
+#'   defaults; [set_brush()] and [set_hand()] still work within the chunk after
+#'   the device is open.
 #' @return A function suitable for `knitr::knit_hooks$set()`.
 #' @examples
 #' if (requireNamespace("knitr", quietly = TRUE)) {

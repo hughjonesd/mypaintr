@@ -9,7 +9,10 @@ knitr_mypaint_hook(...)
 \arguments{
 \item{...}{Default arguments passed through to \code{\link[=mypaint_device]{mypaint_device()}} when the
 hook opens a device. Chunk-specific overrides can be supplied in the chunk
-option \code{mypaint.args} as a named list.}
+option \code{mypaint.args} as a named list. Because these arguments are applied
+when the device opens, use this hook or \code{mypaint.args} to set chunk
+defaults; \code{\link[=set_brush]{set_brush()}} and \code{\link[=set_hand]{set_hand()}} still work within the chunk after
+the device is open.}
 }
 \value{
 A function suitable for \code{knitr::knit_hooks$set()}.

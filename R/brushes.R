@@ -249,6 +249,14 @@ warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
   invisible(NULL)
 }
 
+warn_no_mypaintr_device <- function(fn) {
+  warning(
+    sprintf("%s() has no effect unless the active graphics device is mypaint_device()", fn),
+    call. = FALSE
+  )
+  invisible(NULL)
+}
+
 #' Set the active mypaintr brush
 #'
 #' @param brush Brush specification created with [tweak_brush()], an installed
@@ -257,9 +265,8 @@ warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
 #' @param auto_solid_bg Optional override for background-like fills.
-#' @return `NULL`, invisibly. If the active device is not `mypaintr`, the
-#'   selected brush becomes the default for the next [mypaint_device()] opened
-#'   in this R session.
+#' @return `NULL`, invisibly. If the active graphics device is not
+#'   [mypaint_device()], this emits a warning and has no effect.
 #' @family brush management
 #' @export
 set_brush <- function(brush = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
@@ -284,15 +291,7 @@ set_brush <- function(brush = NULL, type = c("both", "stroke", "fill"), auto_sol
   }
 
   if (!is_mypaintr_device()) {
-    update_default_device_style(
-      stroke_spec = stroke_spec,
-      fill_spec = fill_spec,
-      stroke_style = if (is.null(stroke_style)) NULL else as.integer(stroke_style),
-      fill_style = if (is.null(fill_style)) NULL else as.integer(fill_style),
-      auto_solid_bg = auto_solid_bg,
-      update_stroke = type %in% c("both", "stroke"),
-      update_fill = type %in% c("both", "fill")
-    )
+    warn_no_mypaintr_device("set_brush")
     return(invisible(NULL))
   }
 
