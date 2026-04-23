@@ -62,15 +62,12 @@
 ## ggplot2 Integration
 
 - [`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md)
-  : Wrap a grid grob or ggplot layer with scoped mypaint styling
+  : Wrap a grid grob, ggplot layer, or ggplot theme element with scoped
+  mypaint styling
 - [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
   : Draw rough, brush-rendered bars in ggplot2
 - [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md)
   : Draw rough, brush-rendered columns in ggplot2
-- [`element_mypaint_line()`](https://hughjonesd.github.io/mypaintr/reference/element_mypaint_line.md)
-  : Theme line element with scoped mypaint rendering
-- [`element_mypaint_rect()`](https://hughjonesd.github.io/mypaintr/reference/element_mypaint_rect.md)
-  : Theme rectangle element with scoped mypaint rendering
 
 ## knitr
 

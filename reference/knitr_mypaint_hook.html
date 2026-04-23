@@ -60,7 +60,10 @@ replay path, which does not preserve device-local style changes such as
 <dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Default arguments passed through to <code><a href="mypaint_device.html">mypaint_device()</a></code> when the
 hook opens a device. Chunk-specific overrides can be supplied in the chunk
-option <code>mypaint.args</code> as a named list.</p></dd>
+option <code>mypaint.args</code> as a named list. Because these arguments are applied
+when the device opens, use this hook or <code>mypaint.args</code> to set chunk
+defaults; <code><a href="set_brush.html">set_brush()</a></code> and <code><a href="set_hand.html">set_hand()</a></code> still work within the chunk after
+the device is open.</p></dd>
 
 </dl></div>
     <div class="section level2">

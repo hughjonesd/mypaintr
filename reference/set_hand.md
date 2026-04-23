@@ -26,7 +26,6 @@ set_hand(hand = NULL, type = c("both", "stroke", "fill"))
 
 ## Value
 
-`NULL`, invisibly. If the active device is not `mypaintr`, the selected
-hand settings become the default for the next
-[`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
-opened in this R session.
+`NULL`, invisibly. If the active graphics device is not
+[`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md),
+this emits a warning and has no effect.

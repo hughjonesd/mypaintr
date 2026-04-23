@@ -311,9 +311,9 @@ This is fine, but we can do better:
   elements.
 
 mypaintr provides
-[`element_mypaint_line()`](https://hughjonesd.github.io/mypaintr/reference/element_mypaint_line.md),
-[`element_mypaint_rect()`](https://hughjonesd.github.io/mypaintr/reference/element_mypaint_rect.md),
+[`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md),
 [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md),
+and
 [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md)
 to modify the brush and hand used for individual plot elements. By
 default these will use “normal” drawing.
@@ -345,9 +345,9 @@ ggplot(diamonds) +
    theme_minimal() +
    theme(
      # fill=NULL and hand=NULL by default, i.e. no special effects
-     plot.background = element_mypaint_rect(fill = "white"),
+     plot.background = mypaint_wrap(element_rect(fill = "white")),
      # the same
-     panel.grid = element_mypaint_line()
+     panel.grid = mypaint_wrap(element_line())
    )
 ```
 
@@ -378,7 +378,7 @@ ggplot(diamonds) +
   geom_violin(aes(cut, price, fill = cut, colour = cut)) +
   theme_minimal() +
   theme(
-    panel.grid = element_mypaint_line()
+    panel.grid = mypaint_wrap(element_line())
   )
 ```
 

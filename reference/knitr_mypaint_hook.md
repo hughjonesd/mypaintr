@@ -22,7 +22,13 @@ knitr_mypaint_hook(...)
   Default arguments passed through to
   [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
   when the hook opens a device. Chunk-specific overrides can be supplied
-  in the chunk option `mypaint.args` as a named list.
+  in the chunk option `mypaint.args` as a named list. Because these
+  arguments are applied when the device opens, use this hook or
+  `mypaint.args` to set chunk defaults;
+  [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
+  and
+  [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
+  still work within the chunk after the device is open.
 
 ## Value
 

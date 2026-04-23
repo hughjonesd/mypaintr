@@ -1,12 +1,14 @@
-# Wrap a grid grob or ggplot layer with scoped mypaint styling
+# Wrap a grid grob, ggplot layer, or ggplot theme element with scoped mypaint styling
 
 `mypaint_wrap()` applies temporary mypaintr brush and hand settings
 while the wrapped object is drawn, then restores the previous device
-style. It can wrap either a grid grob or a ggplot2 layer. This makes it
-useful both for direct
-[`grid::grid.draw()`](https://rdrr.io/r/grid/grid.draw.html) workflows
-and for ggplot calls such as
-`ggplot(...) + mypaint_wrap(geom_line(...), ...)`.
+style. It can wrap grid grobs, ggplot2 layers, and ggplot2 theme
+elements. This makes it useful for direct
+[`grid::grid.draw()`](https://rdrr.io/r/grid/grid.draw.html) workflows,
+for ggplot calls such as
+`ggplot(...) + mypaint_wrap(geom_line(...), ...)`, and for theme
+elements such as
+`theme(panel.grid = mypaint_wrap(element_line(), ...))`.
 
 ## Usage
 
@@ -26,7 +28,7 @@ mypaint_wrap(
 
 - object:
 
-  A grid grob or a ggplot2 layer object.
+  A grid grob, ggplot2 layer, or ggplot2 theme element.
 
 - brush:
 
@@ -61,8 +63,7 @@ mypaint_wrap(
 
 ## Value
 
-An object of the same general kind as `object`: a wrapped grob for grid
-inputs or a wrapped layer for ggplot2 inputs.
+An object of the same general kind as `object`.
 
 ## Examples
 
@@ -76,5 +77,21 @@ if (requireNamespace("ggplot2", quietly = TRUE) &&
     "classic/pen" %in% brushes()) {
   ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
     mypaint_wrap(ggplot2::geom_line(), brush = "classic/pen", hand = hand())
+
+  ggplot2::theme(
+    panel.grid = mypaint_wrap(ggplot2::element_line(), brush = "classic/pen")
+  )
 }
+#> <theme> List of 1
+#>  $ panel.grid: <mypaintr_element_line>
+#>   ..@ colour       : NULL
+#>   ..@ linewidth    : NULL
+#>   ..@ linetype     : NULL
+#>   ..@ lineend      : NULL
+#>   ..@ linejoin     : NULL
+#>   ..@ arrow        : logi FALSE
+#>   ..@ arrow.fill   : NULL
+#>   ..@ inherit.blank: logi FALSE
+#>  @ complete: logi FALSE
+#>  @ validate: logi TRUE
 ```

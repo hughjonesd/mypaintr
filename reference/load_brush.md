@@ -5,7 +5,7 @@ Load an installed mypaint brush
 ## Usage
 
 ``` r
-load_brush(brush, paths = default_mypaint_brush_dirs())
+load_brush(brush, paths = default_mypaint_brush_dirs(), normalize = "all")
 ```
 
 ## Arguments
@@ -19,11 +19,14 @@ load_brush(brush, paths = default_mypaint_brush_dirs())
   Optional brush directories. Defaults to locally discovered
   `mypaint-brushes` locations.
 
+- normalize:
+
+  One of `"all"`, `"size"`, `"tracking"`, or `"none"`. Defaults to
+  `"all"`; use `"none"` to explicitly bypass normalization.
+
 ## Value
 
-A JSON brush string suitable for
-[`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md)
-or `mypaint_device(brush = ...)`.
+A reusable brush specification object.
 
 ## See also
 
@@ -40,6 +43,6 @@ Other brush management:
 ``` r
 if (length(brushes())) {
   x <- load_brush(brushes()[[1]])
-  stopifnot(is.character(x), length(x) == 1L)
+  stopifnot(inherits(x, "mypaintr_brush"))
 }
 ```
