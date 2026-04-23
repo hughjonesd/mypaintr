@@ -62,6 +62,10 @@ normalize_brush_source <- function(brush) {
   )
 }
 
+is_json_brush_string <- function(brush) {
+  is.character(brush) && length(brush) == 1L && startsWith(trimws(brush), "{")
+}
+
 default_mypaint_brush_dirs <- function() {
   pkg_config_file <- system.file("mypaintr-config.dcf", package = "mypaintr", mustWork = FALSE)
   pkg_mode <- "auto"
@@ -233,6 +237,9 @@ normalize_brush_spec <- function(brush) {
   if (is.null(brush)) {
     return(NULL)
   }
+  if (!inherits(brush, "mypaintr_brush") && !is_json_brush_string(brush)) {
+    brush <- tweak_brush(brush, normalize = "all")
+  }
   brush <- normalize_brush_source(brush)
   list(
     json = brush$json,
@@ -341,24 +348,26 @@ brushes <- function(paths = default_mypaint_brush_dirs()) {
 #'
 #' @param brush Brush name like `"classic/pencil"` or a path to a `.myb` file.
 #' @inheritParams mypaintr-brush-paths-param
-#' @return A JSON brush string suitable for `tweak_brush()` or
-#'   `mypaint_device(brush = ...)`.
+#' @param normalize One of `"all"`, `"size"`, `"tracking"`, or `"none"`.
+#'   Defaults to `"all"`; use `"none"` to explicitly bypass normalization.
+#' @return A reusable brush specification object.
 #' @examples
 #' if (length(brushes())) {
 #'   x <- load_brush(brushes()[[1]])
-#'   stopifnot(is.character(x), length(x) == 1L)
+#'   stopifnot(inherits(x, "mypaintr_brush"))
 #' }
 #' @family brush management
 #' @export
-load_brush <- function(brush, paths = default_mypaint_brush_dirs()) {
+load_brush <- function(brush, paths = default_mypaint_brush_dirs(), normalize = "all") {
   stopifnot(is.character(brush), length(brush) == 1L, nzchar(brush))
+  normalize <- normalize_mode(normalize)
 
   path <- resolve_mypaint_brush_file(brush, paths = paths)
   if (is.null(path)) {
     stop("could not find brush: ", brush, call. = FALSE)
   }
 
-  read_mypaint_brush(path)
+  tweak_brush(path, normalize = normalize)
 }
 
 #' libmypaint brush setting metadata
