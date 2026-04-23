@@ -292,8 +292,8 @@ This is fine, but we can do better:
 * We probably don't want a special brush to render the white plot background rectangle.
 * We might want to have some "normal" elements mixed in with the sketch elements.
 
-To only use brush elements for part of a ggplot, use `mypaint_wrap()`.
 
+To only use brush elements for part of a ggplot, use `mypaint_wrap()`.
 Here's the same picture as above but with a clean background and straight
 grid lines:
 
