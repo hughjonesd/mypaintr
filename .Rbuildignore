@@ -5,9 +5,7 @@
 ^Rplots\.pdf$
 ^docs$
 ^build$
-^inst/doc$
 ^README\.Rmd$
-^vignettes$
 ^tmp($|/)
 ^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$
 ^vignettes/knitr-display-repro\.Rmd$

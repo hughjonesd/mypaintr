@@ -25,4 +25,3 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-BuildVignettes: false
