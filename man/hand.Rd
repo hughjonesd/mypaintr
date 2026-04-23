@@ -10,7 +10,9 @@ hand(
   wobble = 0.006,
   multi_stroke = 1L,
   width_jitter = 0.08,
-  endpoint_jitter = 0
+  endpoint_jitter = 0,
+  pressure = 1,
+  pressure_taper = 0
 )
 }
 \arguments{
@@ -27,6 +29,13 @@ strokes.}
 
 \item{endpoint_jitter}{Relative endpoint jitter as a proportion of segment
 length.}
+
+\item{pressure}{Base pressure to use for mypaint brush strokes. Ignored on
+non-mypaint devices.}
+
+\item{pressure_taper}{Amount of tapering applied to pressure at the start
+and end of mypaint brush strokes. \code{0} means constant pressure;
+\code{1} means strong tapering. Ignored on non-mypaint devices.}
 }
 \value{
 An object describing how rough geometry should be generated.
@@ -37,4 +46,5 @@ Hand-drawn geometry settings
 \examples{
 hand()
 hand(seed = 1, bow = 0.02, wobble = 0.01)
+hand(pressure = 0.7, pressure_taper = 0.5)
 }

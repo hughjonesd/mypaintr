@@ -74,17 +74,25 @@ as_hand <- function(x = NULL) {
 #'   strokes.
 #' @param endpoint_jitter Relative endpoint jitter as a proportion of segment
 #'   length.
+#' @param pressure Base pressure to use for mypaint brush strokes. Ignored on
+#'   non-mypaint devices.
+#' @param pressure_taper Amount of tapering applied to pressure at the start
+#'   and end of mypaint brush strokes. `0` means constant pressure;
+#'   `1` means strong tapering. Ignored on non-mypaint devices.
 #' @return An object describing how rough geometry should be generated.
 #' @examples
 #' hand()
 #' hand(seed = 1, bow = 0.02, wobble = 0.01)
+#' hand(pressure = 0.7, pressure_taper = 0.5)
 #' @export
 hand <- function(seed = NULL,
                  bow = 0.015,
                  wobble = 0.006,
                  multi_stroke = 1L,
                  width_jitter = 0.08,
-                 endpoint_jitter = 0) {
+                 endpoint_jitter = 0,
+                 pressure = 1,
+                 pressure_taper = 0) {
   structure(
     list(
       seed = seed,
@@ -92,7 +100,9 @@ hand <- function(seed = NULL,
       wobble = wobble,
       multi_stroke = as.integer(multi_stroke),
       width_jitter = width_jitter,
-      endpoint_jitter = endpoint_jitter
+      endpoint_jitter = endpoint_jitter,
+      pressure = pressure,
+      pressure_taper = pressure_taper
     ),
     class = "mypaintr_hand"
   )

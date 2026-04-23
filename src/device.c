@@ -51,6 +51,8 @@ typedef struct {
   int multi_stroke;
   double width_jitter;
   double endpoint_jitter;
+  double pressure;
+  double pressure_taper;
   double hachure_gap;
   int has_hachure_gap;
   double hachure_angle_jitter;
@@ -854,6 +856,8 @@ static void init_hand_defaults(MypaintrHand *hand, uint64_t salt) {
   hand->multi_stroke = 1;
   hand->width_jitter = 0.08;
   hand->endpoint_jitter = 0.01;
+  hand->pressure = 1.0;
+  hand->pressure_taper = 0.0;
   hand->hachure_angle_jitter = 12.0;
   hand->hachure_gap_jitter = 0.15;
 }
@@ -884,6 +888,10 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
   if (value != R_NilValue && XLENGTH(value) == 1) hand->width_jitter = asReal(value);
   value = list_element(spec, "endpoint_jitter");
   if (value != R_NilValue && XLENGTH(value) == 1) hand->endpoint_jitter = asReal(value);
+  value = list_element(spec, "pressure");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->pressure = clamp01(asReal(value));
+  value = list_element(spec, "pressure_taper");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->pressure_taper = clamp01(asReal(value));
   value = list_element(spec, "hachure_gap");
   if (value != R_NilValue && XLENGTH(value) == 1) {
     hand->has_hachure_gap = 1;
@@ -901,6 +909,20 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
   if (hand->multi_stroke < 1) {
     hand->multi_stroke = 1;
   }
+}
+
+static double stroke_pressure_at(const MypaintrHand *hand, double t, double turn_factor) {
+  double base = hand ? clamp01(hand->pressure) : 1.0;
+  double taper = hand ? clamp01(hand->pressure_taper) : 0.0;
+  double tt = clamp01(t);
+  double profile = sin(M_PI * tt);
+  double pressure = base * ((1.0 - taper) + taper * profile);
+
+  if (taper > 0.0 && turn_factor > 0.0) {
+    pressure *= 1.0 - 0.35 * taper * clamp01(turn_factor);
+  }
+
+  return clamp01(pressure);
 }
 
 static void rough_segment_path(double x0, double y0, double x1, double y1, MypaintrHand *hand, PointBuffer *buf) {
@@ -1488,9 +1510,19 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   double start_x;
   double start_y;
   double radius;
+  MypaintrHand neutral_hand;
+  const MypaintrHand *pressure_hand;
 
   if (n < 2 || R_ALPHA(col) == 0) {
     return;
+  }
+
+  init_hand_defaults(&neutral_hand, 1ULL);
+  pressure_hand = &neutral_hand;
+  if (brush == &dev->stroke) {
+    pressure_hand = &dev->stroke_hand;
+  } else if (brush == &dev->fill) {
+    pressure_hand = &dev->fill_hand;
   }
 
   brush_apply_gc(brush, col, lwd);
@@ -1518,13 +1550,55 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     double dt0 = fmax(preroll / 240.0, 0.001);
     mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, 0.0f, 0.0f, dt0, 1.0f, 0.0f, 0.0f);
   }
-  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 1.0f, 0.0f, 0.0f, 0.001, 1.0f, 0.0f, 0.0f);
+  mypaint_brush_stroke_to_2(
+    brush->brush,
+    &dev->surface,
+    (float) x[0],
+    (float) y[0],
+    (float) stroke_pressure_at(pressure_hand, 0.0, 0.0),
+    0.0f,
+    0.0f,
+    0.001,
+    1.0f,
+    0.0f,
+    0.0f
+  );
 
   for (i = 1; i < n; ++i) {
     double dx = x[i] - x[i - 1];
     double dy = y[i] - y[i - 1];
     double dt = fmax(sqrt(dx * dx + dy * dy) / 240.0, 0.001);
-    mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[i], (float) y[i], 1.0f, 0.0f, 0.0f, dt, 1.0f, 0.0f, 0.0f);
+    double t = (n > 1) ? (double) i / (double) (n - 1) : 1.0;
+    double turn_factor = 0.0;
+
+    if (i > 0 && i + 1 < n) {
+      double prev_dx = x[i] - x[i - 1];
+      double prev_dy = y[i] - y[i - 1];
+      double next_dx = x[i + 1] - x[i];
+      double next_dy = y[i + 1] - y[i];
+      double prev_len = sqrt(prev_dx * prev_dx + prev_dy * prev_dy);
+      double next_len = sqrt(next_dx * next_dx + next_dy * next_dy);
+
+      if (prev_len > 1e-9 && next_len > 1e-9) {
+        double cosang = (prev_dx * next_dx + prev_dy * next_dy) / (prev_len * next_len);
+        cosang = fmax(-1.0, fmin(1.0, cosang));
+        turn_factor = 0.5 * (1.0 - cosang);
+      }
+    }
+
+    mypaint_brush_stroke_to_2(
+      brush->brush,
+      &dev->surface,
+      (float) x[i],
+      (float) y[i],
+      (float) stroke_pressure_at(pressure_hand, t, turn_factor),
+      0.0f,
+      0.0f,
+      dt,
+      1.0f,
+      0.0f,
+      0.0f
+    );
   }
 
   mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[n - 1], (float) y[n - 1], 0.0f, 0.0f, 0.0f, 0.01, 1.0f, 0.0f, 0.0f);
