@@ -4,17 +4,19 @@
 \alias{load_brush}
 \title{Load an installed mypaint brush}
 \usage{
-load_brush(brush, paths = default_mypaint_brush_dirs())
+load_brush(brush, paths = default_mypaint_brush_dirs(), normalize = "all")
 }
 \arguments{
 \item{brush}{Brush name like \code{"classic/pencil"} or a path to a \code{.myb} file.}
 
 \item{paths}{Optional brush directories. Defaults to locally discovered
 \code{mypaint-brushes} locations.}
+
+\item{normalize}{One of \code{"all"}, \code{"size"}, \code{"tracking"}, or \code{"none"}.
+Defaults to \code{"all"}; use \code{"none"} to explicitly bypass normalization.}
 }
 \value{
-A JSON brush string suitable for \code{tweak_brush()} or
-\code{mypaint_device(brush = ...)}.
+A reusable brush specification object.
 }
 \description{
 Load an installed mypaint brush
@@ -22,7 +24,7 @@ Load an installed mypaint brush
 \examples{
 if (length(brushes())) {
   x <- load_brush(brushes()[[1]])
-  stopifnot(is.character(x), length(x) == 1L)
+  stopifnot(inherits(x, "mypaintr_brush"))
 }
 }
 \seealso{
