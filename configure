@@ -37,6 +37,14 @@ have_pkg() {
   command -v "$PKG_CONFIG_BIN" >/dev/null 2>&1 && "$PKG_CONFIG_BIN" --exists "$@"
 }
 
+pkg_cflags() {
+  "$PKG_CONFIG_BIN" --cflags "$@"
+}
+
+pkg_libs() {
+  "$PKG_CONFIG_BIN" --libs "$@"
+}
+
 if [ "$lib_mode" = auto ]; then
   if have_pkg libmypaint cairo; then
     lib_mode=system
@@ -51,18 +59,16 @@ case "$lib_mode" in
       echo "System libmypaint requested, but pkg-config could not find libmypaint and cairo." >&2
       exit 1
     fi
-    cat > src/Makevars <<'EOF'
-PKG_CONFIG ?= pkg-config
-PKG_CPPFLAGS = $(shell $(PKG_CONFIG) --cflags libmypaint cairo)
-PKG_LIBS = $(shell $(PKG_CONFIG) --libs libmypaint cairo)
-PKG_CFLAGS = -std=c99
+    cflags=$(pkg_cflags libmypaint cairo)
+    libs=$(pkg_libs libmypaint cairo)
+    cat > src/Makevars <<EOF
+PKG_CPPFLAGS = $cflags
+PKG_LIBS = $libs
 OBJECTS = device.o init.o
 EOF
-    cat > src/Makevars.win <<'EOF'
-PKG_CONFIG ?= pkg-config
-PKG_CPPFLAGS = $(shell $(PKG_CONFIG) --cflags libmypaint cairo)
-PKG_LIBS = $(shell $(PKG_CONFIG) --libs libmypaint cairo)
-PKG_CFLAGS = -std=c99
+    cat > src/Makevars.win <<EOF
+PKG_CPPFLAGS = $cflags
+PKG_LIBS = $libs
 OBJECTS = device.o init.o
 EOF
     ;;
@@ -71,18 +77,16 @@ EOF
       echo "Vendored libmypaint build requires cairo and json-c via pkg-config." >&2
       exit 1
     fi
-    cat > src/Makevars <<'EOF'
-PKG_CONFIG ?= pkg-config
-PKG_CPPFLAGS = -Ivendor/libmypaint $(shell $(PKG_CONFIG) --cflags cairo json-c)
-PKG_LIBS = $(shell $(PKG_CONFIG) --libs cairo json-c)
-PKG_CFLAGS = -std=c99
+    cflags=$(pkg_cflags cairo json-c)
+    libs=$(pkg_libs cairo json-c)
+    cat > src/Makevars <<EOF
+PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
+PKG_LIBS = $libs
 OBJECTS = device.o init.o vendor/libmypaint/brushmodes.o vendor/libmypaint/fifo.o vendor/libmypaint/helpers.o vendor/libmypaint/mypaint-brush-settings.o vendor/libmypaint/mypaint-brush.o vendor/libmypaint/mypaint-mapping.o vendor/libmypaint/mypaint-rectangle.o vendor/libmypaint/mypaint-surface.o vendor/libmypaint/mypaint.o vendor/libmypaint/rng-double.o
 EOF
-    cat > src/Makevars.win <<'EOF'
-PKG_CONFIG ?= pkg-config
-PKG_CPPFLAGS = -Ivendor/libmypaint $(shell $(PKG_CONFIG) --cflags cairo json-c)
-PKG_LIBS = $(shell $(PKG_CONFIG) --libs cairo json-c)
-PKG_CFLAGS = -std=c99
+    cat > src/Makevars.win <<EOF
+PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
+PKG_LIBS = $libs
 OBJECTS = device.o init.o vendor/libmypaint/brushmodes.o vendor/libmypaint/fifo.o vendor/libmypaint/helpers.o vendor/libmypaint/mypaint-brush-settings.o vendor/libmypaint/mypaint-brush.o vendor/libmypaint/mypaint-mapping.o vendor/libmypaint/mypaint-rectangle.o vendor/libmypaint/mypaint-surface.o vendor/libmypaint/mypaint.o vendor/libmypaint/rng-double.o
 EOF
     ;;
