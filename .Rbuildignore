@@ -5,7 +5,6 @@
 ^Rplots\.pdf$
 ^docs$
 ^build$
-^inst/doc$
 ^README\.Rmd$
 ^tmp($|/)
 ^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$

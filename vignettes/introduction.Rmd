@@ -290,10 +290,9 @@ This is fine, but we can do better:
 * We probably don't want a special brush to render the white plot background rectangle.
 * We might want to have some "normal" elements mixed in with the sketch elements.
 
-mypaintr provides `element_mypaint_line()`, `element_mypaint_rect()`,
-`geom_mypaint_bar()`, `geom_mypaint_col()` to modify the brush and hand
-used for individual plot elements. By default these will use "normal"
-drawing. 
+mypaintr provides `mypaint_wrap()`, `geom_mypaint_bar()`, and
+`geom_mypaint_col()` to modify the brush and hand used for individual plot
+elements. By default these will use "normal" drawing. 
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 
@@ -320,9 +319,9 @@ ggplot(diamonds) +
    theme_minimal() +
    theme(
      # fill=NULL and hand=NULL by default, i.e. no special effects
-     plot.background = element_mypaint_rect(fill = "white"),
+     plot.background = mypaint_wrap(element_rect(fill = "white")),
      # the same
-     panel.grid = element_mypaint_line()
+     panel.grid = mypaint_wrap(element_line())
    )
 ```
 
@@ -348,7 +347,7 @@ ggplot(diamonds) +
   geom_violin(aes(cut, price, fill = cut, colour = cut)) +
   theme_minimal() +
   theme(
-    panel.grid = element_mypaint_line()
+    panel.grid = mypaint_wrap(element_line())
   )
 ```
 
