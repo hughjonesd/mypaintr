@@ -22,7 +22,9 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.ext = "png",
-  fig.width = 5
+  fig.width = 7,
+  fig.height = 5,
+  out.width = "75%"
 )
 ```
 
@@ -135,7 +137,7 @@ change what is plotted along a given path, hands change the path itself,
 by adding jitter, multiple lines and other human-like quirks:
 
 ``` r
-set_hand(hand(bow = 0.03, wobble = 0))
+set_hand(hand(bow = 0.015, wobble = 0))
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
@@ -162,7 +164,7 @@ filled.contour(volcano, asp = 1, plot.title = "Maunga Whau",
 
 ## Rough lines and polygons
 
-There is one glitch with the mypaint_device:as you may have spotted,
+There is one glitch with the mypaint_device: as you may have spotted,
 borders and fills don’t always match up. Below, both rectangle border
 and fills are plotted roughly, but the random roughness is computed
 separately for each of them.
@@ -310,51 +312,33 @@ This is fine, but we can do better:
 - We might want to have some “normal” elements mixed in with the sketch
   elements.
 
-mypaintr provides
-[`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md),
-[`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md),
-and
-[`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md)
-to modify the brush and hand used for individual plot elements. By
-default these will use “normal” drawing.
-
-``` r
-
-ggplot(diamonds) +
-  mypaint_wrap(
-    geom_smooth(aes(carat, price), se = TRUE),
-    brush = "deevad/ballpen",
-    hand = hand(multi_stroke = 2)
-  ) +
-  theme_minimal()
-#> `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-```
-
-![](introduction_files/figure-html/unnamed-chunk-13-1.png)
-
+To only use brush elements for part of a ggplot, use
+[`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md).
 Here’s the same picture as above but with a clean background and
 straight grid lines:
 
 ``` r
 
-set_hand(hand())
-set_brush("experimental/bubble")
 
 ggplot(diamonds) + 
-  geom_bar(aes(cut, fill = cut)) + 
-   theme_minimal() +
-   theme(
-     # fill=NULL and hand=NULL by default, i.e. no special effects
-     plot.background = mypaint_wrap(element_rect(fill = "white")),
-     # the same
-     panel.grid = mypaint_wrap(element_line())
-   )
+  mypaint_wrap(
+    geom_bar(aes(cut, fill = cut)),
+    brush = "experimental/bubble",
+    hand = hand()
+  ) + 
+  theme_minimal() 
 ```
 
-![](introduction_files/figure-html/unnamed-chunk-14-1.png)
+![](introduction_files/figure-html/unnamed-chunk-13-1.png)
 
-Or you can go the other way and only set `hand` and `brush` inside
-[`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md):
+You can also use the special geoms
+[`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
+and
+[`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md).
+These allow you to use special fill patterns, like
+[`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
+and
+[`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
 
 ``` r
 
@@ -367,22 +351,7 @@ ggplot(diamonds) +
    theme_minimal() 
 ```
 
-![](introduction_files/figure-html/unnamed-chunk-15-1.png)
-
-Some more fancy examples:
-
-``` r
-
-set_brush("experimental/hard_blot", type = "fill")
-ggplot(diamonds) + 
-  geom_violin(aes(cut, price, fill = cut, colour = cut)) +
-  theme_minimal() +
-  theme(
-    panel.grid = mypaint_wrap(element_line())
-  )
-```
-
-![](introduction_files/figure-html/unnamed-chunk-16-1.png)
+![](introduction_files/figure-html/unnamed-chunk-14-1.png)
 
 To save your output, you can either use
 [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)

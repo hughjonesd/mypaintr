@@ -113,7 +113,7 @@ lines(1:10, col = "firebrick", lwd = 3)
 rect(2, 3, 5, 7, border = "black", col = rgb(0, 0.6, 0.3, 0.25))
 text(6, 8, "hello", col = "black")
 dev.off()
-#> agg_record_3526dea49df 
+#> agg_record_35242802b32 
 #>                      2 
 unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 
@@ -150,7 +150,7 @@ if ("classic/pencil" %in% brushes()) {
 }
 lines(1:5, c(1, 3, 2, 5, 4), lwd = 3)
 dev.off()
-#> agg_record_3526dea49df 
+#> agg_record_35242802b32 
 #>                      2 
 unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
 ```
