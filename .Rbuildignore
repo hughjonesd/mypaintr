@@ -12,3 +12,5 @@
 ^vignettes/knitr-display-repro\.Rmd$
 ^vignettes/test\.png$
 ^README\.Rmd$
+^\.positai$
+^\.claude$

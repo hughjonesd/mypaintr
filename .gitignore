@@ -1,3 +1,4 @@
+.DS_Store
 .Rhistory
 .RData
 .Ruserdata
@@ -12,3 +13,4 @@ src/Makevars.win.user
 .Rproj.user
 inst/doc
 docs
+.positai
