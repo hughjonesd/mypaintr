@@ -117,7 +117,6 @@ hand <- function(seed = NULL,
 #' `human_hand()` is the same as [hand()], but starts from the older rougher
 #' defaults with bow, wobble, and width jitter already enabled.
 #'
-#' @inheritParams hand
 #' @return An object describing how rough geometry should be generated.
 #' @examples
 #' human_hand()
@@ -125,7 +124,7 @@ hand <- function(seed = NULL,
 #' @rdname hand
 #' @export
 human_hand <- function(seed = NULL,
-                       bow = 0.015,
+                       bow = 0.01,
                        wobble = 0.006,
                        multi_stroke = 1L,
                        width_jitter = 0.08,

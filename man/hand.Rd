@@ -18,7 +18,7 @@ hand(
 
 human_hand(
   seed = NULL,
-  bow = 0.015,
+  bow = 0.01,
   wobble = 0.006,
   multi_stroke = 1L,
   width_jitter = 0.08,
