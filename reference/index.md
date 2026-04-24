@@ -23,8 +23,9 @@
 
 ## Rough Drawing
 
-- [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md) :
-  Hand-drawn geometry settings
+- [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
+  [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
+  : Hand-drawn geometry settings
 - [`rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/rough_lines.md)
   [`draw_rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/rough_lines.md)
   : Compute or draw rough connected lines
