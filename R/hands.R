@@ -59,7 +59,7 @@ as_hand <- function(x = NULL) {
     return(hand())
   }
   if (!inherits(x, "mypaintr_hand")) {
-    stop("hand must be created with hand()", call. = FALSE)
+    stop("hand must be created with hand() or human_hand()", call. = FALSE)
   }
   x
 }
@@ -79,17 +79,21 @@ as_hand <- function(x = NULL) {
 #' @param pressure_taper Amount of tapering applied to pressure at the start
 #'   and end of mypaint brush strokes. `0` means constant pressure;
 #'   `1` means strong tapering. Ignored on non-mypaint devices.
+#' @details
+#' `hand()` defaults to plain, base-R-like geometry with no bowing, wobble, or
+#' jitter. Use [human_hand()] for the older rougher defaults.
 #' @return An object describing how rough geometry should be generated.
 #' @examples
 #' hand()
-#' hand(seed = 1, bow = 0.02, wobble = 0.01)
+#' human_hand()
+#' human_hand(seed = 1, bow = 0.02, wobble = 0.01)
 #' hand(pressure = 0.7, pressure_taper = 0.5)
 #' @export
 hand <- function(seed = NULL,
-                 bow = 0.015,
-                 wobble = 0.006,
+                 bow = 0,
+                 wobble = 0,
                  multi_stroke = 1L,
-                 width_jitter = 0.08,
+                 width_jitter = 0,
                  endpoint_jitter = 0,
                  pressure = 1,
                  pressure_taper = 0) {
@@ -105,6 +109,38 @@ hand <- function(seed = NULL,
       pressure_taper = pressure_taper
     ),
     class = "mypaintr_hand"
+  )
+}
+
+#' Hand-drawn geometry settings with rough human-style defaults
+#'
+#' `human_hand()` is the same as [hand()], but starts from the older rougher
+#' defaults with bow, wobble, and width jitter already enabled.
+#'
+#' @inheritParams hand
+#' @return An object describing how rough geometry should be generated.
+#' @examples
+#' human_hand()
+#' human_hand(seed = 1, multi_stroke = 2)
+#' @rdname hand
+#' @export
+human_hand <- function(seed = NULL,
+                       bow = 0.015,
+                       wobble = 0.006,
+                       multi_stroke = 1L,
+                       width_jitter = 0.08,
+                       endpoint_jitter = 0,
+                       pressure = 1,
+                       pressure_taper = 0) {
+  hand(
+    seed = seed,
+    bow = bow,
+    wobble = wobble,
+    multi_stroke = multi_stroke,
+    width_jitter = width_jitter,
+    endpoint_jitter = endpoint_jitter,
+    pressure = pressure,
+    pressure_taper = pressure_taper
   )
 }
 

@@ -2,9 +2,21 @@
 % Please edit documentation in R/hands.R
 \name{hand}
 \alias{hand}
+\alias{human_hand}
 \title{Hand-drawn geometry settings}
 \usage{
 hand(
+  seed = NULL,
+  bow = 0,
+  wobble = 0,
+  multi_stroke = 1L,
+  width_jitter = 0,
+  endpoint_jitter = 0,
+  pressure = 1,
+  pressure_taper = 0
+)
+
+human_hand(
   seed = NULL,
   bow = 0.015,
   wobble = 0.006,
@@ -39,12 +51,22 @@ and end of mypaint brush strokes. \code{0} means constant pressure;
 }
 \value{
 An object describing how rough geometry should be generated.
+
+An object describing how rough geometry should be generated.
 }
 \description{
-Hand-drawn geometry settings
+\code{human_hand()} is the same as \code{\link[=hand]{hand()}}, but starts from the older rougher
+defaults with bow, wobble, and width jitter already enabled.
+}
+\details{
+\code{hand()} defaults to plain, base-R-like geometry with no bowing, wobble, or
+jitter. Use \code{\link[=human_hand]{human_hand()}} for the older rougher defaults.
 }
 \examples{
 hand()
-hand(seed = 1, bow = 0.02, wobble = 0.01)
+human_hand()
+human_hand(seed = 1, bow = 0.02, wobble = 0.01)
 hand(pressure = 0.7, pressure_taper = 0.5)
+human_hand()
+human_hand(seed = 1, multi_stroke = 2)
 }

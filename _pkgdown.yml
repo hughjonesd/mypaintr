@@ -26,6 +26,7 @@ reference:
   - title: Rough Drawing
     contents:
       - hand
+      - human_hand
       - draw_rough_lines
       - draw_rough_segments
       - draw_rough_arrows

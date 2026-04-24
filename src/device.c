@@ -851,11 +851,11 @@ static void set_cairo_source(cairo_t *cr, int col) {
 static void init_hand_defaults(MypaintrHand *hand, uint64_t salt) {
   memset(hand, 0, sizeof(*hand));
   hand->rng_state = mix64(salt ? salt : 1ULL);
-  hand->bow = 0.015;
-  hand->wobble = 0.006;
+  hand->bow = 0.0;
+  hand->wobble = 0.0;
   hand->multi_stroke = 1;
-  hand->width_jitter = 0.08;
-  hand->endpoint_jitter = 0.01;
+  hand->width_jitter = 0.0;
+  hand->endpoint_jitter = 0.0;
   hand->pressure = 1.0;
   hand->pressure_taper = 0.0;
   hand->hachure_angle_jitter = 12.0;
