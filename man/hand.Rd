@@ -63,10 +63,16 @@ defaults with bow, wobble, and width jitter already enabled.
 jitter. Use \code{\link[=human_hand]{human_hand()}} for the older rougher defaults.
 }
 \examples{
-hand()
-human_hand()
-human_hand(seed = 1, bow = 0.02, wobble = 0.01)
-hand(pressure = 0.7, pressure_taper = 0.5)
+plot.new()
+plot.window(c(0, 10), c(0, 10))
+draw_rough_lines(c(1, 10), c(9, 9), hand = hand())
+draw_rough_lines(c(1, 10), c(7, 7), hand = human_hand())
+draw_rough_lines(c(1, 10), c(5, 5),
+                 hand = human_hand(seed = 1,
+                   bow = 0.02, wobble = 0.01))
+draw_rough_lines(c(1, 10), c(3, 3),
+                 hand = human_hand(seed = 1,
+                   pressure = 0.7, pressure_taper = 0.5))
 human_hand()
 human_hand(seed = 1, multi_stroke = 2)
 }
