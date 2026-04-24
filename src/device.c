@@ -322,11 +322,73 @@ static void hsv_to_rgb(double h, double s, double v, double *r, double *g, doubl
   *b = bb + m;
 }
 
+static const double spectral_r_small[10] = {
+  0.009281362787953, 0.009732627042016, 0.011254252737167, 0.015105578649573,
+  0.024797924177217, 0.083622585502406, 0.977865045723212, 1.000000000000000,
+  0.999961046144372, 0.999999992756822
+};
+
+static const double spectral_g_small[10] = {
+  0.002854127435775, 0.003917589679914, 0.012132151699187, 0.748259205918013,
+  1.000000000000000, 0.865695937531795, 0.037477469241101, 0.022816789725717,
+  0.021747419446456, 0.021384940572308
+};
+
+static const double spectral_b_small[10] = {
+  0.537052150373386, 0.546646402401469, 0.575501819073983, 0.258778829633924,
+  0.041709923751716, 0.012662638828324, 0.007485593127390, 0.006766900622462,
+  0.006699764779016, 0.006676219883241
+};
+
+static const double t_matrix_small[3][10] = {
+  {
+    0.026595621243689, 0.049779426257903, 0.022449850859496, -0.218453689278271,
+    -0.256894883201278, 0.445881722194840, 0.772365886289756, 0.194498761382537,
+    0.014038157587820, 0.007687264480513
+  },
+  {
+    -0.032601672674412, -0.061021043498478, -0.052490001018404, 0.206659098273522,
+    0.572496335158169, 0.317837248815438, -0.021216624031211, -0.019387668756117,
+    -0.001521339050858, -0.000835181622534
+  },
+  {
+    0.339475473216284, 0.635401374177222, 0.771520797089589, 0.113222640692379,
+    -0.055251113343776, -0.048222578468680, -0.012966666339586, -0.001523814504223,
+    -0.000094718948810, -0.000051604594741
+  }
+};
+
 static double safe_pow01(double base, double exponent) {
   return pow(fmax(clamp01(base), 1e-6), exponent);
 }
 
-static void mix_rgb_spectral(
+static void rgb_to_spectral10(double r, double g, double b, double *spectral) {
+  int i;
+  for (i = 0; i < 10; ++i) {
+    spectral[i] = spectral_r_small[i] * clamp01(r) +
+                  spectral_g_small[i] * clamp01(g) +
+                  spectral_b_small[i] * clamp01(b);
+  }
+}
+
+static void spectral10_to_rgb(const double *spectral, double *r, double *g, double *b) {
+  double tmp_r = 0.0;
+  double tmp_g = 0.0;
+  double tmp_b = 0.0;
+  int i;
+
+  for (i = 0; i < 10; ++i) {
+    tmp_r += t_matrix_small[0][i] * spectral[i];
+    tmp_g += t_matrix_small[1][i] * spectral[i];
+    tmp_b += t_matrix_small[2][i] * spectral[i];
+  }
+
+  *r = clamp01(tmp_r);
+  *g = clamp01(tmp_g);
+  *b = clamp01(tmp_b);
+}
+
+static void mix_rgb_paint_mode(
   double top_r,
   double top_g,
   double top_b,
@@ -334,48 +396,58 @@ static void mix_rgb_spectral(
   double bottom_g,
   double bottom_b,
   double top_weight,
+  double paint_mode,
   double *out_r,
   double *out_g,
   double *out_b
 ) {
-  double top_c;
-  double top_m;
-  double top_y;
-  double bottom_c;
-  double bottom_m;
-  double bottom_y;
-  double mixed_c;
-  double mixed_m;
-  double mixed_y;
-  double bottom_weight = 1.0 - top_weight;
+  double weight = clamp01(top_weight);
+  double additive_r;
+  double additive_g;
+  double additive_b;
+  double spectral_r;
+  double spectral_g;
+  double spectral_b;
+  double top_spec[10];
+  double bottom_spec[10];
+  double mixed_spec[10];
+  double pigment = clamp01(paint_mode);
+  int i;
 
-  if (top_weight <= 0.0) {
-    *out_r = bottom_r;
-    *out_g = bottom_g;
-    *out_b = bottom_b;
+  if (weight <= 0.0) {
+    *out_r = clamp01(bottom_r);
+    *out_g = clamp01(bottom_g);
+    *out_b = clamp01(bottom_b);
     return;
   }
-  if (top_weight >= 1.0) {
-    *out_r = top_r;
-    *out_g = top_g;
-    *out_b = top_b;
+  if (weight >= 1.0) {
+    *out_r = clamp01(top_r);
+    *out_g = clamp01(top_g);
+    *out_b = clamp01(top_b);
     return;
   }
 
-  top_c = 1.0 - clamp01(top_r);
-  top_m = 1.0 - clamp01(top_g);
-  top_y = 1.0 - clamp01(top_b);
-  bottom_c = 1.0 - clamp01(bottom_r);
-  bottom_m = 1.0 - clamp01(bottom_g);
-  bottom_y = 1.0 - clamp01(bottom_b);
+  additive_r = clamp01(top_r) * weight + clamp01(bottom_r) * (1.0 - weight);
+  additive_g = clamp01(top_g) * weight + clamp01(bottom_g) * (1.0 - weight);
+  additive_b = clamp01(top_b) * weight + clamp01(bottom_b) * (1.0 - weight);
 
-  mixed_c = safe_pow01(top_c, top_weight) * safe_pow01(bottom_c, bottom_weight);
-  mixed_m = safe_pow01(top_m, top_weight) * safe_pow01(bottom_m, bottom_weight);
-  mixed_y = safe_pow01(top_y, top_weight) * safe_pow01(bottom_y, bottom_weight);
+  if (pigment <= 0.0) {
+    *out_r = additive_r;
+    *out_g = additive_g;
+    *out_b = additive_b;
+    return;
+  }
 
-  *out_r = clamp01(1.0 - mixed_c);
-  *out_g = clamp01(1.0 - mixed_m);
-  *out_b = clamp01(1.0 - mixed_y);
+  rgb_to_spectral10(top_r, top_g, top_b, top_spec);
+  rgb_to_spectral10(bottom_r, bottom_g, bottom_b, bottom_spec);
+  for (i = 0; i < 10; ++i) {
+    mixed_spec[i] = safe_pow01(top_spec[i], weight) * safe_pow01(bottom_spec[i], 1.0 - weight);
+  }
+  spectral10_to_rgb(mixed_spec, &spectral_r, &spectral_g, &spectral_b);
+
+  *out_r = clamp01((1.0 - pigment) * additive_r + pigment * spectral_r);
+  *out_g = clamp01((1.0 - pigment) * additive_g + pigment * spectral_g);
+  *out_b = clamp01((1.0 - pigment) * additive_b + pigment * spectral_b);
 }
 
 static double posterize_channel(double value, double levels) {
@@ -541,12 +613,6 @@ static void blend_dab_pixel_pigment(
   double base_a = *dst_a;
   double out_a;
   double top_weight;
-  double additive_r;
-  double additive_g;
-  double additive_b;
-  double pigment_r;
-  double pigment_g;
-  double pigment_b;
   double final_r;
   double final_g;
   double final_b;
@@ -567,31 +633,19 @@ static void blend_dab_pixel_pigment(
   }
 
   top_weight = clamp01(alpha / out_a);
-  additive_r = src_r * top_weight + base_r * (1.0 - top_weight);
-  additive_g = src_g * top_weight + base_g * (1.0 - top_weight);
-  additive_b = src_b * top_weight + base_b * (1.0 - top_weight);
-
-  pigment_r = additive_r;
-  pigment_g = additive_g;
-  pigment_b = additive_b;
-  if (paint > 0.0 && base_a > 1e-6 && alpha > 1e-6) {
-    mix_rgb_spectral(
-      src_r,
-      src_g,
-      src_b,
-      base_r,
-      base_g,
-      base_b,
-      top_weight,
-      &pigment_r,
-      &pigment_g,
-      &pigment_b
-    );
-  }
-
-  final_r = (1.0 - paint) * additive_r + paint * pigment_r;
-  final_g = (1.0 - paint) * additive_g + paint * pigment_g;
-  final_b = (1.0 - paint) * additive_b + paint * pigment_b;
+  mix_rgb_paint_mode(
+    src_r,
+    src_g,
+    src_b,
+    base_r,
+    base_g,
+    base_b,
+    top_weight,
+    paint,
+    &final_r,
+    &final_g,
+    &final_b
+  );
   final_a = out_a;
 
   apply_posterize_rgb(posterize, posterize_num, &final_r, &final_g, &final_b);
@@ -723,11 +777,7 @@ static void sample_surface_color_pigment(
   double avg_r = 0.0;
   double avg_g = 0.0;
   double avg_b = 0.0;
-  double avg_c = 0.0;
-  double avg_m = 0.0;
-  double avg_yk = 0.0;
   int have_rgb = 0;
-  int have_spectral = 0;
   int ix;
   int iy;
 
@@ -781,21 +831,19 @@ static void sample_surface_color_pigment(
         have_rgb = 1;
       } else {
         double fac_new = weighted_alpha / (alpha_sum + weighted_alpha);
-        avg_r = r * fac_new + avg_r * (1.0 - fac_new);
-        avg_g = g * fac_new + avg_g * (1.0 - fac_new);
-        avg_b = b * fac_new + avg_b * (1.0 - fac_new);
-      }
-
-      if (!have_spectral) {
-        avg_c = 1.0 - r;
-        avg_m = 1.0 - g;
-        avg_yk = 1.0 - b;
-        have_spectral = 1;
-      } else {
-        double fac_new = weighted_alpha / (alpha_sum + weighted_alpha);
-        avg_c = safe_pow01(1.0 - r, fac_new) * safe_pow01(avg_c, 1.0 - fac_new);
-        avg_m = safe_pow01(1.0 - g, fac_new) * safe_pow01(avg_m, 1.0 - fac_new);
-        avg_yk = safe_pow01(1.0 - b, fac_new) * safe_pow01(avg_yk, 1.0 - fac_new);
+        mix_rgb_paint_mode(
+          r,
+          g,
+          b,
+          avg_r,
+          avg_g,
+          avg_b,
+          fac_new,
+          paint,
+          &avg_r,
+          &avg_g,
+          &avg_b
+        );
       }
 
       alpha_sum += weighted_alpha;
@@ -816,20 +864,6 @@ static void sample_surface_color_pigment(
     *color_g = 0.0f;
     *color_b = 0.0f;
     *color_a = 0.0f;
-    return;
-  }
-
-  if (paint >= 1.0f && have_spectral) {
-    *color_r = (float) clamp01(1.0 - avg_c);
-    *color_g = (float) clamp01(1.0 - avg_m);
-    *color_b = (float) clamp01(1.0 - avg_yk);
-    return;
-  }
-
-  if (paint > 0.0f && have_spectral) {
-    *color_r = (float) clamp01((1.0 - paint) * avg_r + paint * (1.0 - avg_c));
-    *color_g = (float) clamp01((1.0 - paint) * avg_g + paint * (1.0 - avg_m));
-    *color_b = (float) clamp01((1.0 - paint) * avg_b + paint * (1.0 - avg_yk));
     return;
   }
 
