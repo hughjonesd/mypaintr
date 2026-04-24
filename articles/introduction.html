@@ -115,7 +115,7 @@ can install via your package manager (e.g. <code>apt</code> or
 graphics:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/bubble"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/charcoal"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">VADeaths</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>        beside <span class="op">=</span> <span class="cn">TRUE</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palette.html" class="external-link">palette.colors</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span>, border <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>        cex.names <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
@@ -184,7 +184,7 @@ brushes change what is plotted along a given path, hands change the path
 itself, by adding jitter, multiple lines and other human-like
 quirks:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span>bow <span class="op">=</span> <span class="fl">0.015</span>, wobble <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">VADeaths</span>, beside <span class="op">=</span> <span class="cn">TRUE</span>, col <span class="op">=</span> <span class="cn">NA</span>, cex.names <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-3-1.png" alt="" width="75%"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -195,8 +195,8 @@ quirks:</p>
 sketch.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/bubble"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"deevad/chalk"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/filled.contour.html" class="external-link">filled.contour</a></span><span class="op">(</span><span class="va">volcano</span>, asp <span class="op">=</span> <span class="fl">1</span>, plot.title <span class="op">=</span> <span class="st">"Maunga Whau"</span>,</span>
 <span>               xlab <span class="op">=</span> <span class="st">"Metres North"</span>, ylab <span class="op">=</span> <span class="st">"Metres West"</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-5-1.png" alt="" width="75%"></p>
@@ -211,18 +211,15 @@ separately for each of them.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">8</span>, <span class="fl">8</span>, col <span class="op">=</span> <span class="st">"green4"</span>, border <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-6-1.png" alt="" width="75%"></p>
 <p>The <code>draw_rough_*</code> functions do two useful things:</p>
 <ul>
 <li>They always fill roughly drawn shapes correctly.</li>
-<li>They can be used with any graphics device,</li>
+<li>They can be used with any graphics device.</li>
 </ul>
-<p>However, note that while hands can work with any graphics device,
-mypaint brushes can only be used with the <code><a href="../reference/mypaint_device.html">mypaint_device()</a></code>
-graphics device.</p>
 <p>The next chunks use knitr’s standard <code>"png"</code> device.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="st">"dev"</span><span class="op">)</span></span>
@@ -263,7 +260,7 @@ graphics device.</p>
 <p><img src="introduction_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="75%"></p>
 </div>
 <div class="section level2">
-<h2 id="fills">Fills<a class="anchor" aria-label="anchor" href="#fills"></a>
+<h2 id="pattern-fills">Pattern Fills<a class="anchor" aria-label="anchor" href="#pattern-fills"></a>
 </h2>
 <p>Use the <code>fill_pattern</code> argument to fill a polygon using
 hand-sketched lines. mypaintr knows four ways to do this. Again, these
@@ -272,7 +269,9 @@ functions:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">0</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">0</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
-<span></span>
+<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: set_hand() has no effect unless the active graphics device is</span></span>
+<span><span class="co">#&gt; mypaint_device()</span></span>
 <span><span class="fu"><a href="../reference/rough_rect.html">draw_rough_rect</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">4</span>, <span class="fl">5</span>, col <span class="op">=</span> <span class="st">"blue"</span>, fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/hatch.html">hatch</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rough_rect.html">draw_rough_rect</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">6</span>, <span class="fl">4</span>, <span class="fl">10</span>, col <span class="op">=</span> <span class="st">"green4"</span>, fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/crosshatch.html">crosshatch</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rough_rect.html">draw_rough_rect</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">5</span>, col <span class="op">=</span> <span class="st">"red3"</span>, fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/zigzag.html">zigzag</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
@@ -293,13 +292,13 @@ fill:</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/bubble"</span>, type <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/ink_blot"</span>, type <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"stroke"</span><span class="op">)</span></span>
 <span><span class="va">my_hand</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span>wobble <span class="op">=</span> <span class="fl">0.01</span>, multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/rough_polygons.html">draw_rough_polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">6</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">6</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span>, hand <span class="op">=</span> <span class="va">my_hand</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"deevad/ballpen"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"ramon/Pen"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rough_rect.html">draw_rough_rect</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">8</span>, col <span class="op">=</span> <span class="st">"blue3"</span>, hand <span class="op">=</span> <span class="va">my_hand</span>, fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/hatch.html">hatch</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/rough_arrows.html">draw_rough_arrows</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">9</span>, <span class="fl">8</span>, <span class="fl">9</span>, col <span class="op">=</span> <span class="st">"grey40"</span>, hand <span class="op">=</span> <span class="va">my_hand</span><span class="op">)</span></span></code></pre></div>
@@ -317,7 +316,7 @@ fill:</p>
 <span><span class="co"># mypaint_device("output.png")</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"experimental/bubble"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/dry_brush"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_bar</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">cut</span>, fill <span class="op">=</span> <span class="va">cut</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -339,14 +338,20 @@ clean background and straight grid lines:</p>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="../reference/mypaint_wrap.html">mypaint_wrap</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_bar</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">cut</span>, fill <span class="op">=</span> <span class="va">cut</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    brush <span class="op">=</span> <span class="st">"experimental/bubble"</span>,</span>
+<span>    brush <span class="op">=</span> <span class="st">"classic/dry_brush"</span>,</span>
 <span>    hand <span class="op">=</span> <span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-13-1.png" alt="" width="75%"></p>
 <p>You can also use the special geoms <code><a href="../reference/geom_mypaint_bar.html">geom_mypaint_bar()</a></code>
-and <code><a href="../reference/geom_mypaint_col.html">geom_mypaint_col()</a></code>. These allow you to use special fill
-patterns, like <code><a href="../reference/zigzag.html">zigzag()</a></code> and <code><a href="../reference/jumble.html">jumble()</a></code>.</p>
+and <code><a href="../reference/geom_mypaint_col.html">geom_mypaint_col()</a></code>. These have two advantages over
+<code><a href="../reference/mypaint_wrap.html">mypaint_wrap()</a></code>:</p>
+<ul>
+<li>You can use special fill patterns, like <code><a href="../reference/zigzag.html">zigzag()</a></code> and
+<code><a href="../reference/jumble.html">jumble()</a></code>.</li>
+<li>They affect the legend key as well as the actual plot element.
+(Compare the keys above and below.)</li>
+</ul>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>

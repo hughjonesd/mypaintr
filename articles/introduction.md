@@ -68,7 +68,7 @@ between calls. Here we set the brush to `NULL` to print an axis using
 
 ``` r
 
-set_brush("experimental/bubble")
+set_brush("classic/charcoal")
 barplot(VADeaths, axes = FALSE, 
         beside = TRUE, col = palette.colors(5), border = NA,
         cex.names = 0.8)
@@ -137,7 +137,7 @@ change what is plotted along a given path, hands change the path itself,
 by adding jitter, multiple lines and other human-like quirks:
 
 ``` r
-set_hand(hand(bow = 0.015, wobble = 0))
+set_hand(human_hand())
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
@@ -154,8 +154,8 @@ Combining brushes and hands, you can turn any R graphics into a sketch.
 
 ``` r
 
-set_brush("experimental/bubble")
-set_hand(hand(seed = 1))
+set_brush("deevad/chalk")
+set_hand(human_hand())
 filled.contour(volcano, asp = 1, plot.title = "Maunga Whau",
                xlab = "Metres North", ylab = "Metres West") 
 ```
@@ -172,7 +172,7 @@ separately for each of them.
 ``` r
 
 
-set_hand(hand(seed = 1))
+set_hand(human_hand())
 plot(1:10, 1:10, type = "n")
 rect(2, 2, 8, 8, col = "green4", border = "black")
 ```
@@ -182,12 +182,7 @@ rect(2, 2, 8, 8, col = "green4", border = "black")
 The `draw_rough_*` functions do two useful things:
 
 - They always fill roughly drawn shapes correctly.
-- They can be used with any graphics device,
-
-However, note that while hands can work with any graphics device,
-mypaint brushes can only be used with the
-[`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
-graphics device.
+- They can be used with any graphics device.
 
 The next chunks use knitr’s standard `"png"` device.
 
@@ -238,7 +233,7 @@ for (wobble in 1:5 * 0.02) for (bow in 1:5 * 0.02) {
 
 ![](introduction_files/figure-html/unnamed-chunk-9-1.png)
 
-## Fills
+## Pattern Fills
 
 Use the `fill_pattern` argument to fill a polygon using hand-sketched
 lines. mypaintr knows four ways to do this. Again, these work with base
@@ -247,7 +242,9 @@ graphics devices via the `draw_rough_*` functions:
 ``` r
 
 plot(0:10, 0:10, type = "n")
-
+set_hand(human_hand())
+#> Warning: set_hand() has no effect unless the active graphics device is
+#> mypaint_device()
 draw_rough_rect(0, 1, 4, 5, col = "blue", fill_pattern = hatch())
 draw_rough_rect(0, 6, 4, 10, col = "green4", fill_pattern = crosshatch())
 draw_rough_rect(6, 1, 10, 5, col = "red3", fill_pattern = zigzag())
@@ -270,13 +267,13 @@ fill:
 
 plot(1:10, 1:10, type = "n")
 
-set_brush("experimental/bubble", type = "fill")
+set_brush("classic/ink_blot", type = "fill")
 set_brush(NULL, type = "stroke")
 my_hand <- hand(wobble = 0.01, multi_stroke = 2)
 
 draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red", hand = my_hand)
 
-set_brush("deevad/ballpen")
+set_brush("ramon/Pen")
 draw_rough_rect(8, 4, 5, 8, col = "blue3", hand = my_hand, fill_pattern = hatch())
 
 draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
@@ -296,7 +293,7 @@ library(ggplot2)
 # mypaint_device("output.png")
 
 set_hand(hand())
-set_brush("experimental/bubble")
+set_brush("classic/dry_brush")
 
 ggplot(diamonds) + 
   geom_bar(aes(cut, fill = cut)) + 
@@ -323,7 +320,7 @@ straight grid lines:
 ggplot(diamonds) + 
   mypaint_wrap(
     geom_bar(aes(cut, fill = cut)),
-    brush = "experimental/bubble",
+    brush = "classic/dry_brush",
     hand = hand()
   ) + 
   theme_minimal() 
@@ -335,10 +332,15 @@ You can also use the special geoms
 [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
 and
 [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md).
-These allow you to use special fill patterns, like
-[`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
-and
-[`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
+These have two advantages over
+[`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md):
+
+- You can use special fill patterns, like
+  [`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
+  and
+  [`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
+- They affect the legend key as well as the actual plot element.
+  (Compare the keys above and below.)
 
 ``` r
 
