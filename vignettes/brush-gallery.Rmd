@@ -1,0 +1,80 @@
+---
+title: "Brush gallery"
+author: "David Hugh-Jones"
+date: "2026-04-22"
+output: html_document
+params:
+  develop: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mypaintr)
+# knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.ext = "png",
+  fig.width = 7,
+  fig.height = 5
+)
+
+```
+
+```{r, echo=TRUE}
+
+do_plot <- function(brush) {
+  brush <- load_brush(brush, normalize = "all")
+  set_brush(brush)
+  rect(1, 1, 5, 5, col = "orange", border = NA)
+  rect(5, 5, 9, 9, col = "pink", border = NA)
+  lines(c(0, 6), c(0, 6), col = "darkblue")
+  lines(c(1, 7), c(0, 6), col = "red3")
+  draw_rough_rect(1, 5, 5, 9, hand = hand(), fill_pattern = zigzag(),
+                  col = "darkgreen", border = "grey30")
+}
+```
+
+```{r, echo=FALSE, results='asis'}
+
+  set.seed(123)
+  brushes <- brushes()
+  if (params$develop) brushes <- sample(brushes, 20)
+
+  input_name <- knitr::current_input()
+  if (is.null(input_name) || !nzchar(input_name)) {
+    input_name <- "brush-gallery.Rmd"
+  }
+  fig_dir <- file.path(
+    paste0(tools::file_path_sans_ext(basename(input_name)), "_files"),
+    "brushes"
+  )
+  dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+
+  paths <- character(length(brushes))
+
+  for (i in seq_along(brushes)) {
+    path <- file.path(fig_dir, paste0("brush-", i, ".png"))
+    paths[i] <- path
+
+    mypaint_device(path, width = 6, height = 6)
+    plot.new()
+    plot.window(xlim = c(0, 10), ylim = c(0, 10))
+    do_plot(brushes[i])
+    dev.off()
+  }
+
+  cat("<div style='display:flex; flex-wrap:wrap; gap:8px;'>\n")
+
+  for (i in seq_along(brushes)) {
+    cat(sprintf(
+      "<div style='width:49%%; text-align:center; border: 1px solid grey;'>\n<img src='%s' style='max-width:100%%; height:auto; display:block; margin:0 auto;'>\n<div style='margin-top:6px; font-size:0.95em;'><code>%s</code></div>\n</div>\n",
+      paths[i],
+      brushes[i]
+    ))
+  }
+
+  cat("</div>\n")
+  
+```
