@@ -7,6 +7,8 @@ Bundled third-party components:
   License: ISC
   Copyright: Martin Renold and contributors
   Full text: `src/vendor/libmypaint/COPYING`
+  Note: `src/device.c` includes spectral color-mixing tables and helper logic
+  adapted from `src/vendor/libmypaint/helpers.c`.
 
 - `inst/brushes/`
   License: CC0 1.0 Universal
