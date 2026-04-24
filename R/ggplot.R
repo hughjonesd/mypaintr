@@ -365,6 +365,14 @@ mypaint_wrap.LayerInstance <- function(object,
   object$draw_geom <- function(self, data, layout) {
     wrap_mypaintr_style_output(old_draw_geom(data, layout), style)
   }
+  old_draw_key <- object$geom$draw_key
+  object$geom <- ggplot2::ggproto(
+    NULL,
+    object$geom,
+    draw_key = function(data, params, size) {
+      wrap_mypaintr_style_output(old_draw_key(data, params, size), style)
+    }
+  )
   object
 }
 
