@@ -375,7 +375,7 @@ clip_polyline_to_paths <- function(paths, x, y, rule = c("winding", "evenodd")) 
 
   runs <- rle(keep)
   ends <- cumsum(runs$lengths)
-  starts <- c(1L, head(ends, -1L) + 1L)
+  starts <- c(1L, utils::head(ends, -1L) + 1L)
   out <- list()
   for (i in seq_along(runs$values)) {
     if (!runs$values[i] || runs$lengths[i] < 2L) next
