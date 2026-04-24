@@ -73,6 +73,4 @@ draw_rough_lines(c(1, 10), c(5, 5),
 draw_rough_lines(c(1, 10), c(3, 3),
                  hand = human_hand(seed = 1,
                    pressure = 0.7, pressure_taper = 0.5))
-human_hand()
-human_hand(seed = 1, multi_stroke = 2)
 }

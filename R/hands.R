@@ -124,9 +124,6 @@ hand <- function(seed = NULL,
 #' defaults with bow, wobble, and width jitter already enabled.
 #'
 #' @return An object describing how rough geometry should be generated.
-#' @examples
-#' human_hand()
-#' human_hand(seed = 1, multi_stroke = 2)
 #' @rdname hand
 #' @export
 human_hand <- function(seed = NULL,
