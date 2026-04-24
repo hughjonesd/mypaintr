@@ -80,114 +80,17 @@ or jitter. Use `human_hand()` for the older rougher defaults.
 ## Examples
 
 ``` r
-hand()
-#> $seed
-#> NULL
-#> 
-#> $bow
-#> [1] 0
-#> 
-#> $wobble
-#> [1] 0
-#> 
-#> $multi_stroke
-#> [1] 1
-#> 
-#> $width_jitter
-#> [1] 0
-#> 
-#> $endpoint_jitter
-#> [1] 0
-#> 
-#> $pressure
-#> [1] 1
-#> 
-#> $pressure_taper
-#> [1] 0
-#> 
-#> attr(,"class")
-#> [1] "mypaintr_hand"
-human_hand()
-#> $seed
-#> NULL
-#> 
-#> $bow
-#> [1] 0.01
-#> 
-#> $wobble
-#> [1] 0.006
-#> 
-#> $multi_stroke
-#> [1] 1
-#> 
-#> $width_jitter
-#> [1] 0.08
-#> 
-#> $endpoint_jitter
-#> [1] 0
-#> 
-#> $pressure
-#> [1] 1
-#> 
-#> $pressure_taper
-#> [1] 0
-#> 
-#> attr(,"class")
-#> [1] "mypaintr_hand"
-human_hand(seed = 1, bow = 0.02, wobble = 0.01)
-#> $seed
-#> [1] 1
-#> 
-#> $bow
-#> [1] 0.02
-#> 
-#> $wobble
-#> [1] 0.01
-#> 
-#> $multi_stroke
-#> [1] 1
-#> 
-#> $width_jitter
-#> [1] 0.08
-#> 
-#> $endpoint_jitter
-#> [1] 0
-#> 
-#> $pressure
-#> [1] 1
-#> 
-#> $pressure_taper
-#> [1] 0
-#> 
-#> attr(,"class")
-#> [1] "mypaintr_hand"
-hand(pressure = 0.7, pressure_taper = 0.5)
-#> $seed
-#> NULL
-#> 
-#> $bow
-#> [1] 0
-#> 
-#> $wobble
-#> [1] 0
-#> 
-#> $multi_stroke
-#> [1] 1
-#> 
-#> $width_jitter
-#> [1] 0
-#> 
-#> $endpoint_jitter
-#> [1] 0
-#> 
-#> $pressure
-#> [1] 0.7
-#> 
-#> $pressure_taper
-#> [1] 0.5
-#> 
-#> attr(,"class")
-#> [1] "mypaintr_hand"
+plot.new()
+plot.window(c(0, 10), c(0, 10))
+draw_rough_lines(c(1, 10), c(9, 9), hand = hand())
+draw_rough_lines(c(1, 10), c(7, 7), hand = human_hand())
+draw_rough_lines(c(1, 10), c(5, 5),
+                 hand = human_hand(seed = 1,
+                   bow = 0.02, wobble = 0.01))
+draw_rough_lines(c(1, 10), c(3, 3),
+                 hand = human_hand(seed = 1,
+                   pressure = 0.7, pressure_taper = 0.5))
+
 human_hand()
 #> $seed
 #> NULL
