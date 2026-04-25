@@ -1,11 +1,12 @@
 ---
-title: "Hand Demo"
+title: "Hand demo"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Hand Demo}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
 
 ```{r, include = FALSE}
 library(mypaintr)
@@ -21,9 +22,14 @@ knitr::opts_chunk$set(
   mypaint = TRUE
 )
 
-plot_with_hand <- function(..., null = FALSE) {
+plot_with_hand <- function(...) {
+  null <- length(list(...)) &&is.null(list(...)[[1]])
   title <- deparse(substitute(list(...)))
-  title <- sub("list\\((.*)\\)",  "\\1", title)
+  title <- if (! null) {
+    sub("list\\((.*)\\)",  "human_hand(\\1)", title) 
+  } else {
+    "NULL"
+  }
   plot.new()
   plot.window(c(0, 10), c(0, 10))
   title(title)
@@ -32,7 +38,7 @@ plot_with_hand <- function(..., null = FALSE) {
   if (null)
     set_hand(NULL)
   else 
-    set_hand(hand(seed = 1, ...))
+    set_hand(human_hand(seed = 1, ...))
   rect(1, 1, 4, 4)
   rect(6, 6, 9, 9, col = "green4")
   rect(1, 6, 4, 9, col = "darkred", density = 5)
