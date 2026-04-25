@@ -9,10 +9,10 @@
 ^README\.Rmd$
 ^_pkgdown.yml$
 ^tmp($|/)
+^src/Makevars$
+^src/Makevars\.win$
 ^vignettes/articles($|/)
 ^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$
-^src/Makevars$
-^src/Makevars.win$
 ^README\.Rmd$
 ^\.positai$
 ^\.claude$
