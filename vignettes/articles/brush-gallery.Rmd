@@ -29,7 +29,7 @@ sample_brushes <- c(
   "tanda/pencil-8b"
 )
 
-best_brushes <- unique(c(
+best_brushes <- c(
   "classic/charcoal",
   "classic/coarse_bulk_1",
   "classic/coarse_bulk_2",
@@ -74,7 +74,7 @@ best_brushes <- unique(c(
   "tanda/oil-06-paint",
   "tanda/pencil-2b",
   "tanda/pencil-8b"
-))
+)
 
 brush_set <- switch(
   params$brushes,
@@ -84,7 +84,7 @@ brush_set <- switch(
   stop("params$brushes must be one of 'sample', 'best', or 'all'")
 )
 
-right_preview_scale <- 0.75
+right_preview_scale <- 1
 
 slugify <- function(x) gsub("[^A-Za-z0-9._-]+", "-", x)
 
@@ -117,7 +117,7 @@ render_brush_a <- function(brush, path) {
   set_brush(brush)
   set_hand(human_hand(pressure_taper = 1))
   segments(1, 1:9, 10, 1:9, lwd = (1:9) / 2,
-           col = adjustcolor("red", alpha.f = 0.66))
+           col = adjustcolor("darkred", alpha.f = 0.66))
   dev.off()
 }
 

@@ -308,10 +308,9 @@ ggplot(diamonds) +
 
 ```
 
-You can also use the special geoms `geom_mypaint_bar()` and `geom_mypaint_col()`. These have two advantages over `mypaint_wrap()`:
-
-* You can use special fill patterns, like `zigzag()` and `jumble()`.
-* They affect the legend key as well as the actual plot element. (Compare the keys above and below.)
+You can also use the special geoms `geom_mypaint_bar()` and
+`geom_mypaint_col()`. As well as brushes and hands, these let
+you  use special fill patterns, like `zigzag()` and `jumble()`.
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 
