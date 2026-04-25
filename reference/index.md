@@ -1,31 +1,37 @@
 # Package index
 
-## Devices and Styles
+## Devices
 
 - [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
   : Open a libmypaint-backed graphics device
-- [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
-  : Set the active mypaintr brush
-- [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md)
-  : Create a reusable tweaked brush specification
-- [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
-  : Set the active mypaintr hand-drawn geometry
+
+## Mypaint Brushes
+
 - [`brush_dirs()`](https://hughjonesd.github.io/mypaintr/reference/brush_dirs.md)
   : Discover installed mypaint brush directories
+- [`brush_inputs()`](https://hughjonesd.github.io/mypaintr/reference/brush_inputs.md)
+  : libmypaint brush input metadata
+- [`brush_settings()`](https://hughjonesd.github.io/mypaintr/reference/brush_settings.md)
+  : libmypaint brush setting metadata
 - [`brushes()`](https://hughjonesd.github.io/mypaintr/reference/brushes.md)
   : List installed mypaint brushes
 - [`load_brush()`](https://hughjonesd.github.io/mypaintr/reference/load_brush.md)
   : Load an installed mypaint brush
-- [`brush_settings()`](https://hughjonesd.github.io/mypaintr/reference/brush_settings.md)
-  : libmypaint brush setting metadata
-- [`brush_inputs()`](https://hughjonesd.github.io/mypaintr/reference/brush_inputs.md)
-  : libmypaint brush input metadata
+- [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
+  : Set the active mypaintr brush
+- [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md)
+  : Create a reusable tweaked brush specification
 
-## Rough Drawing
+## Hands
 
 - [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   : Hand-drawn geometry settings
+- [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
+  : Set the active mypaintr hand-drawn geometry
+
+## Rough Drawing
+
 - [`rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/rough_lines.md)
   [`draw_rough_lines()`](https://hughjonesd.github.io/mypaintr/reference/rough_lines.md)
   : Compute or draw rough connected lines
@@ -61,15 +67,15 @@
 
 ## ggplot2 Integration
 
-- [`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md)
-  : Wrap a grid grob, ggplot layer, or ggplot theme element with scoped
-  mypaint styling
 - [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
   : Draw rough, brush-rendered bars in ggplot2
 - [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md)
   : Draw rough, brush-rendered columns in ggplot2
+- [`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md)
+  : Wrap a grid grob, ggplot layer, or ggplot theme element with scoped
+  mypaint styling
 
-## knitr
+## knitr Integration
 
 - [`knitr_mypaint_hook()`](https://hughjonesd.github.io/mypaintr/reference/knitr_mypaint_hook.md)
   : Create a knitr chunk hook for live mypaint rendering
