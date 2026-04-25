@@ -86,27 +86,8 @@ polyline geometry for each segment.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">rough_segments</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $x</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 1.000000 1.038462 1.076923 1.115385 1.153846 1.192308 1.230769 1.269231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 1.307692 1.346154 1.384615 1.423077 1.461538 1.500000 1.538462 1.576923</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] 1.615385 1.653846 1.692308 1.730769 1.769231 1.807692 1.846154 1.884615</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] 1.923077 1.961538 2.000000 2.000000 2.090909 2.181818 2.272727 2.363636</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] 2.454545 2.545455 2.636364 2.727273 2.818182 2.909091 3.000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 1.000000 1.076923 1.153846 1.230769 1.307692 1.384615 1.461538 1.538462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] 1.615385 1.692308 1.769231 1.846154 1.923077 2.000000 2.076923 2.153846</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] 2.230769 2.307692 2.384615 2.461538 2.538462 2.615385 2.692308 2.769231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] 2.846154 2.923077 3.000000 2.000000 2.000000 2.000000 2.000000 2.000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] 2.000000 2.000000 2.000000 2.000000 2.000000 2.000000 2.000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [39] 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">draw_rough_segments</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">:</span><span class="fl">6</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">5</span>, <span class="fl">7</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">draw_rough_segments</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">4</span><span class="op">:</span><span class="fl">6</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">8</span>, <span class="fl">5</span>, <span class="fl">7</span><span class="op">)</span>, hand <span class="op">=</span> <span class="fu"><a href="hand.html">human_hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="rough_segments-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>

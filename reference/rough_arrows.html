@@ -110,50 +110,7 @@ polyline geometry for arrow shafts and heads.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">rough_arrows</span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">8</span>, <span class="fl">8</span>, hand <span class="op">=</span> <span class="fu"><a href="hand.html">hand</a></span><span class="op">(</span>multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $x</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] 2.000000 2.059406 2.118812 2.178218 2.237624 2.297030 2.356436 2.415842</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [9] 2.475248 2.534653 2.594059 2.653465 2.712871 2.772277 2.831683 2.891089</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [17] 2.950495 3.009901 3.069307 3.128713 3.188119 3.247525 3.306931 3.366337</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [25] 3.425743 3.485149 3.544554 3.603960 3.663366 3.722772 3.782178 3.841584</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [33] 3.900990 3.960396 4.019802 4.079208 4.138614 4.198020 4.257426 4.316832</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [41] 4.376238 4.435644 4.495050 4.554455 4.613861 4.673267 4.732673 4.792079</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [49] 4.851485 4.910891 4.970297 5.029703 5.089109 5.148515 5.207921 5.267327</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [57] 5.326733 5.386139 5.445545 5.504950 5.564356 5.623762 5.683168 5.742574</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [65] 5.801980 5.861386 5.920792 5.980198 6.039604 6.099010 6.158416 6.217822</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [73] 6.277228 6.336634 6.396040 6.455446 6.514851 6.574257 6.633663 6.693069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [81] 6.752475 6.811881 6.871287 6.930693 6.990099 7.049505 7.108911 7.168317</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [89] 7.227723 7.287129 7.346535 7.405941 7.465347 7.524752 7.584158 7.643564</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [97] 7.702970 7.762376 7.821782 7.881188 7.940594 8.000000 8.000000 7.912288</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [105] 7.824575 7.736863 7.649150 7.561438 8.000000 7.971807 7.943614 7.915421</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [113] 7.887227 7.859034</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] 2.000000 2.059406 2.118812 2.178218 2.237624 2.297030 2.356436 2.415842</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [9] 2.475248 2.534653 2.594059 2.653465 2.712871 2.772277 2.831683 2.891089</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [17] 2.950495 3.009901 3.069307 3.128713 3.188119 3.247525 3.306931 3.366337</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [25] 3.425743 3.485149 3.544554 3.603960 3.663366 3.722772 3.782178 3.841584</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [33] 3.900990 3.960396 4.019802 4.079208 4.138614 4.198020 4.257426 4.316832</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [41] 4.376238 4.435644 4.495050 4.554455 4.613861 4.673267 4.732673 4.792079</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [49] 4.851485 4.910891 4.970297 5.029703 5.089109 5.148515 5.207921 5.267327</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [57] 5.326733 5.386139 5.445545 5.504950 5.564356 5.623762 5.683168 5.742574</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [65] 5.801980 5.861386 5.920792 5.980198 6.039604 6.099010 6.158416 6.217822</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [73] 6.277228 6.336634 6.396040 6.455446 6.514851 6.574257 6.633663 6.693069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [81] 6.752475 6.811881 6.871287 6.930693 6.990099 7.049505 7.108911 7.168317</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [89] 7.227723 7.287129 7.346535 7.405941 7.465347 7.524752 7.584158 7.643564</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [97] 7.702970 7.762376 7.821782 7.881188 7.940594 8.000000 8.000000 7.979666</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [105] 7.959331 7.938997 7.918662 7.898328 8.000000 7.904429 7.808858 7.713287</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [113] 7.617715 7.522144</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $id</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [75] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 3 3 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [112] 3 3 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, type <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">draw_rough_arrows</span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">8</span>, <span class="fl">8</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">draw_rough_arrows</span><span class="op">(</span><span class="fl">8</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">8</span>, code <span class="op">=</span> <span class="fl">3</span>, hand <span class="op">=</span> <span class="fu"><a href="hand.html">hand</a></span><span class="op">(</span>multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">draw_rough_arrows</span><span class="op">(</span><span class="fl">8</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">8</span>, hand <span class="op">=</span> <span class="fu"><a href="hand.html">human_hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="rough_arrows-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>

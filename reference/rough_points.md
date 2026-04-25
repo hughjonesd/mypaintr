@@ -44,15 +44,8 @@ Other rough drawing helpers:
 ## Examples
 
 ``` r
-plot(1:5, 1:5, type = "n")
-
-rough_points(1:5, 1:5, hand = hand(endpoint_jitter = 0.02))
-#> $x
-#> [1] 1.001139 2.000453 3.000524 3.999905 5.000149
-#> 
-#> $y
-#> [1] 0.999922 2.001663 3.001122 4.000647 5.000481
-#> 
 plot(1:10, 1:10, type = "n")
-draw_rough_points(1:10, 1:10, pch = 16, cex = 1.4)
+draw_rough_points(1:10, 1:10,
+                  hand = human_hand(),
+                  pch = 16, cex = 1.4)
 ```

@@ -46,17 +46,6 @@ Other rough drawing helpers:
 
 ``` r
 y <- c(2, 5, 4, 7, 6, 8)
-rough_lines(1:6, y, hand = hand(multi_stroke = 2))
-#> $x
-#> [1] 1 2 3 4 5 6
-#> 
-#> $y
-#> [1] 2 5 4 7 6 8
-#> 
-#> $id
-#> [1] 1 1 1 1 1 1
-#> 
-y <- c(2, 5, 4, 7, 6, 8)
 plot(1:6, y, type = "n")
-draw_rough_lines(1:6, y, hand = hand(multi_stroke = 2), lwd = 2)
+draw_rough_lines(1:6, y, hand = human_hand(multi_stroke = 2))
 ```

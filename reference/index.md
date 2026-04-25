@@ -39,7 +39,6 @@
   [`draw_rough_points()`](https://hughjonesd.github.io/mypaintr/reference/rough_points.md)
   : Compute or draw rough points
 - [`rough_polygons()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygons.md)
-  [`rough_polygon()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygons.md)
   [`draw_rough_polygons()`](https://hughjonesd.github.io/mypaintr/reference/rough_polygons.md)
   : Compute or draw rough polygons
 - [`rough_polypath()`](https://hughjonesd.github.io/mypaintr/reference/rough_polypath.md)
