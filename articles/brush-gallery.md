@@ -1,799 +1,715 @@
 # Brush gallery
 
-``` r
+This vignette compares installed MyPaint brush previews with two
+`mypaintr` render scenes. Use the `brushes` parameter to control which
+set is rendered:
 
-do_plot <- function(brush) {
-  brush <- load_brush(brush, normalize = "all")
-  set_brush(brush)
-  rect(1, 1, 5, 5, col = "orange", border = NA)
-  rect(5, 5, 9, 9, col = "pink", border = NA)
-  lines(c(0, 6), c(0, 6), col = "darkblue")
-  lines(c(1, 7), c(0, 6), col = "red3")
-  draw_rough_rect(1, 5, 5, 9, hand = hand(), fill_pattern = zigzag(),
-                  col = "darkgreen", border = "grey30")
-}
-```
+- `"sample"`: ten hand-picked good brushes
+- `"best"`: the brushes recommended in the introduction vignette
+- `"all"`: every installed brush
 
-![](brush-gallery_files/brushes/brush-1.png)
+Showing **44** brushes from the `best` set.
 
-`classic/blend+paint`
+## classic/charcoal
 
-![](brush-gallery_files/brushes/brush-2.png)
+No installed preview found
 
-`classic/blending_knife`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-3.png)
+![classic/charcoal
+strokes](brush-gallery_files/brush-gallery/renders/classic-charcoal-a.png)
 
-`classic/blur`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-4.png)
+![classic/charcoal
+fills](brush-gallery_files/brush-gallery/renders/classic-charcoal-b.png)
 
-`classic/brush`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-5.png)
+## classic/coarse_bulk_1
 
-`classic/bulk`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-6.png)
+Installed preview
 
-`classic/calligraphy`
+![classic/coarse_bulk_1
+strokes](brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_1-a.png)
 
-![](brush-gallery_files/brushes/brush-7.png)
+mypaintr strokes
 
-`classic/charcoal`
+![classic/coarse_bulk_1
+fills](brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_1-b.png)
 
-![](brush-gallery_files/brushes/brush-8.png)
+mypaintr fills
 
-`classic/coarse_bulk_1`
+## classic/coarse_bulk_2
 
-![](brush-gallery_files/brushes/brush-9.png)
+No installed preview found
 
-`classic/coarse_bulk_2`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-10.png)
+![classic/coarse_bulk_2
+strokes](brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_2-a.png)
 
-`classic/coarse_bulk_3`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-11.png)
+![classic/coarse_bulk_2
+fills](brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_2-b.png)
 
-`classic/dry_brush`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-12.png)
+## classic/coarse_bulk_3
 
-`classic/imp_blending`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-13.png)
+Installed preview
 
-`classic/imp_details`
+![classic/coarse_bulk_3
+strokes](brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_3-a.png)
 
-![](brush-gallery_files/brushes/brush-14.png)
+mypaintr strokes
 
-`classic/impressionism`
+![classic/coarse_bulk_3
+fills](brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_3-b.png)
 
-![](brush-gallery_files/brushes/brush-15.png)
+mypaintr fills
 
-`classic/ink_blot`
+## classic/dry_brush
 
-![](brush-gallery_files/brushes/brush-16.png)
+No installed preview found
 
-`classic/ink_eraser`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-17.png)
+![classic/dry_brush
+strokes](brush-gallery_files/brush-gallery/renders/classic-dry_brush-a.png)
 
-`classic/kabura`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-18.png)
+![classic/dry_brush
+fills](brush-gallery_files/brush-gallery/renders/classic-dry_brush-b.png)
 
-`classic/knife`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-19.png)
+## classic/ink_blot
 
-`classic/long_grass`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-20.png)
+Installed preview
 
-`classic/marker_fat`
+![classic/ink_blot
+strokes](brush-gallery_files/brush-gallery/renders/classic-ink_blot-a.png)
 
-![](brush-gallery_files/brushes/brush-21.png)
+mypaintr strokes
 
-`classic/marker_small`
+![classic/ink_blot
+fills](brush-gallery_files/brush-gallery/renders/classic-ink_blot-b.png)
 
-![](brush-gallery_files/brushes/brush-22.png)
+mypaintr fills
 
-`classic/modelling`
+## classic/ink_eraser
 
-![](brush-gallery_files/brushes/brush-23.png)
+No installed preview found
 
-`classic/modelling2`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-24.png)
+![classic/ink_eraser
+strokes](brush-gallery_files/brush-gallery/renders/classic-ink_eraser-a.png)
 
-`classic/pen`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-25.png)
+![classic/ink_eraser
+fills](brush-gallery_files/brush-gallery/renders/classic-ink_eraser-b.png)
 
-`classic/pencil`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-26.png)
+## classic/kabura
 
-`classic/pointy_ink`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-27.png)
+Installed preview
 
-`classic/puantilism`
+![classic/kabura
+strokes](brush-gallery_files/brush-gallery/renders/classic-kabura-a.png)
 
-![](brush-gallery_files/brushes/brush-28.png)
+mypaintr strokes
 
-`classic/puantilism2`
+![classic/kabura
+fills](brush-gallery_files/brush-gallery/renders/classic-kabura-b.png)
 
-![](brush-gallery_files/brushes/brush-29.png)
+mypaintr fills
 
-`classic/rounded`
+## classic/pen
 
-![](brush-gallery_files/brushes/brush-30.png)
+No installed preview found
 
-`classic/short_grass`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-31.png)
+![classic/pen
+strokes](brush-gallery_files/brush-gallery/renders/classic-pen-a.png)
 
-`classic/slow_ink`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-32.png)
+![classic/pen
+fills](brush-gallery_files/brush-gallery/renders/classic-pen-b.png)
 
-`classic/smudge`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-33.png)
+## classic/pencil
 
-`classic/smudge+paint`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-34.png)
+Installed preview
 
-`classic/textured_ink`
+![classic/pencil
+strokes](brush-gallery_files/brush-gallery/renders/classic-pencil-a.png)
 
-![](brush-gallery_files/brushes/brush-35.png)
+mypaintr strokes
 
-`classic/wet_knife`
+![classic/pencil
+fills](brush-gallery_files/brush-gallery/renders/classic-pencil-b.png)
 
-![](brush-gallery_files/brushes/brush-36.png)
+mypaintr fills
 
-`deevad/2B_pencil`
+## classic/slow_ink
 
-![](brush-gallery_files/brushes/brush-37.png)
+No installed preview found
 
-`deevad/4H_pencil`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-38.png)
+![classic/slow_ink
+strokes](brush-gallery_files/brush-gallery/renders/classic-slow_ink-a.png)
 
-`deevad/airbrush`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-39.png)
+![classic/slow_ink
+fills](brush-gallery_files/brush-gallery/renders/classic-slow_ink-b.png)
 
-`deevad/ballpen`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-40.png)
+## classic/textured_ink
 
-`deevad/basic_digital_brush`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-41.png)
+Installed preview
 
-`deevad/basic_digital_brush_smudging`
+![classic/textured_ink
+strokes](brush-gallery_files/brush-gallery/renders/classic-textured_ink-a.png)
 
-![](brush-gallery_files/brushes/brush-42.png)
+mypaintr strokes
 
-`deevad/basic_digital_knife`
+![classic/textured_ink
+fills](brush-gallery_files/brush-gallery/renders/classic-textured_ink-b.png)
 
-![](brush-gallery_files/brushes/brush-43.png)
+mypaintr fills
 
-`deevad/basic_digital_knife_smudging`
+## deevad/2B_pencil
 
-![](brush-gallery_files/brushes/brush-44.png)
+No installed preview found
 
-`deevad/blending`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-45.png)
+![deevad/2B_pencil
+strokes](brush-gallery_files/brush-gallery/renders/deevad-2B_pencil-a.png)
 
-`deevad/brush`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-46.png)
+![deevad/2B_pencil
+fills](brush-gallery_files/brush-gallery/renders/deevad-2B_pencil-b.png)
 
-`deevad/chalk`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-47.png)
+## deevad/4H_pencil
 
-`deevad/detail_brush_large`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-48.png)
+Installed preview
 
-`deevad/detail_brush_large_glazing`
+![deevad/4H_pencil
+strokes](brush-gallery_files/brush-gallery/renders/deevad-4H_pencil-a.png)
 
-![](brush-gallery_files/brushes/brush-49.png)
+mypaintr strokes
 
-`deevad/detail_brush_thin`
+![deevad/4H_pencil
+fills](brush-gallery_files/brush-gallery/renders/deevad-4H_pencil-b.png)
 
-![](brush-gallery_files/brushes/brush-50.png)
+mypaintr fills
 
-`deevad/detail_brush_thin_glazing`
+## deevad/chalk
 
-![](brush-gallery_files/brushes/brush-51.png)
+No installed preview found
 
-`deevad/fill`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-52.png)
+![deevad/chalk
+strokes](brush-gallery_files/brush-gallery/renders/deevad-chalk-a.png)
 
-`deevad/grainy_blending`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-53.png)
+![deevad/chalk
+fills](brush-gallery_files/brush-gallery/renders/deevad-chalk-b.png)
 
-`deevad/kneaded_eraser`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-54.png)
+## deevad/spray2
 
-`deevad/kneaded_eraser_large`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-55.png)
+Installed preview
 
-`deevad/large_hard_eraser`
+![deevad/spray2
+strokes](brush-gallery_files/brush-gallery/renders/deevad-spray2-a.png)
 
-![](brush-gallery_files/brushes/brush-56.png)
+mypaintr strokes
 
-`deevad/large_watercolor_fringe`
+![deevad/spray2
+fills](brush-gallery_files/brush-gallery/renders/deevad-spray2-b.png)
 
-![](brush-gallery_files/brushes/brush-57.png)
+mypaintr fills
 
-`deevad/liner`
+## Dieterle/HalfToneCMY#1
 
-![](brush-gallery_files/brushes/brush-58.png)
+No installed preview found
 
-`deevad/only_water_fringe`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-59.png)
+![Dieterle/HalfToneCMY#1
+strokes](brush-gallery_files/brush-gallery/renders/Dieterle-HalfToneCMY-1-a.png)
 
-`deevad/pen`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-60.png)
+![Dieterle/HalfToneCMY#1
+fills](brush-gallery_files/brush-gallery/renders/Dieterle-HalfToneCMY-1-b.png)
 
-`deevad/pen-note`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-61.png)
+## Dieterle/Pencil-\_Left_Handed
 
-`deevad/rigger_brush`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-62.png)
+Installed preview
 
-`deevad/rigger_brush_thin`
+![Dieterle/Pencil-\_Left_Handed
+strokes](brush-gallery_files/brush-gallery/renders/Dieterle-Pencil-_Left_Handed-a.png)
 
-![](brush-gallery_files/brushes/brush-63.png)
+mypaintr strokes
 
-`deevad/rough`
+![Dieterle/Pencil-\_Left_Handed
+fills](brush-gallery_files/brush-gallery/renders/Dieterle-Pencil-_Left_Handed-b.png)
 
-![](brush-gallery_files/brushes/brush-64.png)
+mypaintr fills
 
-`deevad/soft-dip-pen`
+## Dieterle/Posterizer
 
-![](brush-gallery_files/brushes/brush-65.png)
+No installed preview found
 
-`deevad/sponge_smudging`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-66.png)
+![Dieterle/Posterizer
+strokes](brush-gallery_files/brush-gallery/renders/Dieterle-Posterizer-a.png)
 
-`deevad/spray`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-67.png)
+![Dieterle/Posterizer
+fills](brush-gallery_files/brush-gallery/renders/Dieterle-Posterizer-b.png)
 
-`deevad/spray2`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-68.png)
+## experimental/bubble
 
-`deevad/thin_hard_eraser`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-69.png)
+Installed preview
 
-`deevad/thin_watercolor`
+![experimental/bubble
+strokes](brush-gallery_files/brush-gallery/renders/experimental-bubble-a.png)
 
-![](brush-gallery_files/brushes/brush-70.png)
+mypaintr strokes
 
-`deevad/watercolor_expressive`
+![experimental/bubble
+fills](brush-gallery_files/brush-gallery/renders/experimental-bubble-b.png)
 
-![](brush-gallery_files/brushes/brush-71.png)
+mypaintr fills
 
-`deevad/watercolor_glazing`
+## experimental/track
 
-![](brush-gallery_files/brushes/brush-72.png)
+No installed preview found
 
-`Dieterle/8B_Pencil#1`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-73.png)
+![experimental/track
+strokes](brush-gallery_files/brush-gallery/renders/experimental-track-a.png)
 
-`Dieterle/arrow#1`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-74.png)
+![experimental/track
+fills](brush-gallery_files/brush-gallery/renders/experimental-track-b.png)
 
-`Dieterle/Blender`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-75.png)
+## experimental/pixelblocking
 
-`Dieterle/Dissolver`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-76.png)
+Installed preview
 
-`Dieterle/Eraser`
+![experimental/pixelblocking
+strokes](brush-gallery_files/brush-gallery/renders/experimental-pixelblocking-a.png)
 
-![](brush-gallery_files/brushes/brush-77.png)
+mypaintr strokes
 
-`Dieterle/Fan#1`
+![experimental/pixelblocking
+fills](brush-gallery_files/brush-gallery/renders/experimental-pixelblocking-b.png)
 
-![](brush-gallery_files/brushes/brush-78.png)
+mypaintr fills
 
-`Dieterle/Flat2#1`
+## experimental/sewing
 
-![](brush-gallery_files/brushes/brush-79.png)
+No installed preview found
 
-`Dieterle/Flight_Feathers`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-80.png)
+![experimental/sewing
+strokes](brush-gallery_files/brush-gallery/renders/experimental-sewing-a.png)
 
-`Dieterle/Fount-offset#1`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-81.png)
+![experimental/sewing
+fills](brush-gallery_files/brush-gallery/renders/experimental-sewing-b.png)
 
-`Dieterle/Fountain_SF#1`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-82.png)
+## experimental/small_blot
 
-`Dieterle/HalfTone#1`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-83.png)
+Installed preview
 
-`Dieterle/HalfToneCMY#1`
+![experimental/small_blot
+strokes](brush-gallery_files/brush-gallery/renders/experimental-small_blot-a.png)
 
-![](brush-gallery_files/brushes/brush-84.png)
+mypaintr strokes
 
-`Dieterle/Pencil-_Left_Handed`
+![experimental/small_blot
+fills](brush-gallery_files/brush-gallery/renders/experimental-small_blot-b.png)
 
-![](brush-gallery_files/brushes/brush-85.png)
+mypaintr fills
 
-`Dieterle/Posterizer`
+## experimental/spaced-blot
 
-![](brush-gallery_files/brushes/brush-86.png)
+No installed preview found
 
-`Dieterle/Round#1`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-87.png)
+![experimental/spaced-blot
+strokes](brush-gallery_files/brush-gallery/renders/experimental-spaced-blot-a.png)
 
-`Dieterle/Splash`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-88.png)
+![experimental/spaced-blot
+fills](brush-gallery_files/brush-gallery/renders/experimental-spaced-blot-b.png)
 
-`Dieterle/Tail_Feathers`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-89.png)
+## experimental/speed_blot
 
-`Dieterle/Tail_Feathers2`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-90.png)
+Installed preview
 
-`Dieterle/WateryFlatbrush`
+![experimental/speed_blot
+strokes](brush-gallery_files/brush-gallery/renders/experimental-speed_blot-a.png)
 
-![](brush-gallery_files/brushes/brush-91.png)
+mypaintr strokes
 
-`experimental/1pixel`
+![experimental/speed_blot
+fills](brush-gallery_files/brush-gallery/renders/experimental-speed_blot-b.png)
 
-![](brush-gallery_files/brushes/brush-92.png)
+mypaintr fills
 
-`experimental/basic`
+## experimental/subtle_pencil
 
-![](brush-gallery_files/brushes/brush-93.png)
+No installed preview found
 
-`experimental/bubble`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-94.png)
+![experimental/subtle_pencil
+strokes](brush-gallery_files/brush-gallery/renders/experimental-subtle_pencil-a.png)
 
-`experimental/DNA_brush`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-95.png)
+![experimental/subtle_pencil
+fills](brush-gallery_files/brush-gallery/renders/experimental-subtle_pencil-b.png)
 
-`experimental/fur`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-96.png)
+## kaerhon_v1/inkster_l
 
-`experimental/glow`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-97.png)
+Installed preview
 
-`experimental/hard_blot`
+![kaerhon_v1/inkster_l
+strokes](brush-gallery_files/brush-gallery/renders/kaerhon_v1-inkster_l-a.png)
 
-![](brush-gallery_files/brushes/brush-98.png)
+mypaintr strokes
 
-`experimental/hard_sting`
+![kaerhon_v1/inkster_l
+fills](brush-gallery_files/brush-gallery/renders/kaerhon_v1-inkster_l-b.png)
 
-![](brush-gallery_files/brushes/brush-99.png)
+mypaintr fills
 
-`experimental/irregular_ink`
+## ramon/2B_pencil
 
-![](brush-gallery_files/brushes/brush-100.png)
+No installed preview found
 
-`experimental/leaves`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-101.png)
+![ramon/2B_pencil
+strokes](brush-gallery_files/brush-gallery/renders/ramon-2B_pencil-a.png)
 
-`experimental/particules_3`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-102.png)
+![ramon/2B_pencil
+fills](brush-gallery_files/brush-gallery/renders/ramon-2B_pencil-b.png)
 
-`experimental/particules_eraser`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-103.png)
+## ramon/B-pencil
 
-`experimental/pick_and_drag`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-104.png)
+Installed preview
 
-`experimental/pixel_hardink`
+![ramon/B-pencil
+strokes](brush-gallery_files/brush-gallery/renders/ramon-B-pencil-a.png)
 
-![](brush-gallery_files/brushes/brush-105.png)
+mypaintr strokes
 
-`experimental/pixelblocking`
+![ramon/B-pencil
+fills](brush-gallery_files/brush-gallery/renders/ramon-B-pencil-b.png)
 
-![](brush-gallery_files/brushes/brush-106.png)
+mypaintr fills
 
-`experimental/sewing`
+## ramon/P.\_Shade
 
-![](brush-gallery_files/brushes/brush-107.png)
+No installed preview found
 
-`experimental/small_blot`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-108.png)
+![ramon/P.\_Shade
+strokes](brush-gallery_files/brush-gallery/renders/ramon-P._Shade-a.png)
 
-`experimental/soft`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-109.png)
+![ramon/P.\_Shade
+fills](brush-gallery_files/brush-gallery/renders/ramon-P._Shade-b.png)
 
-`experimental/soft_irregular`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-110.png)
+## ramon/Pastel_1
 
-`experimental/spaced-blot`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-111.png)
+Installed preview
 
-`experimental/speed_blot`
+![ramon/Pastel_1
+strokes](brush-gallery_files/brush-gallery/renders/ramon-Pastel_1-a.png)
 
-![](brush-gallery_files/brushes/brush-112.png)
+mypaintr strokes
 
-`experimental/subtle_pencil`
+![ramon/Pastel_1
+fills](brush-gallery_files/brush-gallery/renders/ramon-Pastel_1-b.png)
 
-![](brush-gallery_files/brushes/brush-113.png)
+mypaintr fills
 
-`experimental/track`
+## ramon/Pen
 
-![](brush-gallery_files/brushes/brush-114.png)
+No installed preview found
 
-`kaerhon_v1/airbruch_press_a`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-115.png)
+![ramon/Pen
+strokes](brush-gallery_files/brush-gallery/renders/ramon-Pen-a.png)
 
-`kaerhon_v1/Airbrush_a`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-116.png)
+![ramon/Pen
+fills](brush-gallery_files/brush-gallery/renders/ramon-Pen-b.png)
 
-`kaerhon_v1/airsmudge_a`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-117.png)
+## ramon/Sketch_1
 
-`kaerhon_v1/airsmudgeultimate_sk`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-118.png)
+Installed preview
 
-`kaerhon_v1/classic_sk`
+![ramon/Sketch_1
+strokes](brush-gallery_files/brush-gallery/renders/ramon-Sketch_1-a.png)
 
-![](brush-gallery_files/brushes/brush-119.png)
+mypaintr strokes
 
-`kaerhon_v1/classicroundblock_static_c`
+![ramon/Sketch_1
+fills](brush-gallery_files/brush-gallery/renders/ramon-Sketch_1-b.png)
 
-![](brush-gallery_files/brushes/brush-120.png)
+mypaintr fills
 
-`kaerhon_v1/Dirty_Transparent_sk`
+## ramon/Thin_Pen
 
-![](brush-gallery_files/brushes/brush-121.png)
+No installed preview found
 
-`kaerhon_v1/extreme_round_l`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-122.png)
+![ramon/Thin_Pen
+strokes](brush-gallery_files/brush-gallery/renders/ramon-Thin_Pen-a.png)
 
-`kaerhon_v1/fill_c`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-123.png)
+![ramon/Thin_Pen
+fills](brush-gallery_files/brush-gallery/renders/ramon-Thin_Pen-b.png)
 
-`kaerhon_v1/flat_bar_l`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-124.png)
+## tanda/acrylic-05-paint
 
-`kaerhon_v1/ink_slow_s`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-125.png)
+Installed preview
 
-`kaerhon_v1/ink-slowline_s`
+![tanda/acrylic-05-paint
+strokes](brush-gallery_files/brush-gallery/renders/tanda-acrylic-05-paint-a.png)
 
-![](brush-gallery_files/brushes/brush-126.png)
+mypaintr strokes
 
-`kaerhon_v1/inkster_l`
+![tanda/acrylic-05-paint
+fills](brush-gallery_files/brush-gallery/renders/tanda-acrylic-05-paint-b.png)
 
-![](brush-gallery_files/brushes/brush-127.png)
+mypaintr fills
 
-`kaerhon_v1/paint_barrr_sm`
+## tanda/charcoal-01
 
-![](brush-gallery_files/brushes/brush-128.png)
+No installed preview found
 
-`kaerhon_v1/paint_radius_2_sm`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-129.png)
+![tanda/charcoal-01
+strokes](brush-gallery_files/brush-gallery/renders/tanda-charcoal-01-a.png)
 
-`kaerhon_v1/paint_sm`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-130.png)
+![tanda/charcoal-01
+fills](brush-gallery_files/brush-gallery/renders/tanda-charcoal-01-b.png)
 
-`kaerhon_v1/Sketcher2_sk`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-131.png)
+## tanda/charcoal-03
 
-`kaerhon_v1/Smear_sm`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-132.png)
+Installed preview
 
-`kaerhon_v1/smudge_ink(0.7)_sm`
+![tanda/charcoal-03
+strokes](brush-gallery_files/brush-gallery/renders/tanda-charcoal-03-a.png)
 
-![](brush-gallery_files/brushes/brush-133.png)
+mypaintr strokes
 
-`kaerhon_v1/wet_paint_sm`
+![tanda/charcoal-03
+fills](brush-gallery_files/brush-gallery/renders/tanda-charcoal-03-b.png)
 
-![](brush-gallery_files/brushes/brush-134.png)
+mypaintr fills
 
-`ramon/100%_Opaque`
+## tanda/charcoal-04
 
-![](brush-gallery_files/brushes/brush-135.png)
+No installed preview found
 
-`ramon/2B_pencil`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-136.png)
+![tanda/charcoal-04
+strokes](brush-gallery_files/brush-gallery/renders/tanda-charcoal-04-a.png)
 
-`ramon/B-pencil`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-137.png)
+![tanda/charcoal-04
+fills](brush-gallery_files/brush-gallery/renders/tanda-charcoal-04-b.png)
 
-`ramon/Beamlight`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-138.png)
+## tanda/marker-01
 
-`ramon/BigAirbrush`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-139.png)
+Installed preview
 
-`ramon/Blur_Fast`
+![tanda/marker-01
+strokes](brush-gallery_files/brush-gallery/renders/tanda-marker-01-a.png)
 
-![](brush-gallery_files/brushes/brush-140.png)
+mypaintr strokes
 
-`ramon/Classic_Paint`
+![tanda/marker-01
+fills](brush-gallery_files/brush-gallery/renders/tanda-marker-01-b.png)
 
-![](brush-gallery_files/brushes/brush-141.png)
+mypaintr fills
 
-`ramon/Clouds`
+## tanda/marker-05
 
-![](brush-gallery_files/brushes/brush-142.png)
+No installed preview found
 
-`ramon/Delayed_`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-143.png)
+![tanda/marker-05
+strokes](brush-gallery_files/brush-gallery/renders/tanda-marker-05-a.png)
 
-`ramon/Dirty_Noise`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-144.png)
+![tanda/marker-05
+fills](brush-gallery_files/brush-gallery/renders/tanda-marker-05-b.png)
 
-`ramon/Glow_Airbrush`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-145.png)
+## tanda/oil-06-paint
 
-`ramon/Grain`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-146.png)
+Installed preview
 
-`ramon/Hard_Eraser`
+![tanda/oil-06-paint
+strokes](brush-gallery_files/brush-gallery/renders/tanda-oil-06-paint-a.png)
 
-![](brush-gallery_files/brushes/brush-147.png)
+mypaintr strokes
 
-`ramon/Knife`
+![tanda/oil-06-paint
+fills](brush-gallery_files/brush-gallery/renders/tanda-oil-06-paint-b.png)
 
-![](brush-gallery_files/brushes/brush-148.png)
+mypaintr fills
 
-`ramon/Marker`
+## tanda/pencil-2b
 
-![](brush-gallery_files/brushes/brush-149.png)
+No installed preview found
 
-`ramon/P._Shade`
+Installed preview
 
-![](brush-gallery_files/brushes/brush-150.png)
+![tanda/pencil-2b
+strokes](brush-gallery_files/brush-gallery/renders/tanda-pencil-2b-a.png)
 
-`ramon/Pastel_1`
+mypaintr strokes
 
-![](brush-gallery_files/brushes/brush-151.png)
+![tanda/pencil-2b
+fills](brush-gallery_files/brush-gallery/renders/tanda-pencil-2b-b.png)
 
-`ramon/Pen`
+mypaintr fills
 
-![](brush-gallery_files/brushes/brush-152.png)
+## tanda/pencil-8b
 
-`ramon/PenBrush`
+No installed preview found
 
-![](brush-gallery_files/brushes/brush-153.png)
+Installed preview
 
-`ramon/Round`
+![tanda/pencil-8b
+strokes](brush-gallery_files/brush-gallery/renders/tanda-pencil-8b-a.png)
 
-![](brush-gallery_files/brushes/brush-154.png)
+mypaintr strokes
 
-`ramon/Round_Bl`
+![tanda/pencil-8b
+fills](brush-gallery_files/brush-gallery/renders/tanda-pencil-8b-b.png)
 
-![](brush-gallery_files/brushes/brush-155.png)
-
-`ramon/RS_blendOP`
-
-![](brush-gallery_files/brushes/brush-156.png)
-
-`ramon/Sketch_1`
-
-![](brush-gallery_files/brushes/brush-157.png)
-
-`ramon/Smear`
-
-![](brush-gallery_files/brushes/brush-158.png)
-
-`ramon/Soft_Eraser`
-
-![](brush-gallery_files/brushes/brush-159.png)
-
-`ramon/Thin_Pen`
-
-![](brush-gallery_files/brushes/brush-160.png)
-
-`ramon/Wet_Direction`
-
-![](brush-gallery_files/brushes/brush-161.png)
-
-`ramon/wet_round`
-
-![](brush-gallery_files/brushes/brush-162.png)
-
-`tanda/acrylic-03-only-water`
-
-![](brush-gallery_files/brushes/brush-163.png)
-
-`tanda/acrylic-03-paint`
-
-![](brush-gallery_files/brushes/brush-164.png)
-
-`tanda/acrylic-03-with-water`
-
-![](brush-gallery_files/brushes/brush-165.png)
-
-`tanda/acrylic-04-only-water`
-
-![](brush-gallery_files/brushes/brush-166.png)
-
-`tanda/acrylic-04-paint`
-
-![](brush-gallery_files/brushes/brush-167.png)
-
-`tanda/acrylic-04-with-water`
-
-![](brush-gallery_files/brushes/brush-168.png)
-
-`tanda/acrylic-05-only-water`
-
-![](brush-gallery_files/brushes/brush-169.png)
-
-`tanda/acrylic-05-paint`
-
-![](brush-gallery_files/brushes/brush-170.png)
-
-`tanda/acrylic-05-with-water`
-
-![](brush-gallery_files/brushes/brush-171.png)
-
-`tanda/charcoal-01`
-
-![](brush-gallery_files/brushes/brush-172.png)
-
-`tanda/charcoal-03`
-
-![](brush-gallery_files/brushes/brush-173.png)
-
-`tanda/charcoal-04`
-
-![](brush-gallery_files/brushes/brush-174.png)
-
-`tanda/charcoal-blur1`
-
-![](brush-gallery_files/brushes/brush-175.png)
-
-`tanda/marker-01`
-
-![](brush-gallery_files/brushes/brush-176.png)
-
-`tanda/marker-05`
-
-![](brush-gallery_files/brushes/brush-177.png)
-
-`tanda/oil-01-clean`
-
-![](brush-gallery_files/brushes/brush-178.png)
-
-`tanda/oil-01-paint`
-
-![](brush-gallery_files/brushes/brush-179.png)
-
-`tanda/oil-03-clean`
-
-![](brush-gallery_files/brushes/brush-180.png)
-
-`tanda/oil-03-paint`
-
-![](brush-gallery_files/brushes/brush-181.png)
-
-`tanda/oil-06-clean`
-
-![](brush-gallery_files/brushes/brush-182.png)
-
-`tanda/oil-06-paint`
-
-![](brush-gallery_files/brushes/brush-183.png)
-
-`tanda/oil-mop`
-
-![](brush-gallery_files/brushes/brush-184.png)
-
-`tanda/pencil-2b`
-
-![](brush-gallery_files/brushes/brush-185.png)
-
-`tanda/pencil-8b`
-
-![](brush-gallery_files/brushes/brush-186.png)
-
-`tanda/splatter-02`
-
-![](brush-gallery_files/brushes/brush-187.png)
-
-`tanda/splatter-04`
-
-![](brush-gallery_files/brushes/brush-188.png)
-
-`tanda/texture-03`
-
-![](brush-gallery_files/brushes/brush-189.png)
-
-`tanda/texture-06`
-
-![](brush-gallery_files/brushes/brush-190.png)
-
-`tanda/texture-12`
-
-![](brush-gallery_files/brushes/brush-191.png)
-
-`tanda/water-01`
-
-![](brush-gallery_files/brushes/brush-192.png)
-
-`tanda/water-02`
-
-![](brush-gallery_files/brushes/brush-193.png)
-
-`tanda/water-05`
-
-![](brush-gallery_files/brushes/brush-194.png)
-
-`tanda/water-06`
-
-![](brush-gallery_files/brushes/brush-195.png)
-
-`tanda/watercolor-02-paint`
-
-![](brush-gallery_files/brushes/brush-196.png)
-
-`tanda/watercolor-02-water`
+mypaintr fills

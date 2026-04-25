@@ -332,15 +332,11 @@ You can also use the special geoms
 [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
 and
 [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md).
-These have two advantages over
-[`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md):
-
-- You can use special fill patterns, like
-  [`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
-  and
-  [`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
-- They affect the legend key as well as the actual plot element.
-  (Compare the keys above and below.)
+As well as brushes and hands, these let you use special fill patterns,
+like
+[`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
+and
+[`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
 
 ``` r
 

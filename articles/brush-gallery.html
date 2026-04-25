@@ -55,1012 +55,691 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Brush gallery</h1>
-                        <h4 data-toc-skip class="author">David
-Hugh-Jones</h4>
             
-            <h4 data-toc-skip class="date">2026-04-22</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/hughjonesd/mypaintr/blob/master/vignettes/brush-gallery.Rmd" class="external-link"><code>vignettes/brush-gallery.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/hughjonesd/mypaintr/blob/master/vignettes/articles/brush-gallery.Rmd" class="external-link"><code>vignettes/articles/brush-gallery.Rmd</code></a></small>
       <div class="d-none name"><code>brush-gallery.Rmd</code></div>
     </div>
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="va">do_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">brush</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">brush</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_brush.html">load_brush</a></span><span class="op">(</span><span class="va">brush</span>, normalize <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="va">brush</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">5</span>, <span class="fl">5</span>, col <span class="op">=</span> <span class="st">"orange"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">5</span>, <span class="fl">9</span>, <span class="fl">9</span>, col <span class="op">=</span> <span class="st">"pink"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">6</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">6</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"darkblue"</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">7</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">6</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red3"</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="../reference/rough_rect.html">draw_rough_rect</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span>, <span class="fl">5</span>, <span class="fl">9</span>, hand <span class="op">=</span> <span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span><span class="op">)</span>, fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/zigzag.html">zigzag</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>                  col <span class="op">=</span> <span class="st">"darkgreen"</span>, border <span class="op">=</span> <span class="st">"grey30"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<div style="display:flex; flex-wrap:wrap; gap:8px;">
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-1.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/blend+paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-2.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/blending_knife</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-3.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/blur</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-4.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/brush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-5.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/bulk</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-6.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/calligraphy</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-7.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/charcoal</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-8.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/coarse_bulk_1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-9.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/coarse_bulk_2</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-10.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/coarse_bulk_3</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-11.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/dry_brush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-12.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/imp_blending</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-13.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/imp_details</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-14.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/impressionism</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-15.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/ink_blot</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-16.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/ink_eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-17.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/kabura</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-18.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/knife</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-19.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/long_grass</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-20.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/marker_fat</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-21.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/marker_small</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-22.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/modelling</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-23.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/modelling2</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-24.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/pen</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-25.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/pencil</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-26.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/pointy_ink</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-27.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/puantilism</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-28.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/puantilism2</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-29.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/rounded</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-30.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/short_grass</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-31.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/slow_ink</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-32.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/smudge</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-33.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/smudge+paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-34.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/textured_ink</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-35.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>classic/wet_knife</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-36.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/2B_pencil</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-37.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/4H_pencil</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-38.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/airbrush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-39.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/ballpen</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-40.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/basic_digital_brush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-41.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/basic_digital_brush_smudging</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-42.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/basic_digital_knife</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-43.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/basic_digital_knife_smudging</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-44.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/blending</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-45.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/brush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-46.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/chalk</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-47.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/detail_brush_large</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-48.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/detail_brush_large_glazing</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-49.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/detail_brush_thin</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-50.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/detail_brush_thin_glazing</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-51.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/fill</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-52.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/grainy_blending</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-53.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/kneaded_eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-54.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/kneaded_eraser_large</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-55.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/large_hard_eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-56.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/large_watercolor_fringe</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-57.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/liner</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-58.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/only_water_fringe</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-59.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/pen</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-60.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/pen-note</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-61.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/rigger_brush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-62.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/rigger_brush_thin</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-63.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/rough</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-64.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/soft-dip-pen</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-65.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/sponge_smudging</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-66.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/spray</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-67.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/spray2</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-68.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/thin_hard_eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-69.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/thin_watercolor</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-70.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/watercolor_expressive</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-71.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>deevad/watercolor_glazing</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-72.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/8B_Pencil#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-73.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/arrow#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-74.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Blender</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-75.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Dissolver</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-76.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-77.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Fan#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-78.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Flat2#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-79.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Flight_Feathers</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-80.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Fount-offset#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-81.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Fountain_SF#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-82.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/HalfTone#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-83.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/HalfToneCMY#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-84.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Pencil-_Left_Handed</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-85.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Posterizer</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-86.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Round#1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-87.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Splash</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-88.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Tail_Feathers</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-89.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/Tail_Feathers2</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-90.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>Dieterle/WateryFlatbrush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-91.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/1pixel</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-92.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/basic</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-93.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/bubble</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-94.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/DNA_brush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-95.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/fur</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-96.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/glow</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-97.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/hard_blot</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-98.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/hard_sting</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-99.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/irregular_ink</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-100.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/leaves</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-101.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/particules_3</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-102.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/particules_eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-103.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/pick_and_drag</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-104.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/pixel_hardink</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-105.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/pixelblocking</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-106.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/sewing</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-107.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/small_blot</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-108.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/soft</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-109.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/soft_irregular</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-110.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/spaced-blot</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-111.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/speed_blot</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-112.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/subtle_pencil</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-113.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>experimental/track</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-114.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/airbruch_press_a</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-115.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/Airbrush_a</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-116.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/airsmudge_a</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-117.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/airsmudgeultimate_sk</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-118.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/classic_sk</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-119.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/classicroundblock_static_c</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-120.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/Dirty_Transparent_sk</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-121.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/extreme_round_l</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-122.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/fill_c</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-123.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/flat_bar_l</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-124.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/ink_slow_s</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-125.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/ink-slowline_s</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-126.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/inkster_l</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-127.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/paint_barrr_sm</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-128.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/paint_radius_2_sm</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-129.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/paint_sm</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-130.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/Sketcher2_sk</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-131.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/Smear_sm</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-132.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/smudge_ink(0.7)_sm</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-133.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>kaerhon_v1/wet_paint_sm</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-134.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/100%_Opaque</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-135.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/2B_pencil</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-136.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/B-pencil</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-137.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Beamlight</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-138.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/BigAirbrush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-139.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Blur_Fast</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-140.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Classic_Paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-141.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Clouds</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-142.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Delayed_</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-143.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Dirty_Noise</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-144.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Glow_Airbrush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-145.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Grain</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-146.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Hard_Eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-147.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Knife</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-148.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Marker</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-149.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/P._Shade</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-150.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Pastel_1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-151.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Pen</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-152.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/PenBrush</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-153.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Round</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-154.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Round_Bl</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-155.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/RS_blendOP</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-156.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Sketch_1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-157.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Smear</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-158.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Soft_Eraser</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-159.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Thin_Pen</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-160.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/Wet_Direction</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-161.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>ramon/wet_round</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-162.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-03-only-water</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-163.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-03-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-164.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-03-with-water</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-165.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-04-only-water</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-166.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-04-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-167.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-04-with-water</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-168.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-05-only-water</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-169.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-05-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-170.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/acrylic-05-with-water</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-171.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/charcoal-01</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-172.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/charcoal-03</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-173.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/charcoal-04</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-174.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/charcoal-blur1</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-175.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/marker-01</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-176.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/marker-05</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-177.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-01-clean</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-178.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-01-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-179.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-03-clean</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-180.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-03-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-181.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-06-clean</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-182.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-06-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-183.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/oil-mop</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-184.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/pencil-2b</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-185.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/pencil-8b</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-186.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/splatter-02</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-187.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/splatter-04</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-188.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/texture-03</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-189.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/texture-06</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-190.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/texture-12</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-191.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/water-01</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-192.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/water-02</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-193.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/water-05</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-194.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/water-06</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-195.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/watercolor-02-paint</code>
-</div>
-</div>
-<div style="width:49%; text-align:center; border: 1px solid grey;">
-<img src="brush-gallery_files/brushes/brush-196.png" style="max-width:100%; height:auto; display:block; margin:0 auto;"><div style="margin-top:6px; font-size:0.95em;">
-<code>tanda/watercolor-02-water</code>
-</div>
-</div>
-</div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+<p>This vignette compares installed MyPaint brush previews with two
+<code>mypaintr</code> render scenes. Use the <code>brushes</code>
+parameter to control which set is rendered:</p>
+<ul>
+<li>
+<code>"sample"</code>: ten hand-picked good brushes</li>
+<li>
+<code>"best"</code>: the brushes recommended in the introduction
+vignette</li>
+<li>
+<code>"all"</code>: every installed brush</li>
+</ul>
+<div class="gallery-note">
+Showing <strong>44</strong> brushes from the <code>best</code> set.
+</div>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}.gallery-note{margin:0 0 20px 0;}.row{margin:0 0 32px 0;padding:0 0 24px 0;border-bottom:1px solid #ddd;}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:start;}figure{margin:0;}figcaption{font-weight:600;margin-bottom:8px;}img{max-width:100%;height:auto;border:1px solid #ddd;background:#fff;}.mypaintr-output img{max-width:100%;}.missing{padding:32px;border:1px dashed #bbb;color:#666;background:#fafafa;}@media (max-width: 1000px){.grid{grid-template-columns:1fr;}}</style>
+<section class="row"><h2>
+classic/charcoal
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-charcoal-a.png" alt="classic/charcoal strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-charcoal-b.png" alt="classic/charcoal fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/coarse_bulk_1
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_1-a.png" alt="classic/coarse_bulk_1 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_1-b.png" alt="classic/coarse_bulk_1 fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/coarse_bulk_2
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_2-a.png" alt="classic/coarse_bulk_2 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_2-b.png" alt="classic/coarse_bulk_2 fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/coarse_bulk_3
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_3-a.png" alt="classic/coarse_bulk_3 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-coarse_bulk_3-b.png" alt="classic/coarse_bulk_3 fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/dry_brush
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-dry_brush-a.png" alt="classic/dry_brush strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-dry_brush-b.png" alt="classic/dry_brush fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/ink_blot
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-ink_blot-a.png" alt="classic/ink_blot strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-ink_blot-b.png" alt="classic/ink_blot fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/ink_eraser
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-ink_eraser-a.png" alt="classic/ink_eraser strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-ink_eraser-b.png" alt="classic/ink_eraser fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/kabura
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-kabura-a.png" alt="classic/kabura strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-kabura-b.png" alt="classic/kabura fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/pen
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-pen-a.png" alt="classic/pen strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-pen-b.png" alt="classic/pen fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/pencil
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-pencil-a.png" alt="classic/pencil strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-pencil-b.png" alt="classic/pencil fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/slow_ink
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-slow_ink-a.png" alt="classic/slow_ink strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-slow_ink-b.png" alt="classic/slow_ink fills"></figure>
+</div>
+</section><section class="row"><h2>
+classic/textured_ink
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-textured_ink-a.png" alt="classic/textured_ink strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/classic-textured_ink-b.png" alt="classic/textured_ink fills"></figure>
+</div>
+</section><section class="row"><h2>
+deevad/2B_pencil
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-2B_pencil-a.png" alt="deevad/2B_pencil strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-2B_pencil-b.png" alt="deevad/2B_pencil fills"></figure>
+</div>
+</section><section class="row"><h2>
+deevad/4H_pencil
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-4H_pencil-a.png" alt="deevad/4H_pencil strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-4H_pencil-b.png" alt="deevad/4H_pencil fills"></figure>
+</div>
+</section><section class="row"><h2>
+deevad/chalk
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-chalk-a.png" alt="deevad/chalk strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-chalk-b.png" alt="deevad/chalk fills"></figure>
+</div>
+</section><section class="row"><h2>
+deevad/spray2
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-spray2-a.png" alt="deevad/spray2 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/deevad-spray2-b.png" alt="deevad/spray2 fills"></figure>
+</div>
+</section><section class="row"><h2>
+Dieterle/HalfToneCMY#1
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/Dieterle-HalfToneCMY-1-a.png" alt="Dieterle/HalfToneCMY#1 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/Dieterle-HalfToneCMY-1-b.png" alt="Dieterle/HalfToneCMY#1 fills"></figure>
+</div>
+</section><section class="row"><h2>
+Dieterle/Pencil-_Left_Handed
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/Dieterle-Pencil-_Left_Handed-a.png" alt="Dieterle/Pencil-_Left_Handed strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/Dieterle-Pencil-_Left_Handed-b.png" alt="Dieterle/Pencil-_Left_Handed fills"></figure>
+</div>
+</section><section class="row"><h2>
+Dieterle/Posterizer
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/Dieterle-Posterizer-a.png" alt="Dieterle/Posterizer strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/Dieterle-Posterizer-b.png" alt="Dieterle/Posterizer fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/bubble
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-bubble-a.png" alt="experimental/bubble strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-bubble-b.png" alt="experimental/bubble fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/track
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-track-a.png" alt="experimental/track strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-track-b.png" alt="experimental/track fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/pixelblocking
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-pixelblocking-a.png" alt="experimental/pixelblocking strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-pixelblocking-b.png" alt="experimental/pixelblocking fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/sewing
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-sewing-a.png" alt="experimental/sewing strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-sewing-b.png" alt="experimental/sewing fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/small_blot
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-small_blot-a.png" alt="experimental/small_blot strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-small_blot-b.png" alt="experimental/small_blot fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/spaced-blot
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-spaced-blot-a.png" alt="experimental/spaced-blot strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-spaced-blot-b.png" alt="experimental/spaced-blot fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/speed_blot
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-speed_blot-a.png" alt="experimental/speed_blot strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-speed_blot-b.png" alt="experimental/speed_blot fills"></figure>
+</div>
+</section><section class="row"><h2>
+experimental/subtle_pencil
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-subtle_pencil-a.png" alt="experimental/subtle_pencil strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/experimental-subtle_pencil-b.png" alt="experimental/subtle_pencil fills"></figure>
+</div>
+</section><section class="row"><h2>
+kaerhon_v1/inkster_l
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/kaerhon_v1-inkster_l-a.png" alt="kaerhon_v1/inkster_l strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/kaerhon_v1-inkster_l-b.png" alt="kaerhon_v1/inkster_l fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/2B_pencil
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-2B_pencil-a.png" alt="ramon/2B_pencil strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-2B_pencil-b.png" alt="ramon/2B_pencil fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/B-pencil
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-B-pencil-a.png" alt="ramon/B-pencil strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-B-pencil-b.png" alt="ramon/B-pencil fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/P._Shade
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-P._Shade-a.png" alt="ramon/P._Shade strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-P._Shade-b.png" alt="ramon/P._Shade fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/Pastel_1
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Pastel_1-a.png" alt="ramon/Pastel_1 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Pastel_1-b.png" alt="ramon/Pastel_1 fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/Pen
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Pen-a.png" alt="ramon/Pen strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Pen-b.png" alt="ramon/Pen fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/Sketch_1
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Sketch_1-a.png" alt="ramon/Sketch_1 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Sketch_1-b.png" alt="ramon/Sketch_1 fills"></figure>
+</div>
+</section><section class="row"><h2>
+ramon/Thin_Pen
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Thin_Pen-a.png" alt="ramon/Thin_Pen strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/ramon-Thin_Pen-b.png" alt="ramon/Thin_Pen fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/acrylic-05-paint
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-acrylic-05-paint-a.png" alt="tanda/acrylic-05-paint strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-acrylic-05-paint-b.png" alt="tanda/acrylic-05-paint fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/charcoal-01
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-charcoal-01-a.png" alt="tanda/charcoal-01 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-charcoal-01-b.png" alt="tanda/charcoal-01 fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/charcoal-03
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-charcoal-03-a.png" alt="tanda/charcoal-03 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-charcoal-03-b.png" alt="tanda/charcoal-03 fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/charcoal-04
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-charcoal-04-a.png" alt="tanda/charcoal-04 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-charcoal-04-b.png" alt="tanda/charcoal-04 fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/marker-01
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-marker-01-a.png" alt="tanda/marker-01 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-marker-01-b.png" alt="tanda/marker-01 fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/marker-05
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-marker-05-a.png" alt="tanda/marker-05 strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-marker-05-b.png" alt="tanda/marker-05 fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/oil-06-paint
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-oil-06-paint-a.png" alt="tanda/oil-06-paint strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-oil-06-paint-b.png" alt="tanda/oil-06-paint fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/pencil-2b
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-pencil-2b-a.png" alt="tanda/pencil-2b strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-pencil-2b-b.png" alt="tanda/pencil-2b fills"></figure>
+</div>
+</section><section class="row"><h2>
+tanda/pencil-8b
+</h2>
+<div class="grid">
+<figure><figcaption>
+Installed preview
+</figcaption><div class="missing">
+No installed preview found
+</div>
+</figure><figure class="mypaintr-output"><figcaption>
+mypaintr strokes
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-pencil-8b-a.png" alt="tanda/pencil-8b strokes"></figure><figure class="mypaintr-output"><figcaption>
+mypaintr fills
+</figcaption><img src="brush-gallery_files/brush-gallery/renders/tanda-pencil-8b-b.png" alt="tanda/pencil-8b fills"></figure>
+</div>
+</section></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
 
