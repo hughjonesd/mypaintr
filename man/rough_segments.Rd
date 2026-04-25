@@ -26,9 +26,8 @@ polyline geometry for each segment.
 Compute or draw rough segments
 }
 \examples{
-rough_segments(1:2, 1:2, 2:3, 3:2)
 plot(1:10, 1:10, type = "n")
-draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), lwd = 2)
+draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), hand = human_hand())
 }
 \seealso{
 Other rough drawing helpers: 

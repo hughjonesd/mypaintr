@@ -44,10 +44,7 @@ Compute or draw rough arrows
 }
 \examples{
 plot(1:10, 1:10, type = "n")
-rough_arrows(2, 2, 8, 8, hand = hand(multi_stroke = 2))
-plot(1:10, 1:10, type = "n")
-draw_rough_arrows(2, 2, 8, 8, lwd = 2)
-draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
+draw_rough_arrows(8, 2, 2, 8, hand = human_hand())
 }
 \seealso{
 Other rough drawing helpers: 

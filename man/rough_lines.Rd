@@ -25,10 +25,8 @@ Compute or draw rough connected lines
 }
 \examples{
 y <- c(2, 5, 4, 7, 6, 8)
-rough_lines(1:6, y, hand = hand(multi_stroke = 2))
-y <- c(2, 5, 4, 7, 6, 8)
 plot(1:6, y, type = "n")
-draw_rough_lines(1:6, y, hand = hand(multi_stroke = 2), lwd = 2)
+draw_rough_lines(1:6, y, hand = human_hand(multi_stroke = 2))
 }
 \seealso{
 Other rough drawing helpers: 

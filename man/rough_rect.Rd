@@ -44,9 +44,10 @@ outline suitable for plotting with \code{\link[graphics:lines]{graphics::lines()
 Compute or draw a rough rectangle
 }
 \examples{
-rough_rect(2, 2, 5, 6)
 plot(1:10, 1:10, type = "n")
-draw_rough_rect(2, 2, 8, 7, col = "grey90",
+draw_rough_rect(2, 2, 8, 7,
+                hand = human_hand(),
+                col = "grey90",
                 fill_pattern = crosshatch(padding = 0.05))
 }
 \seealso{

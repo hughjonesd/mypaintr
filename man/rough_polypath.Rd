@@ -53,15 +53,12 @@ roughened closed rings.
 Compute or draw a rough multipath
 }
 \examples{
-rough_polypath(c(2, 4, 4, 2, 2.5, 3.5, 3.5, 2.5),
-               c(2, 2, 4, 4, 2.5, 2.5, 3.5, 3.5),
-               id = c(rep(1, 4), rep(2, 4)),
-               rule = "evenodd")
 plot(1:10, 1:10, type = "n")
 draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
                     c(2, 2, 8, 8, 4, 4, 6, 6),
                     id = c(rep(1, 4), rep(2, 4)),
                     rule = "evenodd",
+                    hand = human_hand(),
                     col = "grey90",
                     fill_pattern = hatch(density = 9))
 }

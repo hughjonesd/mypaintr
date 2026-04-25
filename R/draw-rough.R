@@ -71,8 +71,6 @@ rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x` and `y` components containing a roughened closed
 #'   outline suitable for plotting with [graphics::lines()].
-#' @examples
-#' rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1))
 #' @export
 rough_polygons <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
@@ -83,11 +81,6 @@ rough_polygons <- function(x, y = NULL, hand = NULL) {
   })
 }
 
-#' @rdname rough_polygons
-#' @export
-rough_polygon <- function(x, y = NULL, hand = NULL) {
-  rough_polygons(x, y, hand = hand)
-}
 
 #' Compute or draw a rough rectangle
 #'
@@ -96,8 +89,6 @@ rough_polygon <- function(x, y = NULL, hand = NULL) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x` and `y` components containing a roughened closed
 #'   outline suitable for plotting with [graphics::lines()].
-#' @examples
-#' rough_rect(2, 2, 5, 6)
 #' @export
 rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
   rough_polygons(
@@ -114,8 +105,6 @@ rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x`, `y`, and `id` components describing roughened
 #'   polyline geometry for each segment.
-#' @examples
-#' rough_segments(1:2, 1:2, 2:3, 3:2)
 #' @export
 rough_segments <- function(x0, y0, x1, y1, hand = NULL) {
   hand_spec <- as_hand(hand)
@@ -151,9 +140,6 @@ rough_lines_data <- function(x, y = NULL, hand_spec) {
 #' @inheritParams mypaintr-rough-hand
 #' @return A list with `x`, `y`, and `id` components describing roughened
 #'   polyline geometry for each connected run.
-#' @examples
-#' y <- c(2, 5, 4, 7, 6, 8)
-#' rough_lines(1:6, y, hand = hand(multi_stroke = 2))
 #' @export
 rough_lines <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
@@ -231,9 +217,6 @@ arrowhead_segments <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code =
 #' @inheritParams mypaintr-rough-hand
 #' @return A list with `x`, `y`, and `id` components describing roughened
 #'   polyline geometry for arrow shafts and heads.
-#' @examples
-#' plot(1:10, 1:10, type = "n")
-#' rough_arrows(2, 2, 8, 8, hand = hand(multi_stroke = 2))
 #' @export
 rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
                          hand = NULL) {
@@ -289,11 +272,6 @@ split_polypath <- function(x, y = NULL, id = NULL) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x`, `y`, `id`, and `rule` components describing
 #'   roughened closed rings.
-#' @examples
-#' rough_polypath(c(2, 4, 4, 2, 2.5, 3.5, 3.5, 2.5),
-#'                c(2, 2, 4, 4, 2.5, 2.5, 3.5, 3.5),
-#'                id = c(rep(1, 4), rep(2, 4)),
-#'                rule = "evenodd")
 #' @export
 rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"), hand = NULL) {
   hand_spec <- as_hand(hand)
@@ -330,7 +308,7 @@ draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, ba
 #' @examples
 #' y <- c(2, 5, 4, 7, 6, 8)
 #' plot(1:6, y, type = "n")
-#' draw_rough_lines(1:6, y, hand = hand(multi_stroke = 2), lwd = 2)
+#' draw_rough_lines(1:6, y, hand = human_hand(multi_stroke = 2))
 #' @family rough drawing helpers
 #' @export
 draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
@@ -359,7 +337,7 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), lwd = 2)
+#' draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), hand = human_hand())
 #' @family rough drawing helpers
 #' @export
 draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
@@ -380,8 +358,7 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_arrows(2, 2, 8, 8, lwd = 2)
-#' draw_rough_arrows(8, 2, 2, 8, code = 3, hand = hand(multi_stroke = 2))
+#' draw_rough_arrows(8, 2, 2, 8, hand = human_hand())
 #' @family rough drawing helpers
 #' @export
 draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
@@ -428,6 +405,7 @@ warn_missing_fill_for_pattern <- function(fill_pattern, col) {
 #'                     c(2, 2, 8, 8, 4, 4, 6, 6),
 #'                     id = c(rep(1, 4), rep(2, 4)),
 #'                     rule = "evenodd",
+#'                     hand = human_hand(),
 #'                     col = "grey90",
 #'                     fill_pattern = hatch(density = 9))
 #' @family rough drawing helpers
@@ -489,6 +467,7 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #' @examples
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
+#'                     hand = human_hand(),
 #'                     col = "grey90",
 #'                     fill_pattern = zigzag())
 #' @family rough drawing helpers
@@ -541,7 +520,9 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_rect(2, 2, 8, 7, col = "grey90",
+#' draw_rough_rect(2, 2, 8, 7,
+#'                 hand = human_hand(),
+#'                 col = "grey90",
 #'                 fill_pattern = crosshatch(padding = 0.05))
 #' @family rough drawing helpers
 #' @export
@@ -565,9 +546,6 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
 #' @param x,y Point coordinates as for [graphics::points()].
 #' @inheritParams mypaintr-rough-hand
 #' @return A list with jittered `x` and `y` point locations.
-#' @examples
-#' plot(1:5, 1:5, type = "n")
-#' rough_points(1:5, 1:5, hand = hand(endpoint_jitter = 0.02))
 #' @export
 rough_points <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
@@ -587,7 +565,9 @@ rough_points <- function(x, y = NULL, hand = NULL) {
 #' @param ... Graphics parameters passed to [graphics::points()].
 #' @examples
 #' plot(1:10, 1:10, type = "n")
-#' draw_rough_points(1:10, 1:10, pch = 16, cex = 1.4)
+#' draw_rough_points(1:10, 1:10,
+#'                   hand = human_hand(),
+#'                   pch = 16, cex = 1.4)
 #' @family rough drawing helpers
 #' @export
 draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {

@@ -23,10 +23,10 @@ A list with jittered \code{x} and \code{y} point locations.
 Compute or draw rough points
 }
 \examples{
-plot(1:5, 1:5, type = "n")
-rough_points(1:5, 1:5, hand = hand(endpoint_jitter = 0.02))
 plot(1:10, 1:10, type = "n")
-draw_rough_points(1:10, 1:10, pch = 16, cex = 1.4)
+draw_rough_points(1:10, 1:10,
+                  hand = human_hand(),
+                  pch = 16, cex = 1.4)
 }
 \seealso{
 Other rough drawing helpers: 

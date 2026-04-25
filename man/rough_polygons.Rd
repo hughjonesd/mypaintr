@@ -2,13 +2,10 @@
 % Please edit documentation in R/draw-rough.R
 \name{rough_polygons}
 \alias{rough_polygons}
-\alias{rough_polygon}
 \alias{draw_rough_polygons}
 \title{Compute or draw rough polygons}
 \usage{
 rough_polygons(x, y = NULL, hand = NULL)
-
-rough_polygon(x, y = NULL, hand = NULL)
 
 draw_rough_polygons(
   x,
@@ -43,9 +40,9 @@ outline suitable for plotting with \code{\link[graphics:lines]{graphics::lines()
 Compute or draw rough polygons
 }
 \examples{
-rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1))
 plot(1:10, 1:10, type = "n")
 draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
+                    hand = human_hand(),
                     col = "grey90",
                     fill_pattern = zigzag())
 }
