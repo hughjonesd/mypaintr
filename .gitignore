@@ -16,3 +16,5 @@ src/Makevars.win
 inst/doc
 docs
 .positai
+vignettes/articles/*_files/
+vignettes/articles/*.html
