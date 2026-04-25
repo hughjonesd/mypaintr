@@ -959,6 +959,29 @@ static double stroke_pressure_at(const MypaintrHand *hand, double t, double turn
   return clamp01(pressure);
 }
 
+static double polyline_turn_factor(const double *x, const double *y, int n, int i) {
+  if (i <= 0 || i + 1 >= n) {
+    return 0.0;
+  }
+
+  {
+    double prev_dx = x[i] - x[i - 1];
+    double prev_dy = y[i] - y[i - 1];
+    double next_dx = x[i + 1] - x[i];
+    double next_dy = y[i + 1] - y[i];
+    double prev_len = sqrt(prev_dx * prev_dx + prev_dy * prev_dy);
+    double next_len = sqrt(next_dx * next_dx + next_dy * next_dy);
+
+    if (prev_len > 1e-9 && next_len > 1e-9) {
+      double cosang = (prev_dx * next_dx + prev_dy * next_dy) / (prev_len * next_len);
+      cosang = fmax(-1.0, fmin(1.0, cosang));
+      return 0.5 * (1.0 - cosang);
+    }
+  }
+
+  return 0.0;
+}
+
 static void rough_segment_path(double x0, double y0, double x1, double y1, MypaintrHand *hand, PointBuffer *buf) {
   double dx = x1 - x0;
   double dy = y1 - y0;
@@ -1603,22 +1626,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     double dy = y[i] - y[i - 1];
     double dt = fmax(sqrt(dx * dx + dy * dy) / 240.0, 0.001);
     double t = (n > 1) ? (double) i / (double) (n - 1) : 1.0;
-    double turn_factor = 0.0;
-
-    if (i > 0 && i + 1 < n) {
-      double prev_dx = x[i] - x[i - 1];
-      double prev_dy = y[i] - y[i - 1];
-      double next_dx = x[i + 1] - x[i];
-      double next_dy = y[i + 1] - y[i];
-      double prev_len = sqrt(prev_dx * prev_dx + prev_dy * prev_dy);
-      double next_len = sqrt(next_dx * next_dx + next_dy * next_dy);
-
-      if (prev_len > 1e-9 && next_len > 1e-9) {
-        double cosang = (prev_dx * next_dx + prev_dy * next_dy) / (prev_len * next_len);
-        cosang = fmax(-1.0, fmin(1.0, cosang));
-        turn_factor = 0.5 * (1.0 - cosang);
-      }
-    }
+    double turn_factor = polyline_turn_factor(x, y, n, i);
 
     mypaint_brush_stroke_to_2(
       brush->brush,
@@ -1671,10 +1679,75 @@ static void cairo_set_lty(cairo_t *cr, int lty, double lwd) {
   }
 }
 
-static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const double *y, int n, int col, double lwd, int lty, int closed) {
+static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, const MypaintrHand *hand) {
   int i;
+  double total_len = 0.0;
+  int emulate_pressure = 0;
 
   if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
+    return;
+  }
+
+  if (hand && !closed && lty == LTY_SOLID) {
+    emulate_pressure =
+      fabs(clamp01(hand->pressure) - 1.0) > 1e-9 ||
+      clamp01(hand->pressure_taper) > 1e-9;
+  }
+
+  if (emulate_pressure) {
+    for (i = 1; i < n; ++i) {
+      double dx = x[i] - x[i - 1];
+      double dy = y[i] - y[i - 1];
+      total_len += sqrt(dx * dx + dy * dy);
+    }
+  }
+
+  if (emulate_pressure && total_len > 1e-9) {
+    double cumulative = 0.0;
+
+    cairo_save(dev->cr);
+    set_cairo_source(dev->cr, col);
+    cairo_set_line_cap(dev->cr, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_join(dev->cr, CAIRO_LINE_JOIN_ROUND);
+
+    for (i = 1; i < n; ++i) {
+      double sx = x[i - 1];
+      double sy = y[i - 1];
+      double ex = x[i];
+      double ey = y[i];
+      double dx = ex - sx;
+      double dy = ey - sy;
+      double seg_len = sqrt(dx * dx + dy * dy);
+      int pieces;
+      int j;
+
+      if (seg_len <= 1e-9) {
+        continue;
+      }
+
+      pieces = (int) fmax(1.0, ceil(seg_len / 6.0));
+      for (j = 0; j < pieces; ++j) {
+        double u0 = (double) j / (double) pieces;
+        double u1 = (double) (j + 1) / (double) pieces;
+        double x0 = sx + dx * u0;
+        double y0 = sy + dy * u0;
+        double x1 = sx + dx * u1;
+        double y1 = sy + dy * u1;
+        double mid = cumulative + seg_len * (u0 + u1) * 0.5;
+        double t = mid / total_len;
+        double width = fmax(1e-3, lwd * stroke_pressure_at(hand, t, polyline_turn_factor(x, y, n, i - 1)));
+
+        cairo_new_path(dev->cr);
+        cairo_move_to(dev->cr, x0, flip_y(dev, y0));
+        cairo_line_to(dev->cr, x1, flip_y(dev, y1));
+        cairo_set_line_width(dev->cr, width);
+        cairo_stroke(dev->cr);
+      }
+
+      cumulative += seg_len;
+    }
+
+    cairo_restore(dev->cr);
     return;
   }
 
@@ -1755,7 +1828,15 @@ static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int 
   if (render_style == MYPAINTR_RENDER_BRUSH) {
     render_polyline(dev, brush, x, y, n, col, lwd, lty);
   } else {
-    solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed);
+    solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed, NULL);
+  }
+}
+
+static void render_polyline_mode_hand(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, const MypaintrHand *hand) {
+  if (render_style == MYPAINTR_RENDER_BRUSH) {
+    render_polyline(dev, brush, x, y, n, col, lwd, lty);
+  } else {
+    solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed, hand);
   }
 }
 
@@ -1772,7 +1853,7 @@ static void render_polyline_hand(MypaintrDevice *dev, MypaintrBrush *brush, int 
     double jittered_lwd;
     roughen_vertex_path(x, y, n, hand, closed, &path);
     jittered_lwd = fmax(0.01, lwd * (1.0 + hand_normal(hand, hand->width_jitter)));
-    render_polyline_mode(dev, brush, render_style, path.x, path.y, path.n, col, jittered_lwd, lty, 0);
+    render_polyline_mode_hand(dev, brush, render_style, path.x, path.y, path.n, col, jittered_lwd, lty, 0, hand);
     point_buffer_free(&path);
   }
 }

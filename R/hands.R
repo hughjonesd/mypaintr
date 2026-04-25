@@ -86,13 +86,14 @@ as_hand <- function(x = NULL) {
 #' @examples
 #' plot.new()
 #' plot.window(c(0, 10), c(0, 10))
-#' draw_rough_lines(c(1, 10), c(9, 9), lwd = 2, hand = hand())
-#' draw_rough_lines(c(1, 10), c(7, 7), lwd = 2, hand = human_hand())
-#' draw_rough_lines(c(1, 10), c(5, 5), lwd = 2,
+#' draw_rough_lines(c(0, 10), c(8, 8), lwd = 4, hand = hand())
+#' draw_rough_lines(c(0, 10), c(6, 6), lwd = 4, hand = human_hand())
+#' draw_rough_lines(c(0, 10), c(4, 4), lwd = 4,
 #'                  hand = human_hand(seed = 1,
-#'                    bow = 0.03, wobble = 0.01))
-#' draw_rough_lines(c(1, 10), c(3, 3), lwd = 2,
-#'                  hand = human_hand(seed = 1, pressure_taper = 1))
+#'                    bow = 0.02, wobble = 0.01))
+#' draw_rough_lines(c(0, 10), c(2, 2), lwd = 4,
+#'                  hand = human_hand(seed = 1,
+#'                    pressure = 0.7, pressure_taper = 0.5))
 #' @export
 hand <- function(seed = NULL,
                  bow = 0,
@@ -126,8 +127,8 @@ hand <- function(seed = NULL,
 #' @rdname hand
 #' @export
 human_hand <- function(seed = NULL,
-                       bow = 0.01,
-                       wobble = 0.006,
+                       bow = 0.012,
+                       wobble = 0.008,
                        multi_stroke = 1L,
                        width_jitter = 0.08,
                        endpoint_jitter = 0,

@@ -299,8 +299,117 @@ draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, ba
     args_i$x <- path_i$x
     args_i$y <- path_i$y
     args_i$lwd <- jittered_lwd
-    do.call(draw_fun, args_i)
+    if (!draw_pressure_path(path_i, hand_spec, args_i, closed = closed)) {
+      do.call(draw_fun, args_i)
+    }
   }
+}
+
+is_solid_lty <- function(lty) {
+  if (is.null(lty)) {
+    return(TRUE)
+  }
+  identical(lty, 1L) || identical(lty, "solid")
+}
+
+stroke_pressure_at_r <- function(hand_spec, t, turn_factor = 0) {
+  base <- max(0, min(1, hand_spec$pressure %||% 1))
+  taper <- max(0, min(1, hand_spec$pressure_taper %||% 0))
+  tt <- max(0, min(1, t))
+  profile <- sin(pi * tt)
+  pressure <- base * ((1 - taper) + taper * profile)
+
+  if (taper > 0 && turn_factor > 0) {
+    pressure <- pressure * (1 - 0.35 * taper * max(0, min(1, turn_factor)))
+  }
+
+  max(0, min(1, pressure))
+}
+
+polyline_turn_factor_r <- function(x, y, i) {
+  n <- length(x)
+  if (i <= 1 || i >= n) {
+    return(0)
+  }
+
+  prev_dx <- x[i] - x[i - 1]
+  prev_dy <- y[i] - y[i - 1]
+  next_dx <- x[i + 1] - x[i]
+  next_dy <- y[i + 1] - y[i]
+  prev_len <- sqrt(prev_dx * prev_dx + prev_dy * prev_dy)
+  next_len <- sqrt(next_dx * next_dx + next_dy * next_dy)
+
+  if (!is.finite(prev_len) || !is.finite(next_len) || prev_len <= 0 || next_len <= 0) {
+    return(0)
+  }
+
+  cosang <- (prev_dx * next_dx + prev_dy * next_dy) / (prev_len * next_len)
+  cosang <- max(-1, min(1, cosang))
+  0.5 * (1 - cosang)
+}
+
+segment_subdivisions <- function(dx, dy) {
+  pin <- graphics::par("pin")
+  usr <- graphics::par("usr")
+  x_per_in <- diff(usr[1:2]) / pin[1]
+  y_per_in <- diff(usr[3:4]) / pin[2]
+  len_in <- sqrt((dx / x_per_in)^2 + (dy / y_per_in)^2)
+  max(1L, ceiling(len_in * 18))
+}
+
+draw_pressure_path <- function(path, hand_spec, args, closed = FALSE) {
+  x <- path$x
+  y <- path$y
+  n <- length(x)
+  lwd <- args$lwd %||% graphics::par("lwd")
+  lty <- args$lty %||% graphics::par("lty")
+  pressure <- hand_spec$pressure %||% 1
+  taper <- hand_spec$pressure_taper %||% 0
+
+  if (is_mypaintr_device() || closed || n < 2 || !is_solid_lty(lty)) {
+    return(FALSE)
+  }
+  if (abs(pressure - 1) < 1e-9 && taper <= 0) {
+    return(FALSE)
+  }
+
+  seg_len <- sqrt(diff(x)^2 + diff(y)^2)
+  total_len <- sum(seg_len)
+  if (!is.finite(total_len) || total_len <= 0) {
+    return(FALSE)
+  }
+
+  base_args <- args
+  base_args$x <- NULL
+  base_args$y <- NULL
+  base_args$lwd <- NULL
+  base_args$lty <- NULL
+
+  cumulative <- 0
+  for (i in seq_len(n - 1L)) {
+    dx <- x[i + 1] - x[i]
+    dy <- y[i + 1] - y[i]
+    if (!is.finite(seg_len[i]) || seg_len[i] <= 0) {
+      next
+    }
+    pieces <- segment_subdivisions(dx, dy)
+    turn_factor <- polyline_turn_factor_r(x, y, i)
+    for (j in seq_len(pieces)) {
+      u0 <- (j - 1) / pieces
+      u1 <- j / pieces
+      mid <- cumulative + seg_len[i] * (u0 + u1) * 0.5
+      t <- mid / total_len
+      width <- max(0.01, lwd * stroke_pressure_at_r(hand_spec, t, turn_factor))
+      args_i <- base_args
+      args_i$x <- c(x[i] + dx * u0, x[i] + dx * u1)
+      args_i$y <- c(y[i] + dy * u0, y[i] + dy * u1)
+      args_i$lwd <- width
+      do.call(graphics::lines, args_i)
+    }
+    cumulative <- cumulative + seg_len[i]
+  }
+
+  TRUE
 }
 
 #' @rdname rough_lines
@@ -347,7 +456,12 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
       geom <- rough_segments_data(x0, y0, x1, y1, hand_spec)
       for (i in unique(geom$id)) {
         keep <- geom$id == i
-        graphics::lines(geom$x[keep], geom$y[keep], ...)
+        args <- list(...)
+        args$x <- geom$x[keep]
+        args$y <- geom$y[keep]
+        if (!draw_pressure_path(list(x = args$x, y = args$y), hand_spec, args, closed = FALSE)) {
+          do.call(graphics::lines, args)
+        }
       }
     }
     NULL
