@@ -43,7 +43,23 @@ plot_with_hand(endpoint_jitter = 0)
 ![](hand-demo_files/figure-html/unnamed-chunk-8-1.png)
 
 ``` r
-plot_with_hand(endpoint_jitter = 0.05)
+plot_with_hand(endpoint_jitter = 0.02)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-9-1.png)
+
+## Pressure using `mypaint_device`
+
+``` r
+set_brush("classic/pen")
+plot_with_hand(pressure = 0.5)
+```
+
+![](hand-demo_files/figure-html/unnamed-chunk-10-1.png)
+
+``` r
+set_brush("classic/pen")
+plot_with_hand(pressure_taper = 1)
+```
+
+![](hand-demo_files/figure-html/unnamed-chunk-11-1.png)
