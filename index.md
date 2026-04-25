@@ -26,7 +26,7 @@ barplot(VADeaths, axes = FALSE,
         cex.names = 0.8)
 
 set_brush(NULL)
-set_hand(hand(wobble = 0))
+set_hand(human_hand())
 axis(side = 2, at = seq(0, 60, 20))
 
 # dev.off()
