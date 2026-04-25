@@ -42,12 +42,11 @@ strokes.}
 \item{endpoint_jitter}{Relative endpoint jitter as a proportion of segment
 length.}
 
-\item{pressure}{Base pressure to use for mypaint brush strokes. Ignored on
-non-mypaint devices.}
+\item{pressure}{Base pressure to use for mypaint brush strokes.}
 
 \item{pressure_taper}{Amount of tapering applied to pressure at the start
-and end of mypaint brush strokes. \code{0} means constant pressure;
-\code{1} means strong tapering. Ignored on non-mypaint devices.}
+and end of brush strokes. \code{0} means constant pressure;
+\code{1} means strong tapering.}
 }
 \value{
 An object describing how rough geometry should be generated.
@@ -60,7 +59,11 @@ defaults with bow, wobble, and width jitter already enabled.
 }
 \details{
 \code{hand()} defaults to plain, base-R-like geometry with no bowing, wobble, or
-jitter. Use \code{\link[=human_hand]{human_hand()}} for the older rougher defaults.
+jitter. \code{\link[=human_hand]{human_hand()}} has different, more human-like defaults.
+
+As of now, \code{pressure} and \code{pressure_taper} only apply to lines, not
+shape outlines. On base R devices, they are simulated and affect
+line width.
 }
 \examples{
 plot.new()

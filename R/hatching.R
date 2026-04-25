@@ -32,7 +32,8 @@ new_fill_pattern <- function(style,
 #' @examples
 #' plot.new()
 #' plot.window(xlim = c(0, 10), ylim = c(0, 10))
-#' draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = hatch(density = 10))
+#' draw_rough_rect(2, 2, 8, 8, col = "red",
+#'                 fill_pattern = hatch(density = 10))
 #' @family fill patterns
 #' @export
 hatch <- function(angle = 45, density = 8, clip = TRUE, padding = 0) {
@@ -71,7 +72,8 @@ crosshatch <- function(angle = 45, density = 7, clip = TRUE, padding = 0) {
 #' @examples
 #' plot.new()
 #' plot.window(xlim = c(0, 10), ylim = c(0, 10))
-#' draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = zigzag(density = 7))
+#' draw_rough_rect(2, 2, 8, 8, col = "red",
+#'                 fill_pattern = zigzag(density = 7))
 #' @family fill patterns
 #' @export
 zigzag <- function(angle = 45, density = 6, clip = TRUE, padding = 0) {
@@ -94,7 +96,7 @@ zigzag <- function(angle = 45, density = 6, clip = TRUE, padding = 0) {
 #' @examples
 #' plot.new()
 #' plot.window(xlim = c(0, 10), ylim = c(0, 10))
-#' draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = jumble())
+#' draw_rough_rect(2, 2, 8, 8, col = "red", fill_pattern = jumble())
 #' @family fill patterns
 #' @export
 jumble <- function(angle = 0, density = 5, radius = 0.76 / density, wobble = 0.2,

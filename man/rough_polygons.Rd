@@ -43,7 +43,7 @@ Compute or draw rough polygons
 plot(1:10, 1:10, type = "n")
 draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
                     hand = human_hand(),
-                    col = "grey90",
+                    col = "red",
                     fill_pattern = zigzag())
 }
 \seealso{

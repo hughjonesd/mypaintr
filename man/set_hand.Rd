@@ -2,7 +2,7 @@
 % Please edit documentation in R/hands.R
 \name{set_hand}
 \alias{set_hand}
-\title{Set the active mypaintr hand-drawn geometry}
+\title{Set the active hand}
 \usage{
 set_hand(hand = NULL, type = c("both", "stroke", "fill"))
 }
@@ -21,5 +21,5 @@ fully plain, solid rendering.}
 \code{\link[=mypaint_device]{mypaint_device()}}, this emits a warning and has no effect.
 }
 \description{
-Set the active mypaintr hand-drawn geometry
+Set the active hand
 }

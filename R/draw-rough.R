@@ -520,7 +520,7 @@ warn_missing_fill_for_pattern <- function(fill_pattern, col) {
 #'                     id = c(rep(1, 4), rep(2, 4)),
 #'                     rule = "evenodd",
 #'                     hand = human_hand(),
-#'                     col = "grey90",
+#'                     col = "red",
 #'                     fill_pattern = hatch(density = 9))
 #' @family rough drawing helpers
 #' @export
@@ -582,7 +582,7 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_polygons(c(2, 5, 8, 3), c(2, 7, 5, 1),
 #'                     hand = human_hand(),
-#'                     col = "grey90",
+#'                     col = "red",
 #'                     fill_pattern = zigzag())
 #' @family rough drawing helpers
 #' @export
@@ -636,7 +636,7 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 #' plot(1:10, 1:10, type = "n")
 #' draw_rough_rect(2, 2, 8, 7,
 #'                 hand = human_hand(),
-#'                 col = "grey90",
+#'                 col = "red",
 #'                 fill_pattern = crosshatch(padding = 0.05))
 #' @family rough drawing helpers
 #' @export

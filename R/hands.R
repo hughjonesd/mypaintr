@@ -74,14 +74,18 @@ as_hand <- function(x = NULL) {
 #'   strokes.
 #' @param endpoint_jitter Relative endpoint jitter as a proportion of segment
 #'   length.
-#' @param pressure Base pressure to use for mypaint brush strokes. Ignored on
-#'   non-mypaint devices.
+#' @param pressure Base pressure to use for mypaint brush strokes.
 #' @param pressure_taper Amount of tapering applied to pressure at the start
-#'   and end of mypaint brush strokes. `0` means constant pressure;
-#'   `1` means strong tapering. Ignored on non-mypaint devices.
+#'   and end of brush strokes. `0` means constant pressure;
+#'   `1` means strong tapering.
 #' @details
 #' `hand()` defaults to plain, base-R-like geometry with no bowing, wobble, or
-#' jitter. Use [human_hand()] for the older rougher defaults.
+#' jitter. [human_hand()] has different, more human-like defaults.
+#'
+#' As of now, `pressure` and `pressure_taper` only apply to lines, not
+#' shape outlines. On base R devices, they are simulated and affect
+#' line width.
+#'
 #' @return An object describing how rough geometry should be generated.
 #' @examples
 #' plot.new()
@@ -146,7 +150,7 @@ human_hand <- function(seed = NULL,
   )
 }
 
-#' Set the active mypaintr hand-drawn geometry
+#' Set the active hand
 #'
 #' @param hand Hand-drawn geometry created with [hand()], or `NULL` to disable
 #'   it for the selected type. This disables rough path perturbation only; it
