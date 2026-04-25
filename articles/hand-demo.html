@@ -65,42 +65,78 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hand-demo_files/figure-html/unnamed-chunk-2-1.png" alt="" width="480"></p>
+<code class="sourceCode R"><span><span class="va">plot_with_hand</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">null</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">title</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/deparse.html" class="external-link">deparse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">substitute</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">title</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="op">!</span> <span class="va">null</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"list\\((.*)\\)"</span>,  <span class="st">"human_hand(\\1)"</span>, <span class="va">title</span><span class="op">)</span> </span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="st">"NULL"</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/frame.html" class="external-link">plot.new</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.window.html" class="external-link">plot.window</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/title.html" class="external-link">title</a></span><span class="op">(</span><span class="va">title</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">null</span><span class="op">)</span></span>
+<span>    <span class="va">hand</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
+<span>  <span class="kw">else</span> </span>
+<span>    <span class="va">hand</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span>seed <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="va">hand</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">4</span>, <span class="fl">4</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">6</span>, <span class="fl">9</span>, <span class="fl">9</span>, col <span class="op">=</span> <span class="st">"green4"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/rect.html" class="external-link">rect</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">6</span>, <span class="fl">4</span>, <span class="fl">9</span>, col <span class="op">=</span> <span class="st">"darkred"</span>, density <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/rough_rect.html">draw_rough_rect</a></span><span class="op">(</span><span class="fl">6</span>, <span class="fl">1</span>, <span class="fl">9</span>, <span class="fl">4</span>, lwd <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                  col <span class="op">=</span> <span class="st">"orange2"</span>, </span>
+<span>                  fill_pattern <span class="op">=</span> <span class="fu"><a href="../reference/hatch.html">hatch</a></span><span class="op">(</span><span class="op">)</span>, </span>
+<span>                  hand <span class="op">=</span> <span class="va">hand</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/arrows.html" class="external-link">arrows</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span>, <span class="fl">9</span>, <span class="fl">5</span>, lwd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-3-1.png" alt="" width="480"></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>bow <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-4-1.png" alt="" width="480"></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>wobble <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>bow <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-5-1.png" alt="" width="480"></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>wobble <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-6-1.png" alt="" width="480"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>width_jitter <span class="op">=</span> <span class="fl">0.24</span>, multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-7-1.png" alt="" width="480"></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>endpoint_jitter <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>width_jitter <span class="op">=</span> <span class="fl">0.24</span>, multi_stroke <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-8-1.png" alt="" width="480"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>endpoint_jitter <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>endpoint_jitter <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-9-1.png" alt="" width="480"></p>
-<div class="section level2">
-<h2 id="pressure-using-mypaint_device">Pressure using <code>mypaint_device</code><a class="anchor" aria-label="anchor" href="#pressure-using-mypaint_device"></a>
-</h2>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/pen"</span><span class="op">)</span></span>
-<span><span class="fu">plot_with_hand</span><span class="op">(</span>pressure <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>endpoint_jitter <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></code></pre></div>
 <p><img src="hand-demo_files/figure-html/unnamed-chunk-10-1.png" alt="" width="480"></p>
+<div class="section level2">
+<h2 id="pressure-on-the-default-device">Pressure on the default device<a class="anchor" aria-label="anchor" href="#pressure-on-the-default-device"></a>
+</h2>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu">plot_with_hand</span><span class="op">(</span>pressure <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hand-demo_files/figure-html/unnamed-chunk-11-1.png" alt="" width="480"></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plot_with_hand</span><span class="op">(</span>pressure_taper <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hand-demo_files/figure-html/unnamed-chunk-12-1.png" alt="" width="480"></p>
+</div>
+<div class="section level2">
+<h2 id="pressure-using-mypaint_device">Pressure using <code>mypaint_device()</code><a class="anchor" aria-label="anchor" href="#pressure-using-mypaint_device"></a>
+</h2>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/pen"</span><span class="op">)</span></span>
 <span><span class="fu">plot_with_hand</span><span class="op">(</span>pressure_taper <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hand-demo_files/figure-html/unnamed-chunk-11-1.png" alt="" width="480"></p>
+<p><img src="hand-demo_files/figure-html/unnamed-chunk-13-1.png" alt="" width="480"></p>
 </div>
-  </main>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
