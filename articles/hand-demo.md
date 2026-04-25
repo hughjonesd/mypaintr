@@ -1,4 +1,4 @@
-# Hand Demo
+# Hand demo
 
 ``` r
 plot_with_hand(NULL)
