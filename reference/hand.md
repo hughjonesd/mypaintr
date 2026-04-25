@@ -57,14 +57,12 @@ human_hand(
 
 - pressure:
 
-  Base pressure to use for mypaint brush strokes. Ignored on non-mypaint
-  devices.
+  Base pressure to use for mypaint brush strokes.
 
 - pressure_taper:
 
-  Amount of tapering applied to pressure at the start and end of mypaint
-  brush strokes. `0` means constant pressure; `1` means strong tapering.
-  Ignored on non-mypaint devices.
+  Amount of tapering applied to pressure at the start and end of brush
+  strokes. `0` means constant pressure; `1` means strong tapering.
 
 ## Value
 
@@ -75,7 +73,11 @@ An object describing how rough geometry should be generated.
 ## Details
 
 `hand()` defaults to plain, base-R-like geometry with no bowing, wobble,
-or jitter. Use `human_hand()` for the older rougher defaults.
+or jitter. `human_hand()` has different, more human-like defaults.
+
+As of now, `pressure` and `pressure_taper` only apply to lines, not
+shape outlines. On base R devices, they are simulated and affect line
+width.
 
 ## Examples
 

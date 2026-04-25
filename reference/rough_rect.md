@@ -80,6 +80,6 @@ Other rough drawing helpers:
 plot(1:10, 1:10, type = "n")
 draw_rough_rect(2, 2, 8, 7,
                 hand = human_hand(),
-                col = "grey90",
+                col = "red",
                 fill_pattern = crosshatch(padding = 0.05))
 ```

@@ -100,14 +100,13 @@ length.</p></dd>
 
 
 <dt id="arg-pressure">pressure<a class="anchor" aria-label="anchor" href="#arg-pressure"></a></dt>
-<dd><p>Base pressure to use for mypaint brush strokes. Ignored on
-non-mypaint devices.</p></dd>
+<dd><p>Base pressure to use for mypaint brush strokes.</p></dd>
 
 
 <dt id="arg-pressure-taper">pressure_taper<a class="anchor" aria-label="anchor" href="#arg-pressure-taper"></a></dt>
 <dd><p>Amount of tapering applied to pressure at the start
-and end of mypaint brush strokes. <code>0</code> means constant pressure;
-<code>1</code> means strong tapering. Ignored on non-mypaint devices.</p></dd>
+and end of brush strokes. <code>0</code> means constant pressure;
+<code>1</code> means strong tapering.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -118,7 +117,10 @@ and end of mypaint brush strokes. <code>0</code> means constant pressure;
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code>hand()</code> defaults to plain, base-R-like geometry with no bowing, wobble, or
-jitter. Use <code>human_hand()</code> for the older rougher defaults.</p>
+jitter. <code>human_hand()</code> has different, more human-like defaults.</p>
+<p>As of now, <code>pressure</code> and <code>pressure_taper</code> only apply to lines, not
+shape outlines. On base R devices, they are simulated and affect
+line width.</p>
     </div>
 
     <div class="section level2">

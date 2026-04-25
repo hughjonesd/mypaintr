@@ -61,5 +61,5 @@ Other fill patterns:
 ``` r
 plot.new()
 plot.window(xlim = c(0, 10), ylim = c(0, 10))
-draw_rough_rect(2, 2, 8, 8, col = "grey90", fill_pattern = jumble())
+draw_rough_rect(2, 2, 8, 8, col = "red", fill_pattern = jumble())
 ```

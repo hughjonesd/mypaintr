@@ -1,6 +1,6 @@
-# Set the active mypaintr hand-drawn geometry
+# Set the active hand
 
-Set the active mypaintr hand-drawn geometry
+Set the active hand
 
 ## Usage
 

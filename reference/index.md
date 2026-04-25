@@ -28,7 +28,7 @@
   [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   : Hand-drawn geometry settings
 - [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
-  : Set the active mypaintr hand-drawn geometry
+  : Set the active hand
 
 ## Rough Drawing
 
