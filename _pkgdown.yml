@@ -8,25 +8,31 @@ template:
 
 home:
   title: mypaintr
-  description: Artistic R graphics with libmypaint brushes and rough drawing helpers.
+  description: Plot R Graphics Like a Human
 
 reference:
-  - title: Devices and Styles
+  - title: Devices
     contents:
       - mypaint_device
-      - set_brush
-      - tweak_brush
-      - set_hand
+
+  - title: Mypaint Brushes
+    contents:
       - brush_dirs
+      - brush_inputs
+      - brush_settings
       - brushes
       - load_brush
-      - brush_settings
-      - brush_inputs
+      - set_brush
+      - tweak_brush
 
-  - title: Rough Drawing
+  - title: Hands
     contents:
       - hand
       - human_hand
+      - set_hand
+
+  - title: Rough Drawing
+    contents:
       - draw_rough_lines
       - draw_rough_segments
       - draw_rough_arrows
@@ -51,11 +57,11 @@ reference:
 
   - title: ggplot2 Integration
     contents:
-      - mypaint_wrap
       - geom_mypaint_bar
       - geom_mypaint_col
+      - mypaint_wrap
 
-  - title: knitr
+  - title: knitr Integration
     contents:
       - knitr_mypaint_hook
 
