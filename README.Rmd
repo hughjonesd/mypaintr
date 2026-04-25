@@ -79,10 +79,11 @@ plot(1:10, 1:10, type = "n", xlab = "", ylab = "", axes = FALSE)
 
 draw_rough_polygons(5 + 3 * sin(2*pi * 1:5/5), 5 + 3 * cos(2*pi * 1:5/5),
                     border = "darkred", col = "red3", lwd = 2,
-                    hand = hand(seed = 1, multi_stroke = 3),
+                    hand = human_hand(seed = 1, multi_stroke = 3),
                     fill_pattern = crosshatch())
 
-draw_rough_arrows(8, 8.5, 5.5, 5.5, lwd = 2, hand = hand(seed = 1, bow = 0.05))
+draw_rough_arrows(8, 8.5, 5.5, 5.5, lwd = 2, 
+                  hand = human_hand(seed = 1, bow = 0.05))
 text(8, 9, "A pentagon", family = "Chalkboard")
 ```
 
