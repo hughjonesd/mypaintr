@@ -4,6 +4,8 @@
 
 - [Brush
   gallery](https://hughjonesd.github.io/mypaintr/articles/brush-gallery.md):
+- [Classic graphs,
+  repainted](https://hughjonesd.github.io/mypaintr/articles/classic-graphs.md):
 - [Hand
   Demo](https://hughjonesd.github.io/mypaintr/articles/hand-demo.md):
 - [Introduction to
