@@ -20,13 +20,15 @@ plot_with_hand <- function(...) {
     hand <- human_hand(seed = 1, ...)
   set_hand(hand)
   rect(1, 1, 4, 4)
-  rect(6, 6, 9, 9, col = "green4")
-  rect(1, 6, 4, 9, col = "darkred", density = 5)
-  draw_rough_rect(6, 1, 9, 4, lwd = 2,
-                  col = "orange2", 
-                  fill_pattern = hatch(), 
+  draw_rough_rect(6, 6, 9, 9, col = "green4", hand = hand)
+  draw_rough_rect(1, 6, 4, 9, col = "darkred",
+                  fill_pattern = zigzag(),
                   hand = hand)
-  arrows(1, 5, 9, 5, lwd = 3)
+  draw_rough_rect(6, 1, 9, 4, lwd = 2, border = "navy",
+                  col = "slateblue3", 
+                  fill_pattern = jumble(density = 12), 
+                  hand = hand)
+  arrows(1, 5, 9, 5, lwd = 6)
 }
 ```
 
@@ -93,7 +95,7 @@ plot_with_hand(pressure_taper = 1)
 
 ![](hand-demo_files/figure-html/unnamed-chunk-12-1.png)
 
-## Pressure using `mypaint_device()`
+## Pressure using `mypaint_device()` and brushes
 
 ``` r
 set_brush("classic/pen")
@@ -101,3 +103,10 @@ plot_with_hand(pressure_taper = 1)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-13-1.png)
+
+``` r
+set_brush("ramon/Marker")
+plot_with_hand(pressure_taper = 1)
+```
+
+![](hand-demo_files/figure-html/unnamed-chunk-14-1.png)
