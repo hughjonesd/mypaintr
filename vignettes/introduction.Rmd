@@ -230,11 +230,15 @@ mypaintr knows four ways to do this. Again, these work with base graphics device
 ```{r, dev = "png", fig.width=5, fig.height=5}
 
 plot(0:10, 0:10, type = "n")
-set_hand(human_hand())
-draw_rough_rect(0, 1, 4, 5, col = "blue", fill_pattern = hatch())
-draw_rough_rect(0, 6, 4, 10, col = "green4", fill_pattern = crosshatch())
-draw_rough_rect(6, 1, 10, 5, col = "red3", fill_pattern = zigzag())
-draw_rough_rect(6, 6, 10, 10, col = "grey30", fill_pattern = jumble())
+hand <- human_hand()
+draw_rough_rect(0, 1, 4, 5, col = "blue", hand = hand, 
+                fill_pattern = hatch())
+draw_rough_rect(0, 6, 4, 10, col = "green4", hand = hand,
+                fill_pattern = crosshatch())
+draw_rough_rect(6, 1, 10, 5, col = "red3", hand = hand,
+                fill_pattern = zigzag())
+draw_rough_rect(6, 6, 10, 10, col = "grey30", hand = hand,
+                fill_pattern = jumble())
 text(c(2, 2, 8, 8), c(0.5, 5.5, 0.5, 5.5), 
      labels = c("hatch", "crosshatch", "zigzag", "jumble"))
 
