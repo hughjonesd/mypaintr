@@ -5,12 +5,13 @@
 ^Rplots\.pdf$
 ^docs$
 ^build$
+^LICENSE\.md$
 ^README\.Rmd$
+^_pkgdown.yml$
 ^tmp($|/)
 ^vignettes/articles($|/)
 ^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$
 ^vignettes/knitr-display-repro\.Rmd$
-^vignettes/test\.png$
 ^README\.Rmd$
 ^\.positai$
 ^\.claude$
