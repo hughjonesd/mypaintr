@@ -21,7 +21,9 @@ knitr::opts_chunk$set(
   fig.keep = "none",
   mypaint = TRUE
 )
+```
 
+```{r}
 plot_with_hand <- function(...) {
   null <- length(list(...)) &&is.null(list(...)[[1]])
   title <- deparse(substitute(list(...)))
@@ -43,11 +45,11 @@ plot_with_hand <- function(...) {
   rect(1, 1, 4, 4)
   rect(6, 6, 9, 9, col = "green4")
   rect(1, 6, 4, 9, col = "darkred", density = 5)
-  draw_rough_rect(6, 1, 9, 4, 
+  draw_rough_rect(6, 1, 9, 4, lwd = 2,
                   col = "orange2", 
                   fill_pattern = hatch(), 
-                   hand = hand)
-  arrows(1, 5, 9, 5)
+                  hand = hand)
+  arrows(1, 5, 9, 5, lwd = 3)
 }
 ```
 
@@ -89,12 +91,18 @@ plot_with_hand(endpoint_jitter = 0)
 plot_with_hand(endpoint_jitter = 0.02)
 ```
 
-# Pressure using `mypaint_device`
+# Pressure on the default device
 
-```{r, mypaint=TRUE, fig.keep="none"}
-set_brush("classic/pen")
+```{r}
+
 plot_with_hand(pressure = 0.5)
 ```
+
+```{r}
+plot_with_hand(pressure_taper = 1)
+```
+
+# Pressure using `mypaint_device()`
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 set_brush("classic/pen")
