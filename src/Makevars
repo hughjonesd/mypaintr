@@ -1,5 +1,0 @@
-PKG_CONFIG ?= pkg-config
-PKG_CPPFLAGS = $(shell $(PKG_CONFIG) --cflags libmypaint cairo)
-PKG_LIBS = $(shell $(PKG_CONFIG) --libs libmypaint cairo)
-PKG_CFLAGS = -std=c99
-OBJECTS = device.o init.o

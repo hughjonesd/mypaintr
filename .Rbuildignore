@@ -11,7 +11,8 @@
 ^tmp($|/)
 ^vignettes/articles($|/)
 ^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$
-^vignettes/knitr-display-repro\.Rmd$
+^src/Makevars$
+^src/Makevars.win$
 ^README\.Rmd$
 ^\.positai$
 ^\.claude$

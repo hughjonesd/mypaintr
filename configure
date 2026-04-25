@@ -17,6 +17,8 @@ for arg in "$@"; do
   esac
 done
 
+config_lib_mode=$lib_mode
+
 case "$lib_mode" in
   auto|system|vendored) ;;
   *)
@@ -59,16 +61,18 @@ case "$lib_mode" in
       echo "System libmypaint requested, but pkg-config could not find libmypaint and cairo." >&2
       exit 1
     fi
-    cflags=$(pkg_cflags libmypaint cairo)
-    libs=$(pkg_libs libmypaint cairo)
     cat > src/Makevars <<EOF
-PKG_CPPFLAGS = $cflags
-PKG_LIBS = $libs
+PKG_CONFIG ?= pkg-config
+PKG_CPPFLAGS = \$(shell \$(PKG_CONFIG) --cflags libmypaint cairo)
+PKG_LIBS = \$(shell \$(PKG_CONFIG) --libs libmypaint cairo)
+PKG_CFLAGS = -std=c99
 OBJECTS = device.o init.o
 EOF
     cat > src/Makevars.win <<EOF
-PKG_CPPFLAGS = $cflags
-PKG_LIBS = $libs
+PKG_CONFIG ?= pkg-config
+PKG_CPPFLAGS = \$(shell \$(PKG_CONFIG) --cflags libmypaint cairo)
+PKG_LIBS = \$(shell \$(PKG_CONFIG) --libs libmypaint cairo)
+PKG_CFLAGS = -std=c99
 OBJECTS = device.o init.o
 EOF
     ;;
@@ -77,16 +81,18 @@ EOF
       echo "Vendored libmypaint build requires cairo and json-c via pkg-config." >&2
       exit 1
     fi
-    cflags=$(pkg_cflags cairo json-c)
-    libs=$(pkg_libs cairo json-c)
     cat > src/Makevars <<EOF
-PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
-PKG_LIBS = $libs
+PKG_CONFIG ?= pkg-config
+PKG_CPPFLAGS = -Ivendor/libmypaint \$(shell \$(PKG_CONFIG) --cflags cairo json-c)
+PKG_LIBS = \$(shell \$(PKG_CONFIG) --libs cairo json-c)
+PKG_CFLAGS = -std=c99
 OBJECTS = device.o init.o vendor/libmypaint/brushmodes.o vendor/libmypaint/fifo.o vendor/libmypaint/helpers.o vendor/libmypaint/mypaint-brush-settings.o vendor/libmypaint/mypaint-brush.o vendor/libmypaint/mypaint-mapping.o vendor/libmypaint/mypaint-rectangle.o vendor/libmypaint/mypaint-surface.o vendor/libmypaint/mypaint.o vendor/libmypaint/rng-double.o
 EOF
     cat > src/Makevars.win <<EOF
-PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
-PKG_LIBS = $libs
+PKG_CONFIG ?= pkg-config
+PKG_CPPFLAGS = -Ivendor/libmypaint \$(shell \$(PKG_CONFIG) --cflags cairo json-c)
+PKG_LIBS = \$(shell \$(PKG_CONFIG) --libs cairo json-c)
+PKG_CFLAGS = -std=c99
 OBJECTS = device.o init.o vendor/libmypaint/brushmodes.o vendor/libmypaint/fifo.o vendor/libmypaint/helpers.o vendor/libmypaint/mypaint-brush-settings.o vendor/libmypaint/mypaint-brush.o vendor/libmypaint/mypaint-mapping.o vendor/libmypaint/mypaint-rectangle.o vendor/libmypaint/mypaint-surface.o vendor/libmypaint/mypaint.o vendor/libmypaint/rng-double.o
 EOF
     ;;
@@ -95,7 +101,7 @@ esac
 rm -f src/Makevars.user src/Makevars.win.user
 
 cat > inst/mypaintr-config.dcf <<EOF
-libmypaint_mode: $lib_mode
+libmypaint_mode: $config_lib_mode
 brushes_mode: $brush_mode
 EOF
 

@@ -10,6 +10,8 @@ src/*.dylib
 src/vendor/libmypaint/*.o
 src/Makevars.user
 src/Makevars.win.user
+src/Makevars
+src/Makevars.win
 .Rproj.user
 inst/doc
 docs
