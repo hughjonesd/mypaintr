@@ -104,7 +104,6 @@ normalize_render_style <- function(style) {
 #'
 #' @param filename Output PNG filename. If it contains `\%d`, pages are
 #'   numbered.
-#' @param file Deprecated compatibility alias for `filename`.
 #' @param width,height Device size in inches.
 #' @param res Resolution in pixels per inch.
 #' @param pointsize Base pointsize.
@@ -113,12 +112,6 @@ normalize_render_style <- function(style) {
 #'   installed mypaint brush name, `.myb` file path, JSON brush string, or
 #'   `NULL` for solid strokes. If omitted, `mypaint_device()` uses an internal
 #'   default plotting brush.
-#' @param stroke_style Legacy override for whether stroke drawing uses the brush
-#'   backend or solid Cairo rendering. When `NULL`, this is inferred from
-#'   whether `brush` is `NULL`.
-#' @param fill_style Legacy override for whether fill drawing uses the brush
-#'   backend or solid Cairo rendering. When `NULL`, this is inferred from
-#'   whether `fill_brush` is `NULL`.
 #' @param fill_brush Optional fill brush spec. Defaults to `brush` when not
 #'   supplied. Use explicit `NULL` for solid fills.
 #' @param hand Optional hand-drawn geometry spec applied to both stroke and
@@ -129,82 +122,33 @@ normalize_render_style <- function(style) {
 #'   normal Cairo rendering even when `fill_style = "brush"`.
 #' @return Opens a graphics device and returns `NULL` invisibly.
 #' @examples
-#' out <- tempfile("mypaint-basic-", fileext = "-%d.png")
+#' out <- tempfile("mypaint.png")
 #' mypaint_device(out, width = 4, height = 3, bg = "ivory")
+#' try(set_brush("classic/pen"), silent = TRUE)
 #' plot(
 #'   1:10,
 #'   col = "steelblue",
 #'   pch = 16,
-#'   cex = 1.4,
-#'   main = "Ink Lines"
+#'   cex = 1.4
 #' )
-#' lines(1:10, col = "firebrick", lwd = 3)
-#' rect(2, 3, 5, 7, border = "black", col = rgb(0, 0.6, 0.3, 0.25))
-#' text(6, 8, "hello", col = "black")
 #' dev.off()
-#' unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
-#'
-#' if ("classic/pen" %in% brushes()) {
-#'   out <- tempfile("mypaint-brush-", fileext = "-%d.png")
-#'   mypaint_device(
-#'     out,
-#'     width = 4,
-#'     height = 3,
-#'     brush = tweak_brush("classic/pen", tracking_noise = 0.12),
-#'     fill_style = "brush",
-#'     fill_brush = tweak_brush("classic/pen", normalize = "size", radius_by_random = 0.08)
-#'   )
-#'   plot.new()
-#'   plot.window(xlim = c(0, 10), ylim = c(0, 10))
-#'   polygon(
-#'     c(2, 5, 8, 6, 3),
-#'     c(2, 7, 6, 3, 1.5),
-#'     border = "black",
-#'     col = rgb(0.2, 0.7, 0.5, 0.6)
-#'   )
-#'   lines(c(1, 9), c(1, 9), col = "firebrick", lwd = 4)
-#'   title("Brush Fill")
-#'   box()
-#'   dev.off()
-#'   unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
-#' }
-#'
-#' out <- tempfile("mypaint-mixed-", fileext = "-%d.png")
-#' mypaint_device(out, width = 4, height = 3, brush = NULL)
-#' plot(1:5, 1:5, type = "n", main = "Mixed Styles")
-#' if ("classic/pencil" %in% brushes()) {
-#'   set_brush("classic/pencil", type = "stroke")
-#' }
-#' lines(1:5, c(1, 3, 2, 5, 4), lwd = 3)
-#' dev.off()
-#' unlink(Sys.glob(sub("%d", "*", out, fixed = TRUE)))
+#' unlink(out)
 #' @export
 mypaint_device <- function(filename = NULL,
-                           file = NULL,
                            width = 7,
                            height = 7,
                            res = 144,
                            pointsize = 12,
                            bg = "white",
                            brush = NULL,
-                           stroke_style = NULL,
-                           fill_style = NULL,
                            fill_brush = NULL,
                            hand = NULL,
                            stroke_hand = NULL,
                            fill_hand = NULL,
                            auto_solid_bg = TRUE) {
-  if (is.null(filename)) {
-    filename <- file
-  } else if (!is.null(file) && !identical(filename, file)) {
-    stop("Specify only one of `filename` or `file`.", call. = FALSE)
-  }
-
   supplied_args <- names(match.call(expand.dots = FALSE))
   brush_missing <- !("brush" %in% supplied_args)
   fill_brush_missing <- !("fill_brush" %in% supplied_args)
-  stroke_style_missing <- !("stroke_style" %in% supplied_args)
-  fill_style_missing <- !("fill_style" %in% supplied_args)
   hand_missing <- !("hand" %in% supplied_args)
   stroke_hand_missing <- !("stroke_hand" %in% supplied_args)
   fill_hand_missing <- !("fill_hand" %in% supplied_args)
@@ -246,22 +190,15 @@ mypaint_device <- function(filename = NULL,
   }
   warn_if_pure_smudge_brush(stroke_spec, "stroke")
   warn_if_pure_smudge_brush(fill_spec, "fill")
-  stroke_style <- if (stroke_style_missing || is.null(stroke_style)) {
-    if (brush_missing) 1L else if (is.null(brush)) 0L else 1L
-  } else {
-    normalize_render_style(stroke_style)
-  }
-  fill_style <- if (fill_style_missing || is.null(fill_style)) {
-    if (fill_brush_missing) {
+  stroke_style <- if (brush_missing) 1L else if (is.null(brush)) 0L else 1L
+
+  fill_style <- if (fill_brush_missing) {
       if (stroke_style == 1L) 1L else 0L
     } else if (is.null(fill_brush)) {
       0L
     } else {
       1L
     }
-  } else {
-    normalize_render_style(fill_style)
-  }
 
   invisible(.Call(
     mypaintr_device_open,
