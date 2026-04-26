@@ -17,8 +17,9 @@ fully plain, solid rendering.}
 \code{"fill"}.}
 }
 \value{
-\code{NULL}, invisibly. If the active graphics device is not
-\code{\link[=mypaint_device]{mypaint_device()}}, this emits a warning and has no effect.
+\code{NULL}, invisibly. Updates the default hand settings used when
+\code{\link[=mypaint_device]{mypaint_device()}} opens, and also updates the active device when it is a
+\code{\link[=mypaint_device]{mypaint_device()}}.
 }
 \description{
 Set the active hand
