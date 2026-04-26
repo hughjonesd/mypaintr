@@ -5,6 +5,8 @@
 
 mypaintr_env <- new.env(parent = emptyenv())
 mypaintr_env$style_stack <- list()
+mypaintr_env$default_stroke_hand <- NULL
+mypaintr_env$default_fill_hand <- NULL
 
 is_mypaintr_device <- function() {
   identical(names(grDevices::dev.cur()), "mypaintr")
@@ -170,6 +172,12 @@ mypaint_device <- function(filename = NULL,
   }
   if (fill_hand_missing) {
     fill_hand <- hand
+  }
+  if (hand_missing && stroke_hand_missing) {
+    stroke_hand <- mypaintr_env$default_stroke_hand
+  }
+  if (hand_missing && fill_hand_missing) {
+    fill_hand <- mypaintr_env$default_fill_hand
   }
 
   stroke_spec <- if (brush_missing) {

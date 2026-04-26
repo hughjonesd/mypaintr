@@ -159,16 +159,23 @@ human_hand <- function(seed = NULL,
 #'   fully plain, solid rendering.
 #' @param type Which rendering channel to update: `"both"`, `"stroke"`, or
 #'   `"fill"`.
-#' @return `NULL`, invisibly. If the active graphics device is not
-#'   [mypaint_device()], this emits a warning and has no effect.
+#' @return `NULL`, invisibly. Updates the default hand settings used when
+#'   [mypaint_device()] opens, and also updates the active device when it is a
+#'   [mypaint_device()].
 #' @export
 set_hand <- function(hand = NULL, type = c("both", "stroke", "fill")) {
   type <- match.arg(type)
   stroke_hand <- if (type %in% c("both", "stroke")) normalize_hand_spec(hand) else NULL
   fill_hand <- if (type %in% c("both", "fill")) normalize_hand_spec(hand) else NULL
 
+  if (type %in% c("both", "stroke")) {
+    mypaintr_env$default_stroke_hand <- stroke_hand
+  }
+  if (type %in% c("both", "fill")) {
+    mypaintr_env$default_fill_hand <- fill_hand
+  }
+
   if (!is_mypaintr_device()) {
-    warn_no_mypaintr_device("set_hand")
     return(invisible(NULL))
   }
 
