@@ -23,3 +23,18 @@ fully plain, solid rendering.}
 \description{
 Set the active hand
 }
+\examples{
+ex_file <- tempfile(fileext = ".png")
+mypaint_device(ex_file)
+
+plot.new()
+plot.window(c(0, 10), c(0, 10))
+set_hand(hand())
+rect(1, 1, 5, 5, col = "darkred", density = 5)
+set_hand(human_hand())
+rect(5, 5, 9, 9, col = "darkgreen", density = 5)
+
+dev.off()
+img <- png::readPNG(ex_file)
+grid::grid.raster(img)
+}

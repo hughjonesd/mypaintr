@@ -161,6 +161,20 @@ human_hand <- function(seed = NULL,
 #'   `"fill"`.
 #' @return `NULL`, invisibly. If the active graphics device is not
 #'   [mypaint_device()], this emits a warning and has no effect.
+#' @examples
+#' ex_file <- tempfile(fileext = ".png")
+#' mypaint_device(ex_file)
+#'
+#' plot.new()
+#' plot.window(c(0, 10), c(0, 10))
+#' set_hand(hand())
+#' rect(1, 1, 5, 5, col = "darkred", density = 5)
+#' set_hand(human_hand())
+#' rect(5, 5, 9, 9, col = "darkgreen", density = 5)
+#'
+#' dev.off()
+#' img <- png::readPNG(ex_file)
+#' grid::grid.raster(img)
 #' @export
 set_hand <- function(hand = NULL, type = c("both", "stroke", "fill")) {
   type <- match.arg(type)

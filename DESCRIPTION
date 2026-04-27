@@ -23,5 +23,6 @@ RoxygenNote: 7.3.3
 Config/Needs/website: pkgdown
 Suggests: 
     knitr,
+    png,
     rmarkdown
 VignetteBuilder: knitr
