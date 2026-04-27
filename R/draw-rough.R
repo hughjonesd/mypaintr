@@ -1,10 +1,4 @@
 
-rough_control_offsets <- function(t, amplitude) {
-  ctrl_x <- c(0, 0.33, 0.66, 1)
-  ctrl_y <- c(0, stats::rnorm(2, sd = amplitude), 0)
-  stats::approx(ctrl_x, ctrl_y, xout = t, rule = 2)$y
-}
-
 rough_segment_path <- function(x0, y0, x1, y1, hand_spec) {
   dx <- x1 - x0
   dy <- y1 - y0
@@ -36,7 +30,12 @@ rough_segment_path <- function(x0, y0, x1, y1, hand_spec) {
   base_x <- sx + (ex - sx) * t
   base_y <- sy + (ey - sy) * t
   bow <- bow_amp * sin(pi * t)
-  wobble <- rough_control_offsets(t, wobble_amp) * sin(pi * t)
+  wobble <- stats::approx(
+    c(0, 0.33, 0.66, 1),
+    c(0, stats::rnorm(2, sd = wobble_amp), 0),
+    xout = t,
+    rule = 2
+  )$y * sin(pi * t)
   offset <- bow + wobble
 
   list(
@@ -113,27 +112,6 @@ rough_segments <- function(x0, y0, x1, y1, hand = NULL) {
   })
 }
 
-rough_lines_data <- function(x, y = NULL, hand_spec) {
-  xy <- grDevices::xy.coords(x, y)
-  ok <- stats::complete.cases(xy$x, xy$y)
-  groups <- cumsum(!ok)
-  keep_groups <- unique(groups[ok])
-
-  out_x <- numeric()
-  out_y <- numeric()
-  out_id <- integer()
-  for (i in seq_along(keep_groups)) {
-    keep <- ok & groups == keep_groups[[i]]
-    if (sum(keep) >= 2L) {
-      out_x <- c(out_x, xy$x[keep])
-      out_y <- c(out_y, xy$y[keep])
-      out_id <- c(out_id, rep.int(i, sum(keep)))
-    }
-  }
-
-  list(x = out_x, y = out_y, id = out_id)
-}
-
 #' Compute or draw rough connected lines
 #'
 #' @param x,y Coordinates as for [graphics::lines()].
@@ -144,17 +122,25 @@ rough_lines_data <- function(x, y = NULL, hand_spec) {
 rough_lines <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
   with_hand_seed(hand_spec$seed, {
-    rough_lines_data(x, y, hand_spec)
-  })
-}
+    xy <- grDevices::xy.coords(x, y)
+    ok <- stats::complete.cases(xy$x, xy$y)
+    groups <- cumsum(!ok)
+    keep_groups <- unique(groups[ok])
 
-arrow_unit_scale <- function() {
-  usr <- graphics::par("usr")
-  pin <- graphics::par("pin")
-  c(
-    x = abs(usr[2] - usr[1]) / pin[1],
-    y = abs(usr[4] - usr[3]) / pin[2]
-  )
+    out_x <- numeric()
+    out_y <- numeric()
+    out_id <- integer()
+    for (i in seq_along(keep_groups)) {
+      keep <- ok & groups == keep_groups[[i]]
+      if (sum(keep) >= 2L) {
+        out_x <- c(out_x, xy$x[keep])
+        out_y <- c(out_y, xy$y[keep])
+        out_id <- c(out_id, rep.int(i, sum(keep)))
+      }
+    }
+
+    list(x = out_x, y = out_y, id = out_id)
+  })
 }
 
 arrowhead_segments <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2) {
@@ -167,7 +153,12 @@ arrowhead_segments <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code =
   code <- rep_len(as.integer(code), n)
   angle <- rep_len(angle, n)
 
-  scale <- arrow_unit_scale()
+  usr <- graphics::par("usr")
+  pin <- graphics::par("pin")
+  scale <- c(
+    x = abs(usr[2] - usr[1]) / pin[1],
+    y = abs(usr[4] - usr[3]) / pin[2]
+  )
   seg_x0 <- numeric()
   seg_y0 <- numeric()
   seg_x1 <- numeric()

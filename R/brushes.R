@@ -247,10 +247,6 @@ normalize_brush_spec <- function(brush) {
   )
 }
 
-is_probably_pure_smudge_brush <- function(spec) {
-  FALSE
-}
-
 warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
   type <- match.arg(type)
   invisible(NULL)
