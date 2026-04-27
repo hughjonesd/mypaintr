@@ -87,11 +87,6 @@ make_style_override <- function(update_stroke = FALSE,
   )
 }
 
-rgba_int <- function(col) {
-  rgba <- grDevices::col2rgb(col, alpha = TRUE)
-  as.integer(rgba[, 1L])
-}
-
 normalize_render_style <- function(style) {
   if (is.null(style)) {
     return(NULL)
@@ -200,6 +195,9 @@ mypaint_device <- function(filename = NULL,
       1L
     }
 
+  bg <- grDevices::col2rgb(bg, alpha = TRUE)
+  bg <-  as.integer(bg[, 1L])
+
   invisible(.Call(
     mypaintr_device_open,
     enc2utf8(normalizePath(filename, winslash = "/", mustWork = FALSE)),
@@ -207,7 +205,7 @@ mypaint_device <- function(filename = NULL,
     as.numeric(height),
     as.numeric(res),
     as.numeric(pointsize),
-    rgba_int(bg),
+    bg,
     stroke_spec,
     fill_spec,
     stroke_style,

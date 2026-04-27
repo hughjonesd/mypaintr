@@ -262,19 +262,6 @@ path_bbox <- function(paths) {
   )
 }
 
-sample_point_in_paths <- function(paths, rule = c("winding", "evenodd"), max_tries = 200L) {
-  rule <- match.arg(rule)
-  box <- path_bbox(paths)
-  for (i in seq_len(max_tries)) {
-    x <- stats::runif(1L, box$xmin, box$xmax)
-    y <- stats::runif(1L, box$ymin, box$ymax)
-    if (point_in_paths(paths, x, y, rule)) {
-      return(c(x = x, y = y))
-    }
-  }
-  c(x = mean(c(box$xmin, box$xmax)), y = mean(c(box$ymin, box$ymax)))
-}
-
 rotate_xy <- function(x, y, angle_deg) {
   theta <- angle_deg * pi / 180
   cth <- cos(theta)
