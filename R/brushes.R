@@ -371,6 +371,7 @@ tweak_brush <- function(brush,
   overrides <- as.list(match.call())[-1]
   overrides$normalize <- NULL
   overrides$brush <- NULL
+  overrides[] <- lapply(overrides, eval, envir = parent.frame())
   overrides <- normalize_settings(overrides)
   settings[names(overrides)] <- overrides
 
