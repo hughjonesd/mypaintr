@@ -1,36 +1,44 @@
-name: pkgdown
-
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [master]
+    branches: [main, master]
+  pull_request:
+  release:
+    types: [published]
   workflow_dispatch:
 
-permissions:
-  contents: write
+name: pkgdown.yaml
+
+permissions: read-all
 
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    container: rocker/tidyverse:latest
-
+    # Only restrict concurrency for non-PR jobs
+    concurrency:
+      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends libcairo2-dev libjson-c-dev libcurl4-openssl-dev libssl-dev libxml2-dev rsync
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
 
       - name: Install extra dependencies
         run: |
           apt-get install -y --no-install-recommends libmypaint-1.5-1 libmypaint-dev mypaint-brushes
 
-      - name: Install R dependencies
-        run: |
-          install.packages(c("pkgdown", "knitr", "rmarkdown", "roxygen2", "ggplot2"))
-        shell: Rscript {0}
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
 
       - name: Install package
         run: R CMD INSTALL --configure-args='--with-brushes=vendored' .
@@ -39,9 +47,16 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      - name: Deploy site
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Deploy to GitHub pages 🚀
+        if: github.event_name != 'pull_request'
+        uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
+          clean: true
           branch: gh-pages
           folder: docs
-          clean: true
+
+
+name: pkgdown
+
+
+
