@@ -20,7 +20,7 @@
 - [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
   : Set the active mypaintr brush
 - [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md)
-  : Create a reusable tweaked brush specification
+  : Tweak a brush specification
 
 ## Hands
 

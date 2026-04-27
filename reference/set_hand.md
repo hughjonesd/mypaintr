@@ -29,3 +29,25 @@ set_hand(hand = NULL, type = c("both", "stroke", "fill"))
 `NULL`, invisibly. If the active graphics device is not
 [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md),
 this emits a warning and has no effect.
+
+## Examples
+
+``` r
+ex_file <- tempfile(fileext = ".png")
+mypaint_device(ex_file)
+
+plot.new()
+plot.window(c(0, 10), c(0, 10))
+set_hand(hand())
+rect(1, 1, 5, 5, col = "darkred", density = 5)
+set_hand(human_hand())
+rect(5, 5, 9, 9, col = "darkgreen", density = 5)
+
+dev.off()
+#> agg_record_35259e04d7a 
+#>                      2 
+img <- png::readPNG(ex_file)
+#> Error in loadNamespace(x): there is no package called ‘png’
+grid::grid.raster(img)
+#> Error: object 'img' not found
+```
