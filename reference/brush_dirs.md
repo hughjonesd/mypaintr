@@ -26,5 +26,5 @@ Other brush management:
 
 ``` r
 brush_dirs()
-#> [1] "/usr/local/lib/R/site-library/mypaintr/brushes"
+#> [1] "/home/runner/work/_temp/Library/mypaintr/brushes"
 ```

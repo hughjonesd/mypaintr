@@ -477,10 +477,8 @@ set_brush(tweak_brush(pen, radius_by_random = 0.2))
 abline(h = 1, lwd = 3)
 
 dev.off()
-#> agg_record_3524ec5c8b6 
+#> agg_record_1d95a79c08c 
 #>                      2 
 img <- png::readPNG(ex_file)
-#> Error in loadNamespace(x): there is no package called ‘png’
 grid::grid.raster(img)
-#> Error: object 'img' not found
 ```

@@ -61,10 +61,9 @@ for (idx in seq_along(brushes)) {
 }
 
 dev.off()
-#> agg_record_3521ef842cd 
-#>                      2 
+#> agg_record_1d9546cc7d52 
+#>                       2 
 img <- png::readPNG(ex_file)
-#> Error in loadNamespace(x): there is no package called ‘png’
 grid::grid.raster(img)
-#> Error: object 'img' not found
+
 ```

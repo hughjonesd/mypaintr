@@ -44,10 +44,8 @@ set_hand(human_hand())
 rect(5, 5, 9, 9, col = "darkgreen", density = 5)
 
 dev.off()
-#> agg_record_35259e04d7a 
-#>                      2 
+#> agg_record_1d95656d3599 
+#>                       2 
 img <- png::readPNG(ex_file)
-#> Error in loadNamespace(x): there is no package called ‘png’
 grid::grid.raster(img)
-#> Error: object 'img' not found
 ```
