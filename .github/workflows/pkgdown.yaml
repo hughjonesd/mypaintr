@@ -33,7 +33,7 @@ jobs:
 
       - name: Install extra dependencies
         run: |
-          apt-get install -y --no-install-recommends libmypaint-1.5-1 libmypaint-dev mypaint-brushes
+          sudo apt-get install -y --no-install-recommends libmypaint-1.5-1 libmypaint-dev mypaint-brushes
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
