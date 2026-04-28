@@ -5,6 +5,9 @@ output:
     self_contained: false
 ---
 
+*I have no graphics talent, so this was entirely vibe-coded by Codex.
+Take it away, Codex!*
+
 ```{r setup, include=FALSE}
 library(mypaintr)
 library(ggplot2)
