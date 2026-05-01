@@ -4,8 +4,8 @@ mypaint_device(
   "demo-%d.png",
   width = 5,
   height = 4,
-  brush = "chalk",
-  fill_style = "brush"
+  brush = "deevad/chalk",
+  fill_brush = "deevad/chalk"
 )
 
 plot(1:10, col = "grey30", pch = 16, cex = 1.5)

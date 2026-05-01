@@ -1,15 +1,4 @@
 
-require_knitr <- function() {
-  if (!requireNamespace("knitr", quietly = TRUE)) {
-    stop("knitr must be installed to use knitr_mypaint_hook()", call. = FALSE)
-  }
-}
-
-chunk_sets_dev_explicitly <- function(options) {
-  src <- options$params.src %||% ""
-  is.character(src) && length(src) == 1L && grepl("(^|,)\\s*dev\\s*=", src, perl = TRUE)
-}
-
 #' Create a knitr chunk hook for live mypaint rendering
 #'
 #' The returned hook opens [mypaint_device()] before chunk evaluation and
@@ -36,14 +25,19 @@ chunk_sets_dev_explicitly <- function(options) {
 #' }
 #' @export
 knitr_mypaint_hook <- function(...) {
-  require_knitr()
+  if (!requireNamespace("knitr", quietly = TRUE)) {
+    stop("knitr must be installed to use knitr_mypaint_hook()", call. = FALSE)
+  }
   device_defaults <- list(...)
 
   function(before, options, envir) {
     if (!isTRUE(options$mypaint)) {
       return()
     }
-    if (chunk_sets_dev_explicitly(options)) {
+    src <- options$params.src %||% ""
+    has_explicit_dev <- is.character(src) && length(src) == 1L &&
+      grepl("(^|,)\\s*dev\\s*=", src, perl = TRUE)
+    if (has_explicit_dev) {
       return()
     }
 
