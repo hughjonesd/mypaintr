@@ -182,11 +182,12 @@ The next chunks use knitr's standard `"png"` device.
 ```{r, dev="png", fig.width=5, fig.height=5}
 knitr::opts_chunk$get("dev")
 
-plot(1:10, 1:10, type = "n")
-draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red")
-draw_rough_rect(8, 4, 5, 8, col = "blue3", fill_pattern = hatch())
 
-draw_rough_arrows(1, 9, 8, 9, col = "grey40")
+plot(1:10, 1:10, type = "n", hand = human_hand())
+draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red", hand = human_hand())
+draw_rough_rect(8, 4, 5, 8, col = "blue3", fill_pattern = hatch(), hand = human_hand())
+
+draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = human_hand())
 ```
 
 Control lines and fills with the `hand` argument:

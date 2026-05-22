@@ -26,7 +26,7 @@ geom_mypaint_bar(
 )
 }
 \arguments{
-\item{mapping, data, position, just, lineend, linejoin, na.rm, show.legend, inherit.aes}{As for \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}}.}
+\item{mapping, data, position, just, lineend, linejoin, na.rm, show.legend, inherit.aes}{As for \code{\link[ggplot2:geom_col]{ggplot2::geom_col()}}.}
 
 \item{stat}{The statistical transformation to use. Defaults to \code{"count"}.}
 

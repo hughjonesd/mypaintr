@@ -35,9 +35,9 @@ draw_rough_rect(
 )
 }
 \seealso{
-Other fill patterns: 
-\code{\link{hatch}()},
-\code{\link{jumble}()},
-\code{\link{zigzag}()}
+Other fill patterns:
+\code{\link[=hatch]{hatch()}},
+\code{\link[=jumble]{jumble()}},
+\code{\link[=zigzag]{zigzag()}}
 }
 \concept{fill patterns}

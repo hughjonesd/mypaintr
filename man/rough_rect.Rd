@@ -51,12 +51,12 @@ draw_rough_rect(2, 2, 8, 7,
                 fill_pattern = crosshatch(padding = 0.05))
 }
 \seealso{
-Other rough drawing helpers: 
-\code{\link{rough_arrows}()},
-\code{\link{rough_lines}()},
-\code{\link{rough_points}()},
-\code{\link{rough_polygons}()},
-\code{\link{rough_polypath}()},
-\code{\link{rough_segments}()}
+Other rough drawing helpers:
+\code{\link[=rough_arrows]{rough_arrows()}},
+\code{\link[=rough_lines]{rough_lines()}},
+\code{\link[=rough_points]{rough_points()}},
+\code{\link[=rough_polygons]{rough_polygons()}},
+\code{\link[=rough_polypath]{rough_polypath()}},
+\code{\link[=rough_segments]{rough_segments()}}
 }
 \concept{rough drawing helpers}

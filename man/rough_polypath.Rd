@@ -63,12 +63,12 @@ draw_rough_polypath(c(2, 8, 8, 2, 4, 6, 6, 4),
                     fill_pattern = hatch(density = 9))
 }
 \seealso{
-Other rough drawing helpers: 
-\code{\link{rough_arrows}()},
-\code{\link{rough_lines}()},
-\code{\link{rough_points}()},
-\code{\link{rough_polygons}()},
-\code{\link{rough_rect}()},
-\code{\link{rough_segments}()}
+Other rough drawing helpers:
+\code{\link[=rough_arrows]{rough_arrows()}},
+\code{\link[=rough_lines]{rough_lines()}},
+\code{\link[=rough_points]{rough_points()}},
+\code{\link[=rough_polygons]{rough_polygons()}},
+\code{\link[=rough_rect]{rough_rect()}},
+\code{\link[=rough_segments]{rough_segments()}}
 }
 \concept{rough drawing helpers}

@@ -25,7 +25,7 @@ geom_mypaint_col(
 )
 }
 \arguments{
-\item{mapping, data, position, just, lineend, linejoin, na.rm, show.legend, inherit.aes}{As for \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}}.}
+\item{mapping, data, position, just, lineend, linejoin, na.rm, show.legend, inherit.aes}{As for \code{\link[ggplot2:geom_col]{ggplot2::geom_col()}}.}
 
 \item{...}{Other arguments passed to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
