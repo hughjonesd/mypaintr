@@ -47,12 +47,12 @@ plot(1:10, 1:10, type = "n")
 draw_rough_arrows(8, 2, 2, 8, hand = human_hand())
 }
 \seealso{
-Other rough drawing helpers: 
-\code{\link{rough_lines}()},
-\code{\link{rough_points}()},
-\code{\link{rough_polygons}()},
-\code{\link{rough_polypath}()},
-\code{\link{rough_rect}()},
-\code{\link{rough_segments}()}
+Other rough drawing helpers:
+\code{\link[=rough_lines]{rough_lines()}},
+\code{\link[=rough_points]{rough_points()}},
+\code{\link[=rough_polygons]{rough_polygons()}},
+\code{\link[=rough_polypath]{rough_polypath()}},
+\code{\link[=rough_rect]{rough_rect()}},
+\code{\link[=rough_segments]{rough_segments()}}
 }
 \concept{rough drawing helpers}

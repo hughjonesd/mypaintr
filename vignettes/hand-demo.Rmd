@@ -98,21 +98,36 @@ plot_with_hand(endpoint_jitter = 0.02)
 
 ```{r}
 
-plot_with_hand(pressure = 0.5)
+plot_with_hand(pressure = pressure_flat(0.5))
 ```
 
 ```{r}
-plot_with_hand(pressure_taper = 1)
+plot_with_hand(pressure = pressure_smooth())
 ```
 
 # Pressure using `mypaint_device()` and brushes
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 set_brush("classic/pen")
-plot_with_hand(pressure_taper = 1)
+plot_with_hand(pressure = pressure_flat())
+```
+
+```{r, mypaint=TRUE, fig.keep="none"}
+set_brush("classic/pen")
+plot_with_hand(pressure = pressure_smooth())
 ```
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 set_brush("ramon/Marker")
-plot_with_hand(pressure_taper = 1)
+plot_with_hand(pressure = pressure_flat())
+```
+
+```{r, mypaint=TRUE, fig.keep="none"}
+set_brush("ramon/Marker")
+plot_with_hand(pressure = pressure_smooth())
+```
+
+```{r, mypaint=TRUE, fig.keep="none"}
+set_brush("ramon/Marker")
+plot_with_hand(pressure = pressure_human())
 ```

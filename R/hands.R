@@ -64,6 +64,120 @@ as_hand <- function(x = NULL) {
   x
 }
 
+clamp01 <- function(x) {
+  pmax(0, pmin(1, x))
+}
+
+new_pressure_profile <- function(fun) {
+  stopifnot(is.function(fun))
+  structure(
+    fun,
+    class = c("mypaintr_pressure_profile", class(fun))
+  )
+}
+
+as_pressure_profile <- function(x = NULL) {
+  if (is.null(x)) {
+    return(pressure_flat())
+  }
+  if (!is.function(x)) {
+    stop("pressure must be a function, such as pressure_flat(), pressure_smooth(), or pressure_human()", call. = FALSE)
+  }
+  if (inherits(x, "mypaintr_pressure_profile")) {
+    return(x)
+  }
+
+  args <- names(formals(x))
+  if (is.null(args) || !(length(args) >= 2L || "..." %in% args)) {
+    stop("pressure functions must accept two arguments: t and turn", call. = FALSE)
+  }
+
+  new_pressure_profile(x)
+}
+
+#' Pressure profiles for hand-drawn strokes
+#'
+#' @param value Maximum pressure supplied to the brush, in the range `0` to
+#'   `1`.
+#' @param taper How strongly pressure changes over the stroke. `0` keeps the
+#'   pressure flat; `1` applies the full profile shape.
+#' @param turn_taper How strongly pressure is reduced at sharp turns.
+#' @param start,end Relative pressure at the start and end of a human-style
+#'   stroke when `taper = 1`.
+#' @param peak Position of peak pressure along the stroke, in the range `0` to
+#'   `1`.
+#' @return A pressure-profile function for the `pressure` argument of [hand()]
+#'   and [human_hand()]. Custom functions can also be supplied directly; they
+#'   must accept `t` in the range `0` to `1` and `turn` in the range `0` to
+#'   `1`. `turn` describes local path curvature: `0` is straight, larger values
+#'   are sharper corners, and values near `1` are near reversals.
+#' @examples
+#' plot.new()
+#' plot.window(c(0, 10), c(0, 10))
+#' draw_rough_lines(c(1, 9), c(8, 8), lwd = 5,
+#'                  hand = hand(pressure = pressure_flat(0.5)))
+#' draw_rough_lines(c(1, 9), c(5, 5), lwd = 5,
+#'                  hand = hand(pressure = pressure_smooth()))
+#' draw_rough_lines(c(1, 9), c(2, 2), lwd = 5,
+#'                  hand = hand(pressure = pressure_human()))
+#' @family pressure profiles
+#' @export
+pressure_flat <- function(value = 1) {
+  value <- clamp01(value)
+  new_pressure_profile(
+    function(t, turn) {
+      rep(value, length(t))
+    }
+  )
+}
+
+#' @rdname pressure_flat
+#' @export
+pressure_smooth <- function(value = 1, taper = 1, turn_taper = 0.35) {
+  value <- clamp01(value)
+  taper <- clamp01(taper)
+  turn_taper <- clamp01(turn_taper)
+  new_pressure_profile(
+    function(t, turn) {
+      tt <- clamp01(t)
+      pressure <- value * ((1 - taper) + taper * sin(pi * tt))
+      pressure <- pressure * (1 - turn_taper * taper * clamp01(turn))
+      clamp01(pressure)
+    }
+  )
+}
+
+#' @rdname pressure_flat
+#' @export
+pressure_human <- function(value = 1,
+                           taper = 0.6,
+                           start = 0.35,
+                           end = 0.55,
+                           peak = 0.45,
+                           turn_taper = 0.35) {
+  value <- clamp01(value)
+  taper <- clamp01(taper)
+  start <- clamp01(start)
+  end <- clamp01(end)
+  peak <- max(0.01, min(0.99, peak))
+  turn_taper <- clamp01(turn_taper)
+
+  new_pressure_profile(
+    function(t, turn) {
+      tt <- clamp01(t)
+      smoothstep <- function(x) x * x * (3 - 2 * x)
+      shape <- ifelse(
+        tt <= peak,
+        start + (1 - start) * smoothstep(tt / peak),
+        1 - (1 - end) * smoothstep((tt - peak) / (1 - peak))
+      )
+      pressure <- value * ((1 - taper) + taper * shape)
+      pressure <- pressure * (1 - turn_taper * taper * clamp01(turn))
+      clamp01(pressure)
+    }
+  )
+}
+
 #' Hand-drawn geometry settings
 #'
 #' @param seed Optional random seed used for repeatable geometry.
@@ -74,17 +188,15 @@ as_hand <- function(x = NULL) {
 #'   strokes.
 #' @param endpoint_jitter Relative endpoint jitter as a proportion of segment
 #'   length.
-#' @param pressure Base pressure to use for mypaint brush strokes.
-#' @param pressure_taper Amount of tapering applied to pressure at the start
-#'   and end of brush strokes. `0` means constant pressure;
-#'   `1` means strong tapering.
+#' @param pressure Pressure profile function, typically created with
+#'   [pressure_flat()], [pressure_smooth()], or [pressure_human()].
 #' @details
 #' `hand()` defaults to plain, base-R-like geometry with no bowing, wobble, or
-#' jitter. [human_hand()] has different, more human-like defaults.
+#' jitter and flat pressure. [human_hand()] has different, more human-like
+#' defaults, including [pressure_human()].
 #'
-#' As of now, `pressure` and `pressure_taper` only apply to lines, not
-#' shape outlines. On base R devices, they are simulated and affect
-#' line width.
+#' As of now, pressure profiles only apply to open lines, not shape outlines. On
+#' base R devices, they are simulated and affect line width.
 #'
 #' @return An object describing how rough geometry should be generated.
 #' @examples
@@ -97,7 +209,10 @@ as_hand <- function(x = NULL) {
 #'                    bow = 0.02, wobble = 0.01))
 #' draw_rough_lines(c(0, 10), c(2, 2), lwd = 4,
 #'                  hand = human_hand(seed = 1,
-#'                    pressure = 0.7, pressure_taper = 0.5))
+#'                    pressure = pressure_smooth(0.7, taper = 0.5)))
+#' draw_rough_lines(c(0, 10), c(1, 1), lwd = 4,
+#'                  hand = human_hand(seed = 1,
+#'                    pressure = pressure_human()))
 #' @export
 hand <- function(seed = NULL,
                  bow = 0,
@@ -105,8 +220,8 @@ hand <- function(seed = NULL,
                  multi_stroke = 1L,
                  width_jitter = 0,
                  endpoint_jitter = 0,
-                 pressure = 1,
-                 pressure_taper = 0) {
+                 pressure = pressure_flat()) {
+  pressure <- as_pressure_profile(pressure)
   structure(
     list(
       seed = seed,
@@ -115,8 +230,7 @@ hand <- function(seed = NULL,
       multi_stroke = as.integer(multi_stroke),
       width_jitter = width_jitter,
       endpoint_jitter = endpoint_jitter,
-      pressure = pressure,
-      pressure_taper = pressure_taper
+      pressure = pressure
     ),
     class = "mypaintr_hand"
   )
@@ -124,8 +238,8 @@ hand <- function(seed = NULL,
 
 #' Hand-drawn geometry settings with rough human-style defaults
 #'
-#' `human_hand()` is the same as [hand()], but starts from the older rougher
-#' defaults with bow, wobble, and width jitter already enabled.
+#' `human_hand()` is the same as [hand()], but starts from rougher defaults with
+#' bow, wobble, width jitter, and a human-style pressure profile enabled.
 #'
 #' @return An object describing how rough geometry should be generated.
 #' @rdname hand
@@ -136,8 +250,7 @@ human_hand <- function(seed = NULL,
                        multi_stroke = 1L,
                        width_jitter = 0.08,
                        endpoint_jitter = 0,
-                       pressure = 1,
-                       pressure_taper = 0) {
+                       pressure = pressure_human()) {
   hand(
     seed = seed,
     bow = bow,
@@ -145,8 +258,7 @@ human_hand <- function(seed = NULL,
     multi_stroke = multi_stroke,
     width_jitter = width_jitter,
     endpoint_jitter = endpoint_jitter,
-    pressure = pressure,
-    pressure_taper = pressure_taper
+    pressure = pressure
   )
 }
 

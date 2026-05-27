@@ -42,9 +42,9 @@ plot.window(xlim = c(0, 10), ylim = c(0, 10))
 draw_rough_rect(2, 2, 8, 8, col = "red", fill_pattern = jumble())
 }
 \seealso{
-Other fill patterns: 
-\code{\link{crosshatch}()},
-\code{\link{hatch}()},
-\code{\link{zigzag}()}
+Other fill patterns:
+\code{\link[=crosshatch]{crosshatch()}},
+\code{\link[=hatch]{hatch()}},
+\code{\link[=zigzag]{zigzag()}}
 }
 \concept{fill patterns}

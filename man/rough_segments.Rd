@@ -30,12 +30,12 @@ plot(1:10, 1:10, type = "n")
 draw_rough_segments(1:3, 2:4, 4:6, c(8, 5, 7), hand = human_hand())
 }
 \seealso{
-Other rough drawing helpers: 
-\code{\link{rough_arrows}()},
-\code{\link{rough_lines}()},
-\code{\link{rough_points}()},
-\code{\link{rough_polygons}()},
-\code{\link{rough_polypath}()},
-\code{\link{rough_rect}()}
+Other rough drawing helpers:
+\code{\link[=rough_arrows]{rough_arrows()}},
+\code{\link[=rough_lines]{rough_lines()}},
+\code{\link[=rough_points]{rough_points()}},
+\code{\link[=rough_polygons]{rough_polygons()}},
+\code{\link[=rough_polypath]{rough_polypath()}},
+\code{\link[=rough_rect]{rough_rect()}}
 }
 \concept{rough drawing helpers}

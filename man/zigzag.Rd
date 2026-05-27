@@ -31,9 +31,9 @@ draw_rough_rect(2, 2, 8, 8, col = "red",
                 fill_pattern = zigzag(density = 7))
 }
 \seealso{
-Other fill patterns: 
-\code{\link{crosshatch}()},
-\code{\link{hatch}()},
-\code{\link{jumble}()}
+Other fill patterns:
+\code{\link[=crosshatch]{crosshatch()}},
+\code{\link[=hatch]{hatch()}},
+\code{\link[=jumble]{jumble()}}
 }
 \concept{fill patterns}

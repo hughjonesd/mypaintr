@@ -29,12 +29,12 @@ draw_rough_points(1:10, 1:10,
                   pch = 16, cex = 1.4)
 }
 \seealso{
-Other rough drawing helpers: 
-\code{\link{rough_arrows}()},
-\code{\link{rough_lines}()},
-\code{\link{rough_polygons}()},
-\code{\link{rough_polypath}()},
-\code{\link{rough_rect}()},
-\code{\link{rough_segments}()}
+Other rough drawing helpers:
+\code{\link[=rough_arrows]{rough_arrows()}},
+\code{\link[=rough_lines]{rough_lines()}},
+\code{\link[=rough_polygons]{rough_polygons()}},
+\code{\link[=rough_polypath]{rough_polypath()}},
+\code{\link[=rough_rect]{rough_rect()}},
+\code{\link[=rough_segments]{rough_segments()}}
 }
 \concept{rough drawing helpers}

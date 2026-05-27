@@ -29,12 +29,12 @@ plot(1:6, y, type = "n")
 draw_rough_lines(1:6, y, hand = human_hand(multi_stroke = 2))
 }
 \seealso{
-Other rough drawing helpers: 
-\code{\link{rough_arrows}()},
-\code{\link{rough_points}()},
-\code{\link{rough_polygons}()},
-\code{\link{rough_polypath}()},
-\code{\link{rough_rect}()},
-\code{\link{rough_segments}()}
+Other rough drawing helpers:
+\code{\link[=rough_arrows]{rough_arrows()}},
+\code{\link[=rough_points]{rough_points()}},
+\code{\link[=rough_polygons]{rough_polygons()}},
+\code{\link[=rough_polypath]{rough_polypath()}},
+\code{\link[=rough_rect]{rough_rect()}},
+\code{\link[=rough_segments]{rough_segments()}}
 }
 \concept{rough drawing helpers}

@@ -13,12 +13,12 @@ libmypaint brush input metadata
 head(brush_inputs())
 }
 \seealso{
-Other brush management: 
-\code{\link{brush_dirs}()},
-\code{\link{brush_settings}()},
-\code{\link{brushes}()},
-\code{\link{load_brush}()},
-\code{\link{set_brush}()},
-\code{\link{tweak_brush}()}
+Other brush management:
+\code{\link[=brush_dirs]{brush_dirs()}},
+\code{\link[=brush_settings]{brush_settings()}},
+\code{\link[=brushes]{brushes()}},
+\code{\link[=load_brush]{load_brush()}},
+\code{\link[=set_brush]{set_brush()}},
+\code{\link[=tweak_brush]{tweak_brush()}}
 }
 \concept{brush management}
