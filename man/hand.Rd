@@ -41,8 +41,7 @@ strokes.}
 length.}
 
 \item{pressure}{Pressure profile function, typically created with
-\code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_flat]{pressure_smooth()}}, or
-\code{\link[=pressure_flat]{pressure_human()}}.}
+\code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_smooth]{pressure_smooth()}}, or \code{\link[=pressure_human]{pressure_human()}}.}
 }
 \value{
 An object describing how rough geometry should be generated.
@@ -56,7 +55,7 @@ bow, wobble, width jitter, and a human-style pressure profile enabled.
 \details{
 \code{hand()} defaults to plain, base-R-like geometry with no bowing, wobble, or
 jitter and flat pressure. \code{\link[=human_hand]{human_hand()}} has different, more human-like
-defaults, including \code{\link[=pressure_flat]{pressure_human()}}.
+defaults, including \code{\link[=pressure_human]{pressure_human()}}.
 
 As of now, pressure profiles only apply to open lines, not shape outlines. On
 base R devices, they are simulated and affect line width.
