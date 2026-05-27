@@ -2180,10 +2180,10 @@ static void init_brushes(MypaintrDevice *dev, SEXP stroke_spec, SEXP fill_spec) 
 }
 
 static void init_hands(MypaintrDevice *dev, SEXP stroke_hand, SEXP fill_hand) {
-  configure_hand(&dev->stroke_hand, stroke_hand, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
-  configure_hand(&dev->fill_hand, fill_hand, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
   replace_preserved(&dev->stroke_hand_spec, stroke_hand);
   replace_preserved(&dev->fill_hand_spec, fill_hand);
+  configure_hand(&dev->stroke_hand, dev->stroke_hand_spec, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
+  configure_hand(&dev->fill_hand, dev->fill_hand_spec, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
 }
 
 static MypaintrDevice *current_mypaintr_device(void) {
@@ -2840,12 +2840,12 @@ SEXP mypaintr_device_set_hand(SEXP stroke_hand, SEXP fill_hand, SEXP update_stro
   MypaintrDevice *dev = current_mypaintr_device();
 
   if (asLogical(update_stroke)) {
-    configure_hand(&dev->stroke_hand, stroke_hand, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
     replace_preserved(&dev->stroke_hand_spec, stroke_hand);
+    configure_hand(&dev->stroke_hand, dev->stroke_hand_spec, ((uint64_t) (uintptr_t) dev) ^ (uint64_t) time(NULL));
   }
   if (asLogical(update_fill)) {
-    configure_hand(&dev->fill_hand, fill_hand, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
     replace_preserved(&dev->fill_hand_spec, fill_hand);
+    configure_hand(&dev->fill_hand, dev->fill_hand_spec, (((uint64_t) (uintptr_t) dev) << 1) ^ ((uint64_t) time(NULL) + 17ULL));
   }
 
   return R_NilValue;

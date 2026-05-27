@@ -499,6 +499,69 @@ warn_missing_fill_for_pattern <- function(fill_pattern, col) {
   }
 }
 
+close_path <- function(path) {
+  if (!length(path$x)) {
+    return(path)
+  }
+  list(
+    x = c(path$x, path$x[[1L]]),
+    y = c(path$y, path$y[[1L]])
+  )
+}
+
+draw_device_fill_pattern <- function(paths, col, fill_pattern = NULL,
+                                     rule = c("winding", "evenodd"),
+                                     xpd = NULL, ...) {
+  geom <- rough_fill_pattern_data(paths, hand_spec = NULL, fill_pattern = fill_pattern, rule = rule)
+  if (!length(geom$x)) {
+    return(invisible(NULL))
+  }
+  for (i in unique(geom$id)) {
+    keep <- geom$id == i
+    graphics::lines(geom$x[keep], geom$y[keep], col = col, xpd = xpd, ...)
+  }
+  invisible(NULL)
+}
+
+draw_mypaint_polygons <- function(x, y, hand_spec, col, border, fill_pattern = NULL, ...) {
+  path <- list(x = x, y = y)
+  with_mypaint_hand(hand_spec, {
+    if (is_visible_col(col)) {
+      if (is.null(fill_pattern)) {
+        graphics::polygon(x, y, col = col, border = NA, ...)
+      } else {
+        draw_device_fill_pattern(list(path), col = col, fill_pattern = fill_pattern, ...)
+      }
+    }
+    if (is_visible_col(border)) {
+      closed <- close_path(path)
+      graphics::lines(closed$x, closed$y, col = border, ...)
+    }
+    NULL
+  })
+}
+
+draw_mypaint_polypath <- function(paths, rule, hand_spec, col, border,
+                                  fill_pattern = NULL, ...) {
+  with_mypaint_hand(hand_spec, {
+    if (is_visible_col(col)) {
+      if (is.null(fill_pattern)) {
+        solid_path <- join_polypath_na(paths)
+        graphics::polypath(solid_path$x, solid_path$y, rule = rule, col = col, border = NA, ...)
+      } else {
+        draw_device_fill_pattern(paths, col = col, fill_pattern = fill_pattern, rule = rule, ...)
+      }
+    }
+    if (is_visible_col(border)) {
+      for (path in paths) {
+        closed <- close_path(path)
+        graphics::lines(closed$x, closed$y, col = border, ...)
+      }
+    }
+    NULL
+  })
+}
+
 #' @rdname rough_polypath
 #' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
@@ -521,6 +584,18 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   paths0 <- split_polypath(x, y, id)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   warn_missing_fill_for_pattern(fill_pattern, col)
+
+  if (is_mypaintr_device()) {
+    return(invisible(draw_mypaint_polypath(
+      paths0,
+      rule = rule,
+      hand_spec = hand_spec,
+      col = col,
+      border = border,
+      fill_pattern = fill_pattern,
+      ...
+    )))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     geom <- rough_polypath_data(paths0, hand_spec, rule)
@@ -581,6 +656,18 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
   xy <- grDevices::xy.coords(x, y)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   warn_missing_fill_for_pattern(fill_pattern, col)
+
+  if (is_mypaintr_device()) {
+    return(invisible(draw_mypaint_polygons(
+      xy$x,
+      xy$y,
+      hand_spec = hand_spec,
+      col = col,
+      border = border,
+      fill_pattern = fill_pattern,
+      ...
+    )))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)

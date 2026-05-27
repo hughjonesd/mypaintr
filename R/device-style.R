@@ -61,6 +61,26 @@ apply_device_style_override <- function(style) {
   ))
 }
 
+with_mypaint_hand <- function(hand, expr, type = c("both", "stroke", "fill")) {
+  type <- match.arg(type)
+  if (!is_mypaintr_device()) {
+    return(force(expr))
+  }
+
+  state <- current_device_style()
+  on.exit(apply_device_style_state(state), add = TRUE)
+  hand <- normalize_hand_spec(hand)
+  invisible(.Call(
+    mypaintr_device_set_hand,
+    if (type %in% c("both", "stroke")) hand else NULL,
+    if (type %in% c("both", "fill")) hand else NULL,
+    type %in% c("both", "stroke"),
+    type %in% c("both", "fill")
+  ))
+
+  force(expr)
+}
+
 make_style_override <- function(update_stroke = FALSE,
                                 stroke_spec = NULL,
                                 stroke_style = NULL,
