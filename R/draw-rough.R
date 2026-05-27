@@ -522,6 +522,50 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   warn_missing_fill_for_pattern(fill_pattern, col)
 
+  if (is_mypaintr_device()) {
+    state <- current_device_style()
+    on.exit(apply_device_style_state(state), add = TRUE)
+    invisible(.Call(mypaintr_device_set_hand, hand_spec, hand_spec, TRUE, TRUE))
+
+    neutral_hand <- hand(seed = hand_spec$seed)
+    return(invisible(with_hand_seed(neutral_hand$seed, {
+      if (is.null(fill_pattern)) {
+        if (is_visible_col(col) || is_visible_col(border)) {
+          solid_path <- join_polypath_na(paths0)
+          do.call(
+            graphics::polypath,
+            c(
+              list(x = solid_path$x, y = solid_path$y, rule = rule, col = col, border = border),
+              list(...)
+            )
+          )
+        }
+      } else {
+        if (is_visible_col(col)) {
+          draw_rough_fill_pattern(
+            paths0,
+            neutral_hand,
+            col = col,
+            fill_pattern = fill_pattern,
+            rule = rule,
+            ...
+          )
+        }
+        if (is_visible_col(border)) {
+          solid_path <- join_polypath_na(paths0)
+          do.call(
+            graphics::polypath,
+            c(
+              list(x = solid_path$x, y = solid_path$y, rule = rule, col = NA, border = border),
+              list(...)
+            )
+          )
+        }
+      }
+      NULL
+    })))
+  }
+
   invisible(with_hand_seed(hand_spec$seed, {
     geom <- rough_polypath_data(paths0, hand_spec, rule)
     paths <- split_polypath(geom$x, geom$y, geom$id)
@@ -581,6 +625,47 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
   xy <- grDevices::xy.coords(x, y)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   warn_missing_fill_for_pattern(fill_pattern, col)
+
+  if (is_mypaintr_device()) {
+    state <- current_device_style()
+    on.exit(apply_device_style_state(state), add = TRUE)
+    invisible(.Call(mypaintr_device_set_hand, hand_spec, hand_spec, TRUE, TRUE))
+
+    neutral_hand <- hand(seed = hand_spec$seed)
+    return(invisible(with_hand_seed(neutral_hand$seed, {
+      if (is.null(fill_pattern)) {
+        if (is_visible_col(col) || is_visible_col(border)) {
+          do.call(
+            graphics::polygon,
+            c(
+              list(x = xy$x, y = xy$y, col = col, border = border),
+              list(...)
+            )
+          )
+        }
+      } else {
+        if (is_visible_col(col)) {
+          draw_rough_fill_pattern(
+            list(list(x = xy$x, y = xy$y)),
+            neutral_hand,
+            col = col,
+            fill_pattern = fill_pattern,
+            ...
+          )
+        }
+        if (is_visible_col(border)) {
+          do.call(
+            graphics::polygon,
+            c(
+              list(x = xy$x, y = xy$y, col = NA, border = border),
+              list(...)
+            )
+          )
+        }
+      }
+      NULL
+    })))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)

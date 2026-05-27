@@ -140,6 +140,18 @@ static inline int colors_close(int lhs, int rhs, int tol) {
          abs(R_ALPHA(lhs) - R_ALPHA(rhs)) <= tol;
 }
 
+static inline double device_lwd_scale(const MypaintrDevice *dev) {
+  return dev->res / 96.0;
+}
+
+static inline double device_lwd(const MypaintrDevice *dev, double lwd) {
+  return fmax(lwd * device_lwd_scale(dev), 1e-3);
+}
+
+static inline double device_length(const MypaintrDevice *dev, double x) {
+  return x * device_lwd_scale(dev);
+}
+
 static uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -1208,10 +1220,10 @@ static void save_page(MypaintrDevice *dev) {
   }
 }
 
-static void brush_apply_gc(MypaintrBrush *brush, int col, double lwd) {
+static void brush_apply_gc(const MypaintrDevice *dev, MypaintrBrush *brush, int col, double lwd) {
   double h, s, v;
   double alpha = R_ALPHA(col) / 255.0;
-  double width_factor = fmax(lwd, 1e-3);
+  double width_factor = device_lwd(dev, lwd);
 
   rgb_to_hsv(
     R_RED(col) / 255.0,
@@ -1595,7 +1607,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     pressure_hand = &dev->fill_hand;
   }
 
-  brush_apply_gc(brush, col, lwd);
+  brush_apply_gc(dev, brush, col, lwd);
   start_dx = x[1] - x[0];
   start_dy = y[1] - y[0];
   start_len = sqrt(start_dx * start_dx + start_dy * start_dy);
@@ -1695,6 +1707,7 @@ static void cairo_set_lty(cairo_t *cr, int lty, double lwd) {
 static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, const MypaintrHand *hand) {
   int i;
   double total_len = 0.0;
+  double scaled_lwd = device_lwd(dev, lwd);
   int emulate_pressure = 0;
 
   if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
@@ -1746,7 +1759,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
         double y1 = sy + dy * u1;
         double mid = cumulative + seg_len * (u0 + u1) * 0.5;
         double t = mid / total_len;
-        double width = fmax(1e-3, lwd * stroke_pressure_at(hand, t, polyline_turn_factor(x, y, n, i - 1)));
+        double width = fmax(1e-3, scaled_lwd * stroke_pressure_at(hand, t, polyline_turn_factor(x, y, n, i - 1)));
 
         cairo_new_path(dev->cr);
         cairo_move_to(dev->cr, x0, flip_y(dev, y0));
@@ -1772,17 +1785,17 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
     cairo_close_path(dev->cr);
   }
   set_cairo_source(dev->cr, col);
-  cairo_set_line_width(dev->cr, fmax(lwd, 1e-3));
+  cairo_set_line_width(dev->cr, scaled_lwd);
   cairo_set_line_cap(dev->cr, CAIRO_LINE_CAP_ROUND);
   cairo_set_line_join(dev->cr, CAIRO_LINE_JOIN_ROUND);
-  cairo_set_lty(dev->cr, lty, lwd);
+  cairo_set_lty(dev->cr, lty, scaled_lwd);
   cairo_stroke(dev->cr);
   cairo_restore(dev->cr);
 }
 
 static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty) {
   double pattern[8];
-  int pattern_n = decode_lty(lty, lwd, pattern, 8);
+  int pattern_n = decode_lty(lty, device_lwd(dev, lwd), pattern, 8);
   int pattern_i = 0;
   double remaining;
   int draw_on = 1;
@@ -1896,7 +1909,7 @@ static int cmp_intersection(const void *lhs, const void *rhs) {
 }
 
 static void hatch_fill_path(MypaintrDevice *dev, MypaintrBrush *brush, int npoly, const int *nper, const double *x, const double *y, int fill, int rule) {
-  double radius = exp(brush->base_radius_log);
+  double radius = device_length(dev, exp(brush->base_radius_log));
   double spacing = fmax(2.0, radius * 1.5);
   double min_y = y[0];
   double max_y = y[0];
@@ -1977,7 +1990,7 @@ static void hatch_fill_polygon(MypaintrDevice *dev, MypaintrBrush *brush, int n,
 }
 
 static void hatch_fill_rect(MypaintrDevice *dev, MypaintrBrush *brush, double x0, double y0, double x1, double y1, int fill) {
-  double radius = exp(brush->base_radius_log);
+  double radius = device_length(dev, exp(brush->base_radius_log));
   double spacing = fmax(2.0, radius * 1.5);
   double left = fmin(x0, x1);
   double right = fmax(x0, x1);
@@ -1992,7 +2005,7 @@ static void hatch_fill_rect(MypaintrDevice *dev, MypaintrBrush *brush, double x0
 }
 
 static void hatch_fill_circle(MypaintrDevice *dev, MypaintrBrush *brush, double x, double y, double r, int fill) {
-  double radius = exp(brush->base_radius_log);
+  double radius = device_length(dev, exp(brush->base_radius_log));
   double spacing = fmax(2.0, radius * 1.5);
 
   for (double yy = y - r; yy <= y + r; yy += spacing) {
