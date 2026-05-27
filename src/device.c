@@ -51,8 +51,7 @@ typedef struct {
   int multi_stroke;
   double width_jitter;
   double endpoint_jitter;
-  double pressure;
-  double pressure_taper;
+  SEXP pressure_fun;
   double hachure_gap;
   int has_hachure_gap;
   double hachure_angle_jitter;
@@ -890,8 +889,7 @@ static void init_hand_defaults(MypaintrHand *hand, uint64_t salt) {
   hand->multi_stroke = 1;
   hand->width_jitter = 0.0;
   hand->endpoint_jitter = 0.0;
-  hand->pressure = 1.0;
-  hand->pressure_taper = 0.0;
+  hand->pressure_fun = R_NilValue;
   hand->hachure_angle_jitter = 12.0;
   hand->hachure_gap_jitter = 0.15;
 }
@@ -923,9 +921,12 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
   value = list_element(spec, "endpoint_jitter");
   if (value != R_NilValue && XLENGTH(value) == 1) hand->endpoint_jitter = asReal(value);
   value = list_element(spec, "pressure");
-  if (value != R_NilValue && XLENGTH(value) == 1) hand->pressure = clamp01(asReal(value));
-  value = list_element(spec, "pressure_taper");
-  if (value != R_NilValue && XLENGTH(value) == 1) hand->pressure_taper = clamp01(asReal(value));
+  if (value != R_NilValue) {
+    if (!isFunction(value)) {
+      error("pressure must be a function created by pressure_flat(), pressure_smooth(), pressure_human(), or a compatible custom function");
+    }
+    hand->pressure_fun = value;
+  }
   value = list_element(spec, "hachure_gap");
   if (value != R_NilValue && XLENGTH(value) == 1) {
     hand->has_hachure_gap = 1;
@@ -946,16 +947,28 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
 }
 
 static double stroke_pressure_at(const MypaintrHand *hand, double t, double turn_factor) {
-  double base = hand ? clamp01(hand->pressure) : 1.0;
-  double taper = hand ? clamp01(hand->pressure_taper) : 0.0;
-  double tt = clamp01(t);
-  double profile = sin(M_PI * tt);
-  double pressure = base * ((1.0 - taper) + taper * profile);
+  SEXP t_arg;
+  SEXP turn_arg;
+  SEXP call;
+  SEXP value;
+  double pressure;
 
-  if (taper > 0.0 && turn_factor > 0.0) {
-    pressure *= 1.0 - 0.35 * taper * clamp01(turn_factor);
+  if (!hand || hand->pressure_fun == R_NilValue) {
+    return 1.0;
   }
 
+  PROTECT(t_arg = ScalarReal(clamp01(t)));
+  PROTECT(turn_arg = ScalarReal(clamp01(turn_factor)));
+  PROTECT(call = lang3(hand->pressure_fun, t_arg, turn_arg));
+  PROTECT(value = eval(call, R_GlobalEnv));
+
+  if (XLENGTH(value) < 1) {
+    UNPROTECT(4);
+    error("pressure function must return at least one value");
+  }
+
+  pressure = asReal(value);
+  UNPROTECT(4);
   return clamp01(pressure);
 }
 
@@ -1689,9 +1702,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
   }
 
   if (hand && !closed && lty == LTY_SOLID) {
-    emulate_pressure =
-      fabs(clamp01(hand->pressure) - 1.0) > 1e-9 ||
-      clamp01(hand->pressure_taper) > 1e-9;
+    emulate_pressure = 1;
   }
 
   if (emulate_pressure) {

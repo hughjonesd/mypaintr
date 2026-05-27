@@ -12,8 +12,7 @@ hand(
   multi_stroke = 1L,
   width_jitter = 0,
   endpoint_jitter = 0,
-  pressure = 1,
-  pressure_taper = 0
+  pressure = pressure_flat()
 )
 
 human_hand(
@@ -23,8 +22,7 @@ human_hand(
   multi_stroke = 1L,
   width_jitter = 0.08,
   endpoint_jitter = 0,
-  pressure = 1,
-  pressure_taper = 0
+  pressure = pressure_human()
 )
 }
 \arguments{
@@ -42,11 +40,9 @@ strokes.}
 \item{endpoint_jitter}{Relative endpoint jitter as a proportion of segment
 length.}
 
-\item{pressure}{Base pressure to use for mypaint brush strokes.}
-
-\item{pressure_taper}{Amount of tapering applied to pressure at the start
-and end of brush strokes. \code{0} means constant pressure;
-\code{1} means strong tapering.}
+\item{pressure}{Pressure profile function, typically created with
+\code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_flat]{pressure_smooth()}}, or
+\code{\link[=pressure_flat]{pressure_human()}}.}
 }
 \value{
 An object describing how rough geometry should be generated.
@@ -54,16 +50,16 @@ An object describing how rough geometry should be generated.
 An object describing how rough geometry should be generated.
 }
 \description{
-\code{human_hand()} is the same as \code{\link[=hand]{hand()}}, but starts from the older rougher
-defaults with bow, wobble, and width jitter already enabled.
+\code{human_hand()} is the same as \code{\link[=hand]{hand()}}, but starts from rougher defaults with
+bow, wobble, width jitter, and a human-style pressure profile enabled.
 }
 \details{
 \code{hand()} defaults to plain, base-R-like geometry with no bowing, wobble, or
-jitter. \code{\link[=human_hand]{human_hand()}} has different, more human-like defaults.
+jitter and flat pressure. \code{\link[=human_hand]{human_hand()}} has different, more human-like
+defaults, including \code{\link[=pressure_flat]{pressure_human()}}.
 
-As of now, \code{pressure} and \code{pressure_taper} only apply to lines, not
-shape outlines. On base R devices, they are simulated and affect
-line width.
+As of now, pressure profiles only apply to open lines, not shape outlines. On
+base R devices, they are simulated and affect line width.
 }
 \examples{
 plot.new()
@@ -75,5 +71,8 @@ draw_rough_lines(c(0, 10), c(4, 4), lwd = 4,
                    bow = 0.02, wobble = 0.01))
 draw_rough_lines(c(0, 10), c(2, 2), lwd = 4,
                  hand = human_hand(seed = 1,
-                   pressure = 0.7, pressure_taper = 0.5))
+                   pressure = pressure_smooth(0.7, taper = 0.5)))
+draw_rough_lines(c(0, 10), c(1, 1), lwd = 4,
+                 hand = human_hand(seed = 1,
+                   pressure = pressure_human()))
 }
