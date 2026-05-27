@@ -15,6 +15,7 @@ has three components:
 Here are some demos.
 
 ``` r
+
 library(mypaintr)
 knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 
@@ -33,6 +34,7 @@ To use mypaintr from the command line, open the
 graphics device:
 
 ``` r
+
 mypaint_device("output.png")
 ```
 
@@ -41,6 +43,7 @@ And close the device with
 to the output file:
 
 ``` r
+
 dev.off()
 ```
 
@@ -55,6 +58,7 @@ via your package manager (e.g. `apt` or `brew`).
 
 ``` r
 
+
 set_brush("tanda/marker-01")
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
@@ -67,6 +71,7 @@ between calls. Here we set the brush to `NULL` to print an axis using
 (close to) standard R graphics:
 
 ``` r
+
 
 set_brush("classic/charcoal")
 barplot(VADeaths, axes = FALSE, 
@@ -137,6 +142,7 @@ change what is plotted along a given path, hands change the path itself,
 by adding jitter, multiple lines and other human-like quirks:
 
 ``` r
+
 set_hand(human_hand())
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
@@ -144,6 +150,7 @@ barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ![](introduction_files/figure-html/unnamed-chunk-3-1.png)
 
 ``` r
+
 set_hand(hand(bow = 0, wobble = 0.01, multi_stroke = 2))
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
@@ -153,6 +160,7 @@ barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 Combining brushes and hands, you can turn any R graphics into a sketch.
 
 ``` r
+
 
 set_brush("deevad/chalk")
 set_hand(human_hand())
@@ -172,6 +180,7 @@ separately for each of them.
 ``` r
 
 
+
 set_hand(human_hand())
 plot(1:10, 1:10, type = "n")
 rect(2, 2, 8, 8, col = "green4", border = "black")
@@ -187,14 +196,16 @@ The `draw_rough_*` functions do two useful things:
 The next chunks use knitr’s standard `"png"` device.
 
 ``` r
+
 knitr::opts_chunk$get("dev")
 #> [1] "ragg_png"
 
-plot(1:10, 1:10, type = "n")
-draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red")
-draw_rough_rect(8, 4, 5, 8, col = "blue3", fill_pattern = hatch())
+plot.new()
+plot.window(c(1, 10), c(1, 10))
+draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red", hand = human_hand())
+draw_rough_rect(8, 4, 5, 8, col = "blue3", fill_pattern = hatch(), hand = human_hand())
 
-draw_rough_arrows(1, 9, 8, 9, col = "grey40")
+draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = human_hand())
 ```
 
 ![](introduction_files/figure-html/unnamed-chunk-7-1.png)
@@ -203,7 +214,9 @@ Control lines and fills with the `hand` argument:
 
 ``` r
 
-plot(1:10, 1:10, type = "n")
+
+plot.new()
+plot.window(c(1, 10), c(1, 10))
 
 my_hand <- hand(wobble = 0.01, multi_stroke = 2)
 draw_rough_polygons(c(2, 4, 6), c(4, 2, 6), col = "red", hand = my_hand)
@@ -215,6 +228,7 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 ![](introduction_files/figure-html/unnamed-chunk-8-1.png)
 
 ``` r
+
 
 plot(c(0.01, 0.11), c(0.01, 0.11), type = "n", 
      xlab = "bow", ylab = "wobble", 
@@ -240,6 +254,7 @@ lines. mypaintr knows four ways to do this. Again, these work with base
 graphics devices via the `draw_rough_*` functions:
 
 ``` r
+
 
 plot(0:10, 0:10, type = "n")
 hand <- human_hand()
@@ -267,6 +282,7 @@ fill:
 
 ``` r
 
+
 plot(1:10, 1:10, type = "n")
 
 set_brush("classic/ink_blot", type = "fill")
@@ -288,6 +304,7 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 You can use ggplot2 with a mypaint output device:
 
 ``` r
+
 
 library(ggplot2)
 
@@ -319,6 +336,7 @@ straight grid lines:
 ``` r
 
 
+
 ggplot(diamonds) + 
   mypaint_wrap(
     geom_bar(aes(cut, fill = cut)),
@@ -341,6 +359,7 @@ and
 [`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
 
 ``` r
+
 
 
 ggplot(diamonds) + 
@@ -367,6 +386,7 @@ dynamically updating the device within chunks, you must install a
 special hook:
 
 ``` r
+
 knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
 ```
 
@@ -375,6 +395,7 @@ options `mypaint=TRUE, fig.keep="none"`. You can set them for all chunks
 like this:
 
 ``` r
+
 knitr::opts_chunk$set(
   mypaint = TRUE,
   fig.keep = "none"

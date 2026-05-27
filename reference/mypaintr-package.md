@@ -17,3 +17,7 @@ Useful links:
 ## Author
 
 **Maintainer**: David Hugh-Jones <david@example.com>
+
+Authors:
+
+- David Hugh-Jones <david@example.com>

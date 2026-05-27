@@ -1,6 +1,7 @@
 # Hand demo
 
 ``` r
+
 plot_with_hand <- function(...) {
   null <- length(list(...)) &&is.null(list(...)[[1]])
   title <- deparse(substitute(list(...)))
@@ -18,7 +19,12 @@ plot_with_hand <- function(...) {
     hand <- NULL
   else 
     hand <- human_hand(seed = 1, ...)
-  set_hand(hand)
+
+  on_mypaint_device <- identical(names(grDevices::dev.cur()), "mypaintr")
+  if (on_mypaint_device) {
+    set_hand(hand)
+  }
+
   rect(1, 1, 4, 4)
   draw_rough_rect(6, 6, 9, 9, col = "green4", hand = hand)
   draw_rough_rect(1, 6, 4, 9, col = "darkred",
@@ -33,48 +39,56 @@ plot_with_hand <- function(...) {
 ```
 
 ``` r
+
 plot_with_hand(NULL)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-3-1.png)
 
 ``` r
+
 plot_with_hand()
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-4-1.png)
 
 ``` r
+
 plot_with_hand(bow = 0)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-5-1.png)
 
 ``` r
+
 plot_with_hand(wobble = 0)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-6-1.png)
 
 ``` r
+
 plot_with_hand(multi_stroke = 2)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-7-1.png)
 
 ``` r
+
 plot_with_hand(width_jitter = 0.24, multi_stroke = 2)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-8-1.png)
 
 ``` r
+
 plot_with_hand(endpoint_jitter = 0)
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-9-1.png)
 
 ``` r
+
 plot_with_hand(endpoint_jitter = 0.02)
 ```
 
@@ -84,13 +98,15 @@ plot_with_hand(endpoint_jitter = 0.02)
 
 ``` r
 
-plot_with_hand(pressure = 0.5)
+
+plot_with_hand(pressure = pressure_flat(0.5))
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-11-1.png)
 
 ``` r
-plot_with_hand(pressure_taper = 1)
+
+plot_with_hand(pressure = pressure_smooth())
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-12-1.png)
@@ -98,15 +114,41 @@ plot_with_hand(pressure_taper = 1)
 ## Pressure using `mypaint_device()` and brushes
 
 ``` r
+
 set_brush("classic/pen")
-plot_with_hand(pressure_taper = 1)
+plot_with_hand(pressure = pressure_flat())
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-13-1.png)
 
 ``` r
-set_brush("ramon/Marker")
-plot_with_hand(pressure_taper = 1)
+
+set_brush("classic/pen")
+plot_with_hand(pressure = pressure_smooth())
 ```
 
 ![](hand-demo_files/figure-html/unnamed-chunk-14-1.png)
+
+``` r
+
+set_brush("ramon/Marker")
+plot_with_hand(pressure = pressure_flat())
+```
+
+![](hand-demo_files/figure-html/unnamed-chunk-15-1.png)
+
+``` r
+
+set_brush("ramon/Marker")
+plot_with_hand(pressure = pressure_smooth())
+```
+
+![](hand-demo_files/figure-html/unnamed-chunk-16-1.png)
+
+``` r
+
+set_brush("ramon/Marker")
+plot_with_hand(pressure = pressure_human())
+```
+
+![](hand-demo_files/figure-html/unnamed-chunk-17-1.png)

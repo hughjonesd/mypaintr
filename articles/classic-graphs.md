@@ -28,7 +28,7 @@ Code
         set_brush(tweak_brush("tanda/watercolor-02-paint", radius_logarithmic = log(0.8), 
             opaque = 0.28, smudge = 0.25, smudge_length = 0.75))
         set_hand(human_hand(seed = 202, bow = 0.01, wobble = 0.004, 
-            pressure = 0.55, pressure_taper = 0.45))
+            pressure = pressure_smooth(0.55, taper = 0.45)))
         for (yy in seq(-1.8, 1.9, length.out = 9)) {
             lines(c(-3.8, 3.3), c(yy, yy + runif(1, -0.25, 0.25)), 
                 col = adjustcolor("#7c9ac6", 0.23), lwd = runif(1, 
@@ -38,7 +38,7 @@ Code
         polygon(inner[, "x"], inner[, "y"], col = "#f7f8fb", border = NA)
         set_brush("classic/textured_ink")
         set_hand(human_hand(seed = 8, bow = 0.006, wobble = 0.003, 
-            pressure = 0.75, pressure_taper = 0.15))
+            pressure = pressure_smooth(0.75, taper = 0.15)))
         lines(c(-1.8, -1.8, 0.3, 0.95, 0.55, -1.8), c(-1.45, 1.35, 
             1.35, 0.72, 0.18, 0.18), col = adjustcolor("#1d3762", 
             0.35), lwd = 3.5)
@@ -63,8 +63,8 @@ Code
             xaxs = "i")
         set_brush(tweak_brush("tanda/charcoal-04", radius_logarithmic = log(0.55), 
             opaque = 0.72))
-        set_hand(human_hand(seed = 13, bow = 0, wobble = 0.001, pressure = 0.7, 
-            pressure_taper = 0.25))
+        set_hand(human_hand(seed = 13, bow = 0, wobble = 0.001, pressure = pressure_smooth(0.7, 
+            taper = 0.25)))
         persp(volcano, phi = 30, theta = 135, shade = 0.55, col = "#3f9c3e", 
             border = adjustcolor("white", 0.8), ltheta = 45, box = FALSE, 
             axes = FALSE, xlab = "", ylab = "", zlab = "")
@@ -84,7 +84,8 @@ Code
         par(mfrow = c(2, 2), mar = c(2.2, 2.2, 1.5, 0.4), oma = c(0, 
             0, 1.8, 0), bg = "#fbf7ef")
         cols <- c("#b23a30", "#2f6f73", "#d08a1f", "#4d4f8f")
-        set_hand(human_hand(seed = 1, pressure = 0.6, pressure_taper = 0.35))
+        set_hand(human_hand(seed = 1, pressure = pressure_smooth(0.6, 
+            taper = 0.35)))
         for (i in 1:4) {
             x <- anscombe[[paste0("x", i)]]
             y <- anscombe[[paste0("y", i)]]
@@ -131,7 +132,7 @@ Code
         for (sp in levels(iris$Species)) {
             idx <- iris$Species == sp
             set_brush(brushes[[sp]])
-            set_hand(hand(pressure = 0.55, pressure_taper = 0.1))
+            set_hand(hand(pressure = pressure_smooth(0.55, taper = 0.1)))
             points(iris$Sepal.Length[idx], iris$Petal.Length[idx], 
                 col = adjustcolor(cols[[sp]], 0.78), pch = 16, cex = 1.2 + 
                     iris$Petal.Width[idx]/3)
@@ -192,7 +193,7 @@ Code
             col = adjustcolor("#2d1f61", 0.42), border = NA)
         set_brush(tweak_brush("deevad/spray2", radius_logarithmic = log(1.35), 
             opaque = 0.62))
-        set_hand(hand(pressure = 0.7))
+        set_hand(hand(pressure = pressure_flat(0.7)))
         segments(years, 0, years, y, col = adjustcolor("#7f62ff", 
             0.42), lwd = 2.4)
         peak <- y > 95
@@ -202,8 +203,8 @@ Code
             0.62), pch = 16, cex = 1.2 + y[peak]/95)
         set_brush(tweak_brush("classic/pen", radius_logarithmic = log(0.45), 
             opaque = 0.8, dabs_per_actual_radius = 5))
-        set_hand(human_hand(seed = 4, pressure = 0.75, pressure_taper = 0.45, 
-            bow = 0, wobble = 0.001))
+        set_hand(human_hand(seed = 4, pressure = pressure_smooth(0.75, 
+            taper = 0.45), bow = 0, wobble = 0.001))
         lines(years, y, col = adjustcolor("#ffcc55", 0.95), lwd = 2.2)
         set_brush(tweak_brush("experimental/bubble", radius_logarithmic = log(0.55), 
             opaque = 0.7))
@@ -235,7 +236,8 @@ Code
         segments(years, par("usr")[3] + 10, years, flow, col = adjustcolor("#2879a8", 
             0.55), lwd = 1.6)
         set_brush("classic/ink_blot")
-        set_hand(human_hand(seed = 71, pressure = 0.6, pressure_taper = 0.6))
+        set_hand(human_hand(seed = 71, pressure = pressure_smooth(0.6, 
+            taper = 0.6)))
         lines(years, flow, col = "#075079", lwd = 3)
     }
 
@@ -256,7 +258,7 @@ Code
         y <- r * sin(theta)
         pal <- hcl.colors(9, "Spectral")
         set_hand(human_hand(seed = 100, bow = 0, wobble = 0.0015, 
-            pressure = 0.65, pressure_taper = 0.65))
+            pressure = pressure_smooth(0.65, taper = 0.65)))
         for (i in seq_len(length(pal))) {
             idx <- seq(floor((i - 1) * length(x)/length(pal)) + 1, 
                 floor(i * length(x)/length(pal)))
@@ -290,11 +292,11 @@ Code
         box(col = "#3d362d")
         grid(col = "#e4d7c2")
         set_brush("classic/pen")
-        set_hand(hand(pressure = 0.85, pressure_taper = 0))
+        set_hand(hand(pressure = pressure_flat(0.85)))
         lines(c(0.8, 9.2), c(7.2, 7.2), col = "#2c5aa0", lwd = 5)
-        set_hand(hand(pressure = 0.85, pressure_taper = 1))
+        set_hand(hand(pressure = pressure_smooth(0.85)))
         lines(c(0.8, 9.2), c(4.8, 4.8), col = "#2c5aa0", lwd = 5)
-        set_hand(human_hand(seed = 9, pressure = 0.85, pressure_taper = 1, 
+        set_hand(human_hand(seed = 9, pressure = pressure_smooth(0.85), 
             bow = 0.01, wobble = 0.004, multi_stroke = 2))
         lines(c(0.8, 9.2), c(2.4, 2.4), col = "#a3342f", lwd = 5)
         set_brush(NULL)
@@ -311,16 +313,17 @@ Code
 
     {
         p <- ggplot(mpg, aes(displ, hwy, colour = class)) + mypaint_wrap(geom_point(size = 2.4, 
-            alpha = 0.82), brush = "classic/textured_ink", hand = hand(pressure = 0.6, 
-            pressure_taper = 0.2)) + mypaint_wrap(geom_smooth(aes(group = 1), 
+            alpha = 0.82), brush = "classic/textured_ink", hand = hand(pressure = pressure_smooth(0.6, 
+            taper = 0.2))) + mypaint_wrap(geom_smooth(aes(group = 1), 
             method = "loess", se = FALSE, linewidth = 1.8, colour = "#222222"), 
             brush = "classic/slow_ink", hand = human_hand(seed = 2, 
-                pressure = 0.7, pressure_taper = 0.35)) + scale_colour_brewer(palette = "Dark2") + 
-            theme_minimal(base_size = 13) + theme(panel.grid.major = mypaint_wrap(element_line(colour = "#dad6ca"), 
-            brush = "classic/pencil"), panel.grid.minor = element_blank(), 
-            legend.position = "bottom", plot.background = element_rect(fill = "#f8f5ee", 
-                colour = NA), panel.background = element_rect(fill = "#f8f5ee", 
-                colour = NA)) + labs(title = "A ggplot2 classic, with ink in the machinery", 
+                pressure = pressure_smooth(0.7, taper = 0.35))) + 
+            scale_colour_brewer(palette = "Dark2") + theme_minimal(base_size = 13) + 
+            theme(panel.grid.major = mypaint_wrap(element_line(colour = "#dad6ca"), 
+                brush = "classic/pencil"), panel.grid.minor = element_blank(), 
+                legend.position = "bottom", plot.background = element_rect(fill = "#f8f5ee", 
+                    colour = NA), panel.background = element_rect(fill = "#f8f5ee", 
+                    colour = NA)) + labs(title = "A ggplot2 classic, with ink in the machinery", 
             x = "Displacement", y = "Highway MPG", colour = NULL)
         quiet(print(p))
     }

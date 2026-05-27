@@ -8,6 +8,7 @@ algorithms for “rough” lines and polygons.
 Installation:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("hughjonesd/mypaintr")
 ```
@@ -15,6 +16,7 @@ pak::pak("hughjonesd/mypaintr")
 A base R barplot using a custom brush, plus a hand-drawn axis:
 
 ``` r
+
 library(mypaintr)
 
 # on the command line, do: 
@@ -37,6 +39,7 @@ axis(side = 2, at = seq(0, 60, 20))
 A ggplot using a custom element:
 
 ``` r
+
 library(ggplot2)
 #> Warning: package 'ggplot2' was built under R version 4.5.2
 
@@ -55,6 +58,7 @@ ggplot(diamonds) +
 Sketchy lines using the ordinary base R device:
 
 ``` r
+
 
 plot(1:10, 1:10, type = "n", xlab = "", ylab = "", axes = FALSE)
 

@@ -27,6 +27,10 @@
 - [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   : Hand-drawn geometry settings
+- [`pressure_flat()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
+  [`pressure_smooth()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
+  [`pressure_human()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
+  : Pressure profiles for hand-drawn strokes
 - [`set_hand()`](https://hughjonesd.github.io/mypaintr/reference/set_hand.md)
   : Set the active hand
 
