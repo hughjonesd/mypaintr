@@ -499,6 +499,39 @@ warn_missing_fill_for_pattern <- function(fill_pattern, col) {
   }
 }
 
+draw_mypaintr_rough_shape <- function(primitive, shape_args, paths, hand_spec,
+                                      fill_pattern, col, border, rule = NULL, ...) {
+  dots <- list(...)
+
+  state <- current_device_style()
+  on.exit(apply_device_style_state(state), add = TRUE)
+  set_hand(hand_spec)
+
+  neutral_hand <- hand(seed = hand_spec$seed)
+  invisible(with_hand_seed(seed = neutral_hand$seed, expr = {
+    if (is.null(fill_pattern)) {
+      if (is_visible_col(col) || is_visible_col(border)) {
+        do.call(primitive, c(shape_args, list(col = col, border = border), dots))
+      }
+    } else {
+      if (is_visible_col(col)) {
+        fill_args <- c(
+          list(paths = paths, hand_spec = neutral_hand, col = col, fill_pattern = fill_pattern),
+          dots
+        )
+        if (!is.null(rule)) {
+          fill_args$rule <- rule
+        }
+        do.call(draw_rough_fill_pattern, fill_args)
+      }
+      if (is_visible_col(border)) {
+        do.call(primitive, c(shape_args, list(col = NA, border = border), dots))
+      }
+    }
+    NULL
+  }))
+}
+
 #' @rdname rough_polypath
 #' @inheritParams mypaintr-rough-fill
 #' @param ... Graphics parameters passed to [graphics::lines()].
@@ -521,6 +554,21 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   paths0 <- split_polypath(x, y, id)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   warn_missing_fill_for_pattern(fill_pattern, col)
+
+  if (is_mypaintr_device()) {
+    solid_path <- join_polypath_na(paths0)
+    return(draw_mypaintr_rough_shape(
+      primitive = graphics::polypath,
+      shape_args = list(x = solid_path$x, y = solid_path$y, rule = rule),
+      paths = paths0,
+      hand_spec = hand_spec,
+      fill_pattern = fill_pattern,
+      col = col,
+      border = border,
+      rule = rule,
+      ...
+    ))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     geom <- rough_polypath_data(paths0, hand_spec, rule)
@@ -581,6 +629,19 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
   xy <- grDevices::xy.coords(x, y)
   fill_pattern <- as_fill_pattern(fill_pattern, hand_spec = hand_spec)
   warn_missing_fill_for_pattern(fill_pattern, col)
+
+  if (is_mypaintr_device()) {
+    return(draw_mypaintr_rough_shape(
+      primitive = graphics::polygon,
+      shape_args = list(x = xy$x, y = xy$y),
+      paths = list(list(x = xy$x, y = xy$y)),
+      hand_spec = hand_spec,
+      fill_pattern = fill_pattern,
+      col = col,
+      border = border,
+      ...
+    ))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
