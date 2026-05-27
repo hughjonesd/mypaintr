@@ -109,7 +109,7 @@ plot_with_hand(pressure = pressure_smooth())
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 set_brush("classic/pen")
-plot_with_hand(pressure = pressure_none())
+plot_with_hand(pressure = pressure_flat())
 ```
 
 ```{r, mypaint=TRUE, fig.keep="none"}
@@ -119,7 +119,7 @@ plot_with_hand(pressure = pressure_smooth())
 
 ```{r, mypaint=TRUE, fig.keep="none"}
 set_brush("ramon/Marker")
-plot_with_hand(pressure = pressure_none())
+plot_with_hand(pressure = pressure_flat())
 ```
 
 ```{r, mypaint=TRUE, fig.keep="none"}
