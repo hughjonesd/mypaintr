@@ -505,10 +505,10 @@ draw_mypaintr_rough_shape <- function(primitive, shape_args, paths, hand_spec,
 
   state <- current_device_style()
   on.exit(apply_device_style_state(state), add = TRUE)
-  invisible(.Call(mypaintr_device_set_hand, hand_spec, hand_spec, TRUE, TRUE))
+  set_hand(hand_spec)
 
   neutral_hand <- hand(seed = hand_spec$seed)
-  invisible(with_hand_seed(neutral_hand$seed, {
+  invisible(with_hand_seed(seed = neutral_hand$seed, expr = {
     if (is.null(fill_pattern)) {
       if (is_visible_col(col) || is_visible_col(border)) {
         do.call(primitive, c(shape_args, list(col = col, border = border), dots))
@@ -558,13 +558,13 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   if (is_mypaintr_device()) {
     solid_path <- join_polypath_na(paths0)
     return(draw_mypaintr_rough_shape(
-      graphics::polypath,
-      list(x = solid_path$x, y = solid_path$y, rule = rule),
-      paths0,
-      hand_spec,
-      fill_pattern,
-      col,
-      border,
+      primitive = graphics::polypath,
+      shape_args = list(x = solid_path$x, y = solid_path$y, rule = rule),
+      paths = paths0,
+      hand_spec = hand_spec,
+      fill_pattern = fill_pattern,
+      col = col,
+      border = border,
       rule = rule,
       ...
     ))
@@ -632,13 +632,13 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
 
   if (is_mypaintr_device()) {
     return(draw_mypaintr_rough_shape(
-      graphics::polygon,
-      list(x = xy$x, y = xy$y),
-      list(list(x = xy$x, y = xy$y)),
-      hand_spec,
-      fill_pattern,
-      col,
-      border,
+      primitive = graphics::polygon,
+      shape_args = list(x = xy$x, y = xy$y),
+      paths = list(list(x = xy$x, y = xy$y)),
+      hand_spec = hand_spec,
+      fill_pattern = fill_pattern,
+      col = col,
+      border = border,
       ...
     ))
   }
