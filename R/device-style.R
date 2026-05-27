@@ -105,8 +105,7 @@ normalize_render_style <- function(style) {
 #' @param bg Background colour.
 #' @param brush Stroke brush specification created with [tweak_brush()], an
 #'   installed mypaint brush name, `.myb` file path, JSON brush string, or
-#'   `NULL` for solid strokes. If omitted, `mypaint_device()` uses an internal
-#'   default plotting brush.
+#'   `NULL` for solid strokes.
 #' @param fill_brush Optional fill brush spec. Defaults to `brush` when not
 #'   supplied. Use explicit `NULL` for solid fills.
 #' @param hand Optional hand-drawn geometry spec applied to both stroke and
@@ -142,9 +141,7 @@ mypaint_device <- function(filename = NULL,
                            fill_hand = NULL,
                            auto_solid_bg = TRUE) {
   supplied_args <- names(match.call(expand.dots = FALSE))
-  brush_missing <- !("brush" %in% supplied_args)
   fill_brush_missing <- !("fill_brush" %in% supplied_args)
-  hand_missing <- !("hand" %in% supplied_args)
   stroke_hand_missing <- !("stroke_hand" %in% supplied_args)
   fill_hand_missing <- !("fill_hand" %in% supplied_args)
   auto_solid_bg_missing <- !("auto_solid_bg" %in% supplied_args)
@@ -167,16 +164,12 @@ mypaint_device <- function(filename = NULL,
     fill_hand <- hand
   }
 
-  stroke_spec <- if (brush_missing) {
-    normalize_brush_spec(default_plot_brush_spec())
-  } else if (is.null(brush)) {
+  stroke_spec <- if (is.null(brush)) {
     NULL
   } else {
     normalize_brush_spec(brush)
   }
-  fill_spec <- if (fill_brush_missing && brush_missing) {
-    stroke_spec
-  } else if (fill_brush_missing) {
+  fill_spec <- if (fill_brush_missing) {
     stroke_spec
   } else if (is.null(fill_brush)) {
     NULL
@@ -185,7 +178,7 @@ mypaint_device <- function(filename = NULL,
   }
   warn_if_pure_smudge_brush(stroke_spec, "stroke")
   warn_if_pure_smudge_brush(fill_spec, "fill")
-  stroke_style <- if (brush_missing) 1L else if (is.null(brush)) 0L else 1L
+  stroke_style <- if (is.null(stroke_spec)) 0L else 1L
 
   fill_style <- if (fill_brush_missing) {
       if (stroke_style == 1L) 1L else 0L

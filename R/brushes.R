@@ -1,26 +1,3 @@
-
-default_plot_brush_spec <- function() {
-  structure(
-    list(
-      json = NULL,
-      settings = c(
-        opaque = 1.0,
-        opaque_multiply = 1.0,
-        radius_logarithmic = log(1.05),
-        hardness = 0.92,
-        anti_aliasing = 1.0,
-        dabs_per_basic_radius = 2.2,
-        dabs_per_actual_radius = 2.4,
-        tracking_noise = 0.0,
-        offset_by_random = 0.0
-      ),
-      source = "mypaintr-default",
-      normalize = "none"
-    ),
-    class = "mypaintr_brush"
-  )
-}
-
 new_mypaintr_brush <- function(json = NULL, settings = numeric(), source = NULL, normalize = "none") {
   structure(
     list(

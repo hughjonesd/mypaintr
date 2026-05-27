@@ -33,8 +33,7 @@ numbered.}
 
 \item{brush}{Stroke brush specification created with \code{\link[=tweak_brush]{tweak_brush()}}, an
 installed mypaint brush name, \code{.myb} file path, JSON brush string, or
-\code{NULL} for solid strokes. If omitted, \code{mypaint_device()} uses an internal
-default plotting brush.}
+\code{NULL} for solid strokes.}
 
 \item{fill_brush}{Optional fill brush spec. Defaults to \code{brush} when not
 supplied. Use explicit \code{NULL} for solid fills.}
