@@ -48,8 +48,7 @@ mypaint_device(
   Stroke brush specification created with
   [`tweak_brush()`](https://hughjonesd.github.io/mypaintr/reference/tweak_brush.md),
   an installed mypaint brush name, `.myb` file path, JSON brush string,
-  or `NULL` for solid strokes. If omitted, `mypaint_device()` uses an
-  internal default plotting brush.
+  or `NULL` for solid strokes.
 
 - fill_brush:
 
@@ -91,7 +90,7 @@ plot(
   cex = 1.4
 )
 dev.off()
-#> agg_record_1cec58f64f77 
+#> agg_record_1d7a6de8a7b1 
 #>                       2 
 unlink(out)
 ```
