@@ -29,6 +29,9 @@ reference:
     contents:
       - hand
       - human_hand
+      - pressure_flat
+      - pressure_smooth
+      - pressure_human
       - set_hand
 
   - title: Rough Drawing

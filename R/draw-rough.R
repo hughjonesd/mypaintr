@@ -313,17 +313,9 @@ is_solid_lty <- function(lty) {
 }
 
 stroke_pressure_at_r <- function(hand_spec, t, turn_factor = 0) {
-  base <- max(0, min(1, hand_spec$pressure %||% 1))
-  taper <- max(0, min(1, hand_spec$pressure_taper %||% 0))
-  tt <- max(0, min(1, t))
-  profile <- sin(pi * tt)
-  pressure <- base * ((1 - taper) + taper * profile)
-
-  if (taper > 0 && turn_factor > 0) {
-    pressure <- pressure * (1 - 0.35 * taper * max(0, min(1, turn_factor)))
-  }
-
-  max(0, min(1, pressure))
+  profile <- hand_spec$pressure
+  pressure <- profile(t, turn_factor)
+  max(0, min(1, pressure[[1L]]))
 }
 
 polyline_turn_factor_r <- function(x, y, i) {
@@ -363,16 +355,13 @@ draw_pressure_path <- function(path, hand_spec, args, closed = FALSE) {
   n <- length(x)
   lwd <- args$lwd %||% graphics::par("lwd")
   lty <- args$lty %||% graphics::par("lty")
-  pressure <- hand_spec$pressure %||% 1
-  taper <- hand_spec$pressure_taper %||% 0
 
   if (is_mypaintr_device() || closed || n < 2 || !is_solid_lty(lty)) {
     return(FALSE)
   }
-  if (abs(pressure - 1) < 1e-9 && taper <= 0) {
-    return(FALSE)
-  }
 
+  # Base graphics has no pressure input, so emulate it by splitting an open
+  # solid line into short segments and varying each segment's width.
   seg_len <- sqrt(diff(x)^2 + diff(y)^2)
   total_len <- sum(seg_len)
   if (!is.finite(total_len) || total_len <= 0) {
