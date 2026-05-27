@@ -19,12 +19,7 @@ plot_with_hand <- function(...) {
     hand <- NULL
   else 
     hand <- human_hand(seed = 1, ...)
-
-  on_mypaint_device <- identical(names(grDevices::dev.cur()), "mypaintr")
-  if (on_mypaint_device) {
-    set_hand(hand)
-  }
-
+  set_hand(hand)
   rect(1, 1, 4, 4)
   draw_rough_rect(6, 6, 9, 9, col = "green4", hand = hand)
   draw_rough_rect(1, 6, 4, 9, col = "darkred",
