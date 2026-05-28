@@ -52,6 +52,10 @@ typedef struct {
   double width_jitter;
   double endpoint_jitter;
   SEXP pressure_fun;
+  double speed;
+  double xtilt;
+  double ytilt;
+  double barrel_rotation;
   double hachure_gap;
   int has_hachure_gap;
   double hachure_angle_jitter;
@@ -961,6 +965,10 @@ static void init_hand_defaults(MypaintrHand *hand, uint64_t salt) {
   hand->width_jitter = 0.0;
   hand->endpoint_jitter = 0.0;
   hand->pressure_fun = R_NilValue;
+  hand->speed = 1.0;
+  hand->xtilt = 0.0;
+  hand->ytilt = 0.0;
+  hand->barrel_rotation = 0.0;
   hand->hachure_angle_jitter = 12.0;
   hand->hachure_gap_jitter = 0.15;
 }
@@ -998,6 +1006,14 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
     }
     hand->pressure_fun = value;
   }
+  value = list_element(spec, "speed");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->speed = asReal(value);
+  value = list_element(spec, "xtilt");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->xtilt = asReal(value);
+  value = list_element(spec, "ytilt");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->ytilt = asReal(value);
+  value = list_element(spec, "barrel_rotation");
+  if (value != R_NilValue && XLENGTH(value) == 1) hand->barrel_rotation = asReal(value);
   value = list_element(spec, "hachure_gap");
   if (value != R_NilValue && XLENGTH(value) == 1) {
     hand->has_hachure_gap = 1;
@@ -1642,8 +1658,10 @@ static void init_surface(MypaintrDevice *dev) {
   dev->surface.end_atomic_multi = surface_end_atomic_multi;
 }
 
-static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd) {
+static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, const MypaintrHand *hand) {
   int i;
+  double total_len = 0.0;
+  double cumulative_len = 0.0;
   double start_dx;
   double start_dy;
   double start_len;
@@ -1652,19 +1670,26 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   double start_y;
   double radius;
   MypaintrHand neutral_hand;
-  const MypaintrHand *pressure_hand;
+  const MypaintrHand *brush_hand;
+  float xtilt;
+  float ytilt;
+  float barrel_rotation;
 
   if (n < 2 || R_ALPHA(col) == 0) {
     return;
   }
 
-  init_hand_defaults(&neutral_hand, 1ULL);
-  pressure_hand = &neutral_hand;
-  if (brush == &dev->stroke) {
-    pressure_hand = &dev->stroke_hand;
-  } else if (brush == &dev->fill) {
-    pressure_hand = &dev->fill_hand;
+  for (i = 1; i < n; ++i) {
+    double dx = x[i] - x[i - 1];
+    double dy = y[i] - y[i - 1];
+    total_len += sqrt(dx * dx + dy * dy);
   }
+
+  init_hand_defaults(&neutral_hand, 1ULL);
+  brush_hand = hand ? hand : &neutral_hand;
+  xtilt = (float) brush_hand->xtilt;
+  ytilt = (float) brush_hand->ytilt;
+  barrel_rotation = (float) (brush_hand->barrel_rotation / 360.0);
 
   brush_apply_gc(dev, brush, col, lwd);
   start_dx = x[1] - x[0];
@@ -1686,48 +1711,62 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     brush_seed_from_surface(dev, brush, x[0], y[0]);
   }
   mypaint_surface_begin_atomic((MyPaintSurface *) &dev->surface);
-  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) start_x, (float) start_y, 0.0f, 0.0f, 0.0f, 0.01, 1.0f, 0.0f, 0.0f);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) start_x, (float) start_y, 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
   if (start_len > 1e-9) {
-    double dt0 = fmax(preroll / 240.0, 0.001);
-    mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, 0.0f, 0.0f, dt0, 1.0f, 0.0f, 0.0f);
+    double dt0 = fmax(preroll / 240.0 / brush_hand->speed, 0.001);
+    mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, xtilt, ytilt, dt0, 1.0f, 0.0f, barrel_rotation);
   }
   mypaint_brush_stroke_to_2(
     brush->brush,
     &dev->surface,
     (float) x[0],
     (float) y[0],
-    (float) stroke_pressure_at(pressure_hand, 0.0, 0.0),
-    0.0f,
-    0.0f,
+    (float) stroke_pressure_at(brush_hand, 0.0, 0.0),
+    xtilt,
+    ytilt,
     0.001,
     1.0f,
     0.0f,
-    0.0f
+    barrel_rotation
   );
 
   for (i = 1; i < n; ++i) {
-    double dx = x[i] - x[i - 1];
-    double dy = y[i] - y[i - 1];
-    double dt = fmax(sqrt(dx * dx + dy * dy) / 240.0, 0.001);
-    double t = (n > 1) ? (double) i / (double) (n - 1) : 1.0;
+    double sx = x[i - 1];
+    double sy = y[i - 1];
+    double dx = x[i] - sx;
+    double dy = y[i] - sy;
+    double seg_len = sqrt(dx * dx + dy * dy);
     double turn_factor = polyline_turn_factor(x, y, n, i);
+    int pieces = (int) fmax(1.0, ceil(seg_len / 120.0));
+    int j;
 
-    mypaint_brush_stroke_to_2(
-      brush->brush,
-      &dev->surface,
-      (float) x[i],
-      (float) y[i],
-      (float) stroke_pressure_at(pressure_hand, t, turn_factor),
-      0.0f,
-      0.0f,
-      dt,
-      1.0f,
-      0.0f,
-      0.0f
-    );
+    for (j = 1; j <= pieces; ++j) {
+      double u = (double) j / (double) pieces;
+      double px = sx + dx * u;
+      double py = sy + dy * u;
+      double step_len = seg_len / (double) pieces;
+      double dt = fmax(step_len / 240.0 / brush_hand->speed, 0.001);
+      double t = total_len > 1e-9 ? (cumulative_len + seg_len * u) / total_len : 1.0;
+
+      mypaint_brush_stroke_to_2(
+        brush->brush,
+        &dev->surface,
+        (float) px,
+        (float) py,
+        (float) stroke_pressure_at(brush_hand, t, turn_factor),
+        xtilt,
+        ytilt,
+        dt,
+        1.0f,
+        0.0f,
+        barrel_rotation
+      );
+    }
+
+    cumulative_len += seg_len;
   }
 
-  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[n - 1], (float) y[n - 1], 0.0f, 0.0f, 0.0f, 0.01, 1.0f, 0.0f, 0.0f);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[n - 1], (float) y[n - 1], 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
   mypaint_surface_end_atomic((MyPaintSurface *) &dev->surface, NULL);
 }
 
@@ -1852,7 +1891,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
   cairo_restore(dev->cr);
 }
 
-static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty) {
+static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty, const MypaintrHand *hand) {
   double pattern[8];
   int pattern_n = decode_lty(lty, device_lwd(dev, lwd), pattern, 8);
   int pattern_i = 0;
@@ -1865,7 +1904,7 @@ static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const dou
   }
 
   if (pattern_n <= 0) {
-    render_polyline_solid(dev, brush, x, y, n, col, lwd);
+    render_polyline_solid(dev, brush, x, y, n, col, lwd, hand);
     return;
   }
 
@@ -1890,7 +1929,7 @@ static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const dou
       if (draw_on && step > 1e-9) {
         double segx[2] = {sx, nx};
         double segy[2] = {sy, ny};
-        render_polyline_solid(dev, brush, segx, segy, 2, col, lwd);
+        render_polyline_solid(dev, brush, segx, segy, 2, col, lwd, hand);
       }
 
       sx = nx;
@@ -1909,7 +1948,7 @@ static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const dou
 
 static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed) {
   if (render_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, brush, x, y, n, col, lwd, lty);
+    render_polyline(dev, brush, x, y, n, col, lwd, lty, NULL);
   } else {
     solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed, NULL);
   }
@@ -1917,7 +1956,7 @@ static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int 
 
 static void render_polyline_mode_hand(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, const MypaintrHand *hand) {
   if (render_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, brush, x, y, n, col, lwd, lty);
+    render_polyline(dev, brush, x, y, n, col, lwd, lty, hand);
   } else {
     solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed, hand);
   }
@@ -2026,7 +2065,7 @@ static void hatch_fill_path(MypaintrDevice *dev, MypaintrBrush *brush, int npoly
       for (i = 0; i + 1 < count; i += 2) {
         double segx[2] = {cuts[i].x, cuts[i + 1].x};
         double segy[2] = {yy, yy};
-        render_polyline(dev, brush, segx, segy, 2, fill, 1.0, LTY_SOLID);
+        render_polyline(dev, brush, segx, segy, 2, fill, 1.0, LTY_SOLID, NULL);
       }
     } else {
       int winding = 0;
@@ -2035,7 +2074,7 @@ static void hatch_fill_path(MypaintrDevice *dev, MypaintrBrush *brush, int npoly
         if (winding != 0 && cuts[i + 1].x > cuts[i].x) {
           double segx[2] = {cuts[i].x, cuts[i + 1].x};
           double segy[2] = {yy, yy};
-          render_polyline(dev, brush, segx, segy, 2, fill, 1.0, LTY_SOLID);
+          render_polyline(dev, brush, segx, segy, 2, fill, 1.0, LTY_SOLID, NULL);
         }
       }
     }
@@ -2059,7 +2098,7 @@ static void hatch_fill_rect(MypaintrDevice *dev, MypaintrBrush *brush, double x0
   for (double yy = bottom; yy <= top; yy += spacing) {
     double xx[2] = {left, right};
     double yyv[2] = {yy, yy};
-    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0, LTY_SOLID);
+    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0, LTY_SOLID, NULL);
   }
 }
 
@@ -2072,7 +2111,7 @@ static void hatch_fill_circle(MypaintrDevice *dev, MypaintrBrush *brush, double 
     double dx = sqrt(fmax(r * r - dy * dy, 0.0));
     double xx[2] = {x - dx, x + dx};
     double yyv[2] = {yy, yy};
-    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0, LTY_SOLID);
+    render_polyline(dev, brush, xx, yyv, 2, fill, 1.0, LTY_SOLID, NULL);
   }
 }
 

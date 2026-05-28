@@ -68,6 +68,21 @@ clamp01 <- function(x) {
   pmax(0, pmin(1, x))
 }
 
+check_finite_scalar <- function(x, name) {
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x)) {
+    stop(name, " must be a finite numeric scalar", call. = FALSE)
+  }
+  x
+}
+
+check_positive_scalar <- function(x, name) {
+  x <- check_finite_scalar(x, name)
+  if (x <= 0) {
+    stop(name, " must be greater than 0", call. = FALSE)
+  }
+  x
+}
+
 new_pressure_profile <- function(fun) {
   stopifnot(is.function(fun))
   structure(
@@ -190,6 +205,12 @@ pressure_human <- function(value = 1,
 #'   length.
 #' @param pressure Pressure profile function, typically created with
 #'   [pressure_flat()], [pressure_smooth()], or [pressure_human()].
+#' @param speed Synthetic brush speed multiplier for [mypaint_device()] brush
+#'   rendering. `1` preserves the default distance-based timing heuristic;
+#'   values greater than `1` draw faster, and values below `1` draw slower.
+#' @param xtilt,ytilt Stylus tilt inputs passed to libmypaint, in its normalized
+#'   `-1` to `1` range.
+#' @param barrel_rotation Stylus barrel rotation, in degrees.
 #' @details
 #' `hand()` defaults to plain, base-R-like geometry with no bowing, wobble, or
 #' jitter and flat pressure. [human_hand()] has different, more human-like
@@ -197,6 +218,10 @@ pressure_human <- function(value = 1,
 #'
 #' As of now, pressure profiles only apply to open lines, not shape outlines. On
 #' base R devices, they are simulated and affect line width.
+#'
+#' The `speed`, `xtilt`, `ytilt`, and `barrel_rotation` arguments affect only
+#' brush rendering on [mypaint_device()]. They are ignored by standard graphics
+#' devices.
 #'
 #' @return An object describing how rough geometry should be generated.
 #' @examples
@@ -220,8 +245,16 @@ hand <- function(seed = NULL,
                  multi_stroke = 1L,
                  width_jitter = 0,
                  endpoint_jitter = 0,
-                 pressure = pressure_flat()) {
+                 pressure = pressure_flat(),
+                 speed = 1,
+                 xtilt = 0,
+                 ytilt = 0,
+                 barrel_rotation = 0) {
   pressure <- as_pressure_profile(pressure)
+  speed <- check_positive_scalar(speed, "speed")
+  xtilt <- check_finite_scalar(xtilt, "xtilt")
+  ytilt <- check_finite_scalar(ytilt, "ytilt")
+  barrel_rotation <- check_finite_scalar(barrel_rotation, "barrel_rotation")
   structure(
     list(
       seed = seed,
@@ -230,7 +263,11 @@ hand <- function(seed = NULL,
       multi_stroke = as.integer(multi_stroke),
       width_jitter = width_jitter,
       endpoint_jitter = endpoint_jitter,
-      pressure = pressure
+      pressure = pressure,
+      speed = speed,
+      xtilt = xtilt,
+      ytilt = ytilt,
+      barrel_rotation = barrel_rotation
     ),
     class = "mypaintr_hand"
   )
@@ -250,7 +287,11 @@ human_hand <- function(seed = NULL,
                        multi_stroke = 1L,
                        width_jitter = 0.08,
                        endpoint_jitter = 0,
-                       pressure = pressure_human()) {
+                       pressure = pressure_human(),
+                       speed = 1,
+                       xtilt = 0,
+                       ytilt = 0,
+                       barrel_rotation = 0) {
   hand(
     seed = seed,
     bow = bow,
@@ -258,7 +299,11 @@ human_hand <- function(seed = NULL,
     multi_stroke = multi_stroke,
     width_jitter = width_jitter,
     endpoint_jitter = endpoint_jitter,
-    pressure = pressure
+    pressure = pressure,
+    speed = speed,
+    xtilt = xtilt,
+    ytilt = ytilt,
+    barrel_rotation = barrel_rotation
   )
 }
 

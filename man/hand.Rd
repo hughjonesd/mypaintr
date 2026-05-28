@@ -12,17 +12,25 @@ hand(
   multi_stroke = 1L,
   width_jitter = 0,
   endpoint_jitter = 0,
-  pressure = pressure_flat()
+  pressure = pressure_flat(),
+  speed = 1,
+  xtilt = 0,
+  ytilt = 0,
+  barrel_rotation = 0
 )
 
 human_hand(
   seed = NULL,
-  bow = 0.012,
-  wobble = 0.008,
+  bow = 0.004,
+  wobble = 0.004,
   multi_stroke = 1L,
   width_jitter = 0.08,
   endpoint_jitter = 0,
-  pressure = pressure_human()
+  pressure = pressure_human(),
+  speed = 1,
+  xtilt = 0,
+  ytilt = 0,
+  barrel_rotation = 0
 )
 }
 \arguments{
@@ -42,6 +50,15 @@ length.}
 
 \item{pressure}{Pressure profile function, typically created with
 \code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_smooth]{pressure_smooth()}}, or \code{\link[=pressure_human]{pressure_human()}}.}
+
+\item{speed}{Synthetic brush speed multiplier for \code{\link[=mypaint_device]{mypaint_device()}} brush
+rendering. \code{1} preserves the default distance-based timing heuristic;
+values greater than \code{1} draw faster, and values below \code{1} draw slower.}
+
+\item{xtilt, ytilt}{Stylus tilt inputs passed to libmypaint, in its normalized
+\code{-1} to \code{1} range.}
+
+\item{barrel_rotation}{Stylus barrel rotation, in degrees.}
 }
 \value{
 An object describing how rough geometry should be generated.
@@ -59,6 +76,10 @@ defaults, including \code{\link[=pressure_human]{pressure_human()}}.
 
 As of now, pressure profiles only apply to open lines, not shape outlines. On
 base R devices, they are simulated and affect line width.
+
+The \code{speed}, \code{xtilt}, \code{ytilt}, and \code{barrel_rotation} arguments affect only
+brush rendering on \code{\link[=mypaint_device]{mypaint_device()}}. They are ignored by standard graphics
+devices.
 }
 \examples{
 plot.new()
