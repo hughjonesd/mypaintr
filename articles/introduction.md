@@ -162,22 +162,20 @@ Combining brushes and hands, you can turn any R graphics into a sketch.
 ``` r
 
 
-set_brush("classic/marker_fat")
-set_hand(human_hand(xtilt = 0.5, ytilt = -0.4))
-
-plot(mpg ~ hp, data = mtcars, col = mtcars$gear, pch = 5)
 set_brush("classic/marker_small")
-legend("top", legend = 3:5, title = "Gears", col = 3:5, pch = 5, horiz = TRUE)
+set_hand(human_hand(xtilt = 0.5, ytilt = -0.4))
+palette("Dark 2")
+plot(mpg ~ hp, data = mtcars, col = factor(mtcars$gear), pch = 19)
+legend("topright", legend = 3:5, title = "Gears", col = 1:3, pch = 19, horiz = TRUE)
 ```
 
 ![](introduction_files/figure-html/unnamed-chunk-1-1.png)
 
 ## Rough lines and polygons
 
-There is one glitch with the mypaint_device: as you may have spotted,
-borders and fills don’t always match up. Below, both rectangle border
-and fills are plotted roughly, but the random roughness is computed
-separately for each of them.
+There is one glitch with hands: borders and fills don’t always match up.
+Below, both rectangle border and fills are plotted roughly, but the
+random roughness is computed separately for each of them.
 
 ``` r
 
@@ -305,15 +303,13 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 
 ## ggplot2
 
-You can use ggplot2 with a mypaint output device:
+Here’s what you don’t want to do:
 
 ``` r
 
 
 library(ggplot2)
-
-# At the console, do this:
-# mypaint_device("output.png")
+mypaint_device("output.png")
 
 set_hand(hand())
 set_brush("classic/dry_brush")
@@ -323,23 +319,22 @@ ggplot(diamonds) +
    theme_minimal() 
 ```
 
-![](introduction_files/figure-html/ggplot-1.png)
+This will produce a graph, but:
 
-This is fine, but we can do better:
-
-- We probably don’t want a special brush to render the white plot
-  background rectangle.
-- We might want to have some “normal” elements mixed in with the sketch
-  elements.
+- We probably want to have some elements, e.g. grid lines, look
+  “normal”. Here, *everything* will be hand-drawn.
+- Rendering the white plot background rectangle(s) by brush will be
+  *slow*.
 
 To only use brush elements for part of a ggplot, use
 [`mypaint_wrap()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_wrap.md).
-Here’s the same picture as above but with a clean background and
-straight grid lines:
+Here’s a mypaint bar graph, but with a clean background and straight
+grid lines:
 
 ``` r
 
 
+library(ggplot2)
 
 ggplot(diamonds) + 
   mypaint_wrap(

@@ -196,21 +196,19 @@ quirks:</p>
 sketch.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/marker_fat"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span>xtilt <span class="op">=</span> <span class="fl">0.5</span>, ytilt <span class="op">=</span> <span class="op">-</span><span class="fl">0.4</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mpg</span> <span class="op">~</span> <span class="va">hp</span>, data <span class="op">=</span> <span class="va">mtcars</span>, col <span class="op">=</span> <span class="va">mtcars</span><span class="op">$</span><span class="va">gear</span>, pch <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/marker_small"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"top"</span>, legend <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">5</span>, title <span class="op">=</span> <span class="st">"Gears"</span>, col <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">5</span>, pch <span class="op">=</span> <span class="fl">5</span>, horiz <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">human_hand</a></span><span class="op">(</span>xtilt <span class="op">=</span> <span class="fl">0.5</span>, ytilt <span class="op">=</span> <span class="op">-</span><span class="fl">0.4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/grDevices/palette.html" class="external-link">palette</a></span><span class="op">(</span><span class="st">"Dark 2"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mpg</span> <span class="op">~</span> <span class="va">hp</span>, data <span class="op">=</span> <span class="va">mtcars</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">$</span><span class="va">gear</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, legend <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">5</span>, title <span class="op">=</span> <span class="st">"Gears"</span>, col <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, pch <span class="op">=</span> <span class="fl">19</span>, horiz <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-1-1.png" alt="" width="75%"></p>
 </div>
 <div class="section level2">
 <h2 id="rough-lines-and-polygons">Rough lines and polygons<a class="anchor" aria-label="anchor" href="#rough-lines-and-polygons"></a>
 </h2>
-<p>There is one glitch with the mypaint_device: as you may have spotted,
-borders and fills don’t always match up. Below, both rectangle border
-and fills are plotted roughly, but the random roughness is computed
-separately for each of them.</p>
+<p>There is one glitch with hands: borders and fills don’t always match
+up. Below, both rectangle border and fills are plotted roughly, but the
+random roughness is computed separately for each of them.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/pencil"</span><span class="op">)</span></span>
@@ -316,13 +314,11 @@ fill:</p>
 <div class="section level2">
 <h2 id="ggplot2">ggplot2<a class="anchor" aria-label="anchor" href="#ggplot2"></a>
 </h2>
-<p>You can use ggplot2 with a mypaint output device:</p>
+<p>Here’s what you don’t want to do:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># At the console, do this:</span></span>
-<span><span class="co"># mypaint_device("output.png")</span></span>
+<span><span class="fu"><a href="../reference/mypaint_device.html">mypaint_device</a></span><span class="op">(</span><span class="st">"output.png"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/set_hand.html">set_hand</a></span><span class="op">(</span><span class="fu"><a href="../reference/hand.html">hand</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/set_brush.html">set_brush</a></span><span class="op">(</span><span class="st">"classic/dry_brush"</span><span class="op">)</span></span>
@@ -330,19 +326,19 @@ fill:</p>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_bar</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">cut</span>, fill <span class="op">=</span> <span class="va">cut</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="introduction_files/figure-html/ggplot-1.png" alt="" width="75%"></p>
-<p>This is fine, but we can do better:</p>
+<p>This will produce a graph, but:</p>
 <ul>
-<li>We probably don’t want a special brush to render the white plot
-background rectangle.</li>
-<li>We might want to have some “normal” elements mixed in with the
-sketch elements.</li>
+<li>We probably want to have some elements, e.g. grid lines, look
+“normal”. Here, <em>everything</em> will be hand-drawn.</li>
+<li>Rendering the white plot background rectangle(s) by brush will be
+<em>slow</em>.</li>
 </ul>
 <p>To only use brush elements for part of a ggplot, use
-<code><a href="../reference/mypaint_wrap.html">mypaint_wrap()</a></code>. Here’s the same picture as above but with a
+<code><a href="../reference/mypaint_wrap.html">mypaint_wrap()</a></code>. Here’s a mypaint bar graph, but with a
 clean background and straight grid lines:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="../reference/mypaint_wrap.html">mypaint_wrap</a></span><span class="op">(</span></span>
