@@ -49,7 +49,8 @@ strokes.}
 length.}
 
 \item{pressure}{Pressure profile function, typically created with
-\code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_smooth]{pressure_smooth()}}, or \code{\link[=pressure_human]{pressure_human()}}.}
+\code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_smooth]{pressure_smooth()}}, or \code{\link[=pressure_human]{pressure_human()}}. A single
+number is treated as \code{pressure_flat(pressure)}.}
 
 \item{speed}{Synthetic brush speed multiplier for \code{\link[=mypaint_device]{mypaint_device()}} brush
 rendering. \code{1} preserves the default distance-based timing heuristic;

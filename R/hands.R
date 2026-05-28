@@ -95,8 +95,11 @@ as_pressure_profile <- function(x = NULL) {
   if (is.null(x)) {
     return(pressure_flat())
   }
+  if (is.numeric(x)) {
+    return(pressure_flat(check_finite_scalar(x, "pressure")))
+  }
   if (!is.function(x)) {
-    stop("pressure must be a function, such as pressure_flat(), pressure_smooth(), or pressure_human()", call. = FALSE)
+    stop("pressure must be a number or a function, such as pressure_flat(), pressure_smooth(), or pressure_human()", call. = FALSE)
   }
   if (inherits(x, "mypaintr_pressure_profile")) {
     return(x)
@@ -204,7 +207,8 @@ pressure_human <- function(value = 1,
 #' @param endpoint_jitter Relative endpoint jitter as a proportion of segment
 #'   length.
 #' @param pressure Pressure profile function, typically created with
-#'   [pressure_flat()], [pressure_smooth()], or [pressure_human()].
+#'   [pressure_flat()], [pressure_smooth()], or [pressure_human()]. A single
+#'   number is treated as `pressure_flat(pressure)`.
 #' @param speed Synthetic brush speed multiplier for [mypaint_device()] brush
 #'   rendering. `1` preserves the default distance-based timing heuristic;
 #'   values greater than `1` draw faster, and values below `1` draw slower.
