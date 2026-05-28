@@ -55,7 +55,7 @@ You can also customize how lines and fills are drawn, using brushes.
 Brushes are from the `mypaint-brushes` package, which you can install via
 your package manager (e.g. `apt` or `brew`).
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r brushes, mypaint=TRUE, fig.keep="none"}
 
 set_brush("tanda/marker-01")
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
@@ -66,7 +66,7 @@ If you want different plot elements to look different, you can use
 `set_brush()` between calls. Here we set the brush to `NULL` to
 print an axis using (close to) standard R graphics:
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r set-brush, mypaint=TRUE, fig.keep="none"}
 
 set_brush("classic/charcoal")
 barplot(VADeaths, axes = FALSE, 
@@ -134,12 +134,12 @@ The other way to customize plotting is to set the "hand". While brushes change
 what is plotted along a given path, hands change the path itself, by 
 adding jitter, multiple lines and other human-like quirks:
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r hand, mypaint=TRUE, fig.keep="none"}
 set_hand(human_hand())
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r hand-2, mypaint=TRUE, fig.keep="none"}
 set_hand(hand(bow = 0, wobble = 0.01, multi_stroke = 2))
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
@@ -163,7 +163,7 @@ and fills don't always match up. Below, both rectangle border and fills are
 plotted roughly, but the random roughness is computed separately for
 each of them.
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r bad-rect, mypaint=TRUE, fig.keep="none"}
 
 set_brush("classic/pencil")
 set_hand(human_hand())
@@ -180,7 +180,7 @@ The `draw_rough_*` functions do two useful things:
 
 The next chunks use knitr's standard `"png"` device.
 
-```{r, dev="png", fig.width=5, fig.height=5}
+```{r rough, dev="png", fig.width=5, fig.height=5}
 knitr::opts_chunk$get("dev")
 
 plot.new()
@@ -194,7 +194,7 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = human_hand())
 Control lines and fills with the `hand` argument:
 
 
-```{r, dev="png", fig.width=5, fig.height=5}
+```{r rough-hand, dev="png", fig.width=5, fig.height=5}
 
 plot.new()
 plot.window(c(1, 10), c(1, 10))
@@ -208,7 +208,7 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 
 
 
-```{r, dev="png", fig.width=5, fig.height=5}
+```{r bow-wobble, dev="png", fig.width=5, fig.height=5}
 
 
 plot(c(-0.01, 0.11), c(-0.01, 0.11), type = "n", 
@@ -231,7 +231,7 @@ for (wobble in 0:5 * 0.02) for (bow in 0:5 * 0.02) {
 Use the `fill_pattern` argument to fill a polygon using hand-sketched lines.
 mypaintr knows four ways to do this. Again, these work with base graphics devices via the `draw_rough_*` functions:
 
-```{r, dev = "png", fig.width=5, fig.height=5}
+```{r fill-pattern, dev = "png", fig.width=5, fig.height=5}
 
 plot(0:10, 0:10, type = "n")
 hand <- human_hand()
@@ -256,7 +256,7 @@ This lets you use both hands and brushes.
 
 The next chunk also shows how to use different brushes for stroke and fill:
 
-```{r, mypaint=TRUE, fig.keep="none", fig.width=5, fig.height=5}
+```{r rough-mypaint, mypaint=TRUE, fig.keep="none", fig.width=5, fig.height=5}
 
 plot(1:10, 1:10, type = "n")
 
@@ -277,7 +277,7 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 
 You can use ggplot2 with a mypaint output device:
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r ggplot, mypaint=TRUE, fig.keep="none"}
 
 library(ggplot2)
 
@@ -303,7 +303,7 @@ Here's the same picture as above but with a clean background and straight
 grid lines:
 
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r mypaint-wrap, mypaint=TRUE, fig.keep="none"}
 
 
 ggplot(diamonds) + 
@@ -320,7 +320,7 @@ You can also use the special geoms `geom_mypaint_bar()` and
 `geom_mypaint_col()`. As well as brushes and hands, these let
 you  use special fill patterns, like `zigzag()` and `jumble()`.
 
-```{r, mypaint=TRUE, fig.keep="none"}
+```{r geom-mypaint-bar, mypaint=TRUE, fig.keep="none"}
 
 
 ggplot(diamonds) + 
@@ -365,3 +365,104 @@ dev='mypaint_device', fig.ext='png', fig.keep='high', mypaint=FALSE}
 ```
 
 this may work, *so long as you don't edit device options within a single plot*.
+
+# Advanced hand control: pressure, speed and tilt
+
+You can set pressure, speed, stylus x and y tilt, and stylus barrel rotation
+in `hand()`. Different brushes react in different ways to each of these.
+
+Pressure can vary over the whole stroke. Pass a "pressure profile"
+in to `hand(pressure = ...)`. A pressure profile is a two-argument
+function which takes `(t, turn)` and returns a value between 0 and 1.
+`t` is the time through the stroke from 0 to 1. `turn` is higher
+for sharp turns and is between 0 and 1. There are three built-in
+pressure profiles: `pressure_flat()`, `pressure_smooth()` and
+`pressure_human()`.
+
+```{r pressure, mypaint=TRUE, fig.keep="none"}
+
+plot.new()
+plot.window(c(0, 10), c(0, 11))
+
+set_brush("classic/pen")
+
+x <- seq(0.1, sqrt(10), length.out = 100)^2
+y <- sin(seq(0, 10 * pi, length.out = 100)) * 0.6
+
+text(0, 9.8, "pressure_flat()", adj = 0)
+set_hand(hand(pressure = pressure_flat()))
+lines(x, y + 9, lwd = 0.8, col = "red4")
+
+text(0, 7.8, "pressure_smooth()", adj = 0)
+set_hand(hand(pressure = pressure_smooth()))
+lines(x, y + 7, lwd = 0.8, col = "red4")
+
+text(0, 5.8, "pressure_human()", adj = 0)
+set_hand(hand(pressure = pressure_human()))
+lines(x, y + 5, lwd = 0.8, col = "red4")
+
+text(0, 3.8, "pressure_human(taper = 1, start = 0, peak = 0.7)", adj = 0)
+set_hand(hand(pressure = pressure_human(taper = 1, start = 0, peak = 0.7)))
+lines(x, y + 3, lwd = 0.8, col = "red4")
+
+text(0, 1.8, "pressure_human(turn_taper = 1, start = 0)", adj = 0)
+set_hand(hand(pressure = pressure_human(turn_taper = 1, start = 0)))
+lines(x, y + 1, lwd = 0.8, col = "red4")
+
+```
+
+Many brushes are affected by speed:
+
+```{r speed, mypaint=TRUE, fig.keep="none"}
+
+plot.new()
+plot.window(c(0, 1.5), c(0, 5.5))
+  
+set_brush("deevad/chalk")
+
+speeds <- c(0.05, 0.25, 2)
+x <- 0.5 + seq(0.07, 0.93, length.out = 180)
+y <- 0.2 * sin(2 * pi * 2.1 * x)
+ybase <- 5
+col <- scales::alpha("red4", 0.75)
+
+for (s in speeds) {
+  set_hand(hand(speed = s, pressure = pressure_human()))
+  lines(x, y + ybase, lwd = 2.2, col = col)
+  text(0, ybase, paste("speed:", s), adj = 0)
+  ybase <- ybase - 2
+}
+
+```
+
+
+`xtilt` and `ytilt` affect how the "stylus" is tilted, which changes
+the shape of some brushes:
+
+```{r tilts, mypaint=TRUE, fig.keep="none"}
+
+plot.new()
+plot.window(c(0, 14), c(0, 40))
+set_brush("classic/marker_fat")
+
+x <- 4 + seq(0.1, sqrt(10), length.out = 100)^2
+y <- sin(seq(0, 10 * pi, length.out = 100)) * 0.6
+ybase <- 36
+
+for (xtilt in c(0, 0.5, 1)) {
+  for (ytilt in c(-0.5, 0, 0.5)) {
+    set_hand(hand(xtilt = xtilt, ytilt = ytilt))
+    lines(x, y + ybase, col = "red4")
+    text(0, ybase, adj = 0,
+         labels = paste("xtilt:", xtilt, " ytilt:", ytilt))
+    ybase <- ybase - 4
+  }
+  
+}
+
+
+```
+
+I don't actually know any pens that respond to barrel rotation, but you could
+always make your own....
+
