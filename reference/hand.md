@@ -14,17 +14,25 @@ hand(
   multi_stroke = 1L,
   width_jitter = 0,
   endpoint_jitter = 0,
-  pressure = pressure_flat()
+  pressure = pressure_flat(),
+  speed = 1,
+  xtilt = 0,
+  ytilt = 0,
+  barrel_rotation = 0
 )
 
 human_hand(
   seed = NULL,
-  bow = 0.012,
-  wobble = 0.008,
+  bow = 0.004,
+  wobble = 0.004,
   multi_stroke = 1L,
   width_jitter = 0.08,
   endpoint_jitter = 0,
-  pressure = pressure_human()
+  pressure = pressure_human(),
+  speed = 1,
+  xtilt = 0,
+  ytilt = 0,
+  barrel_rotation = 0
 )
 ```
 
@@ -61,6 +69,24 @@ human_hand(
   [`pressure_smooth()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md),
   or
   [`pressure_human()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md).
+  A single number is treated as `pressure_flat(pressure)`.
+
+- speed:
+
+  Synthetic brush speed multiplier for
+  [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
+  brush rendering. `1` preserves the default distance-based timing
+  heuristic; values greater than `1` draw faster, and values below `1`
+  draw slower.
+
+- xtilt, ytilt:
+
+  Stylus tilt inputs passed to libmypaint, in its normalized `-1` to `1`
+  range.
+
+- barrel_rotation:
+
+  Stylus barrel rotation, in degrees.
 
 ## Value
 
@@ -77,6 +103,11 @@ human-like defaults, including
 
 As of now, pressure profiles only apply to open lines, not shape
 outlines. On base R devices, they are simulated and affect line width.
+
+The `speed`, `xtilt`, `ytilt`, and `barrel_rotation` arguments affect
+only brush rendering on
+[`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md).
+They are ignored by standard graphics devices.
 
 ## Examples
 

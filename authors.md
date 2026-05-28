@@ -10,12 +10,12 @@ Source:
 [`DESCRIPTION`](https://github.com/hughjonesd/mypaintr/blob/master/DESCRIPTION)
 
 Hugh-Jones D (2026). *mypaintr: Plot R Graphics Like a Human*. R package
-version 0.0.1, <https://github.com/hughjonesd/mypaintr>.
+version 0.0.1.9000, <https://github.com/hughjonesd/mypaintr>.
 
     @Manual{,
       title = {mypaintr: Plot R Graphics Like a Human},
       author = {David Hugh-Jones},
       year = {2026},
-      note = {R package version 0.0.1},
+      note = {R package version 0.0.1.9000},
       url = {https://github.com/hughjonesd/mypaintr},
     }

@@ -9,7 +9,7 @@ bow, wobble, width jitter, and a human-style pressure profile enabled."></head><
 
     <a class="navbar-brand me-2" href="../index.html">mypaintr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.1</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,17 +53,25 @@ bow, wobble, width jitter, and a human-style pressure profile enabled.</p>
 <span>  multi_stroke <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  width_jitter <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  endpoint_jitter <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  pressure <span class="op">=</span> <span class="fu"><a href="pressure_flat.html">pressure_flat</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  pressure <span class="op">=</span> <span class="fu"><a href="pressure_flat.html">pressure_flat</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  speed <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  xtilt <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  ytilt <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  barrel_rotation <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">human_hand</span><span class="op">(</span></span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bow <span class="op">=</span> <span class="fl">0.012</span>,</span>
-<span>  wobble <span class="op">=</span> <span class="fl">0.008</span>,</span>
+<span>  bow <span class="op">=</span> <span class="fl">0.004</span>,</span>
+<span>  wobble <span class="op">=</span> <span class="fl">0.004</span>,</span>
 <span>  multi_stroke <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  width_jitter <span class="op">=</span> <span class="fl">0.08</span>,</span>
 <span>  endpoint_jitter <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  pressure <span class="op">=</span> <span class="fu"><a href="pressure_flat.html">pressure_human</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  pressure <span class="op">=</span> <span class="fu"><a href="pressure_flat.html">pressure_human</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  speed <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  xtilt <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  ytilt <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  barrel_rotation <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -99,7 +107,23 @@ length.</p></dd>
 
 <dt id="arg-pressure">pressure<a class="anchor" aria-label="anchor" href="#arg-pressure"></a></dt>
 <dd><p>Pressure profile function, typically created with
-<code><a href="pressure_flat.html">pressure_flat()</a></code>, <code><a href="pressure_flat.html">pressure_smooth()</a></code>, or <code><a href="pressure_flat.html">pressure_human()</a></code>.</p></dd>
+<code><a href="pressure_flat.html">pressure_flat()</a></code>, <code><a href="pressure_flat.html">pressure_smooth()</a></code>, or <code><a href="pressure_flat.html">pressure_human()</a></code>. A single
+number is treated as <code>pressure_flat(pressure)</code>.</p></dd>
+
+
+<dt id="arg-speed">speed<a class="anchor" aria-label="anchor" href="#arg-speed"></a></dt>
+<dd><p>Synthetic brush speed multiplier for <code><a href="mypaint_device.html">mypaint_device()</a></code> brush
+rendering. <code>1</code> preserves the default distance-based timing heuristic;
+values greater than <code>1</code> draw faster, and values below <code>1</code> draw slower.</p></dd>
+
+
+<dt id="arg-xtilt-ytilt">xtilt, ytilt<a class="anchor" aria-label="anchor" href="#arg-xtilt-ytilt"></a></dt>
+<dd><p>Stylus tilt inputs passed to libmypaint, in its normalized
+<code>-1</code> to <code>1</code> range.</p></dd>
+
+
+<dt id="arg-barrel-rotation">barrel_rotation<a class="anchor" aria-label="anchor" href="#arg-barrel-rotation"></a></dt>
+<dd><p>Stylus barrel rotation, in degrees.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -114,6 +138,9 @@ jitter and flat pressure. <code>human_hand()</code> has different, more human-li
 defaults, including <code><a href="pressure_flat.html">pressure_human()</a></code>.</p>
 <p>As of now, pressure profiles only apply to open lines, not shape outlines. On
 base R devices, they are simulated and affect line width.</p>
+<p>The <code>speed</code>, <code>xtilt</code>, <code>ytilt</code>, and <code>barrel_rotation</code> arguments affect only
+brush rendering on <code><a href="mypaint_device.html">mypaint_device()</a></code>. They are ignored by standard graphics
+devices.</p>
     </div>
 
     <div class="section level2">
