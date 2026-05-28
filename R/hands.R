@@ -245,8 +245,8 @@ hand <- function(seed = NULL,
 #' @rdname hand
 #' @export
 human_hand <- function(seed = NULL,
-                       bow = 0.012,
-                       wobble = 0.008,
+                       bow = 0.004,
+                       wobble = 0.004,
                        multi_stroke = 1L,
                        width_jitter = 0.08,
                        endpoint_jitter = 0,
