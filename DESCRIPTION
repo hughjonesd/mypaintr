@@ -1,7 +1,7 @@
 Package: mypaintr
 Type: Package
 Title: Plot R Graphics Like a Human
-Version: 0.0.1
+Version: 0.0.1.9000
 Authors@R: person("David", "Hugh-Jones", email = "david@example.com", role = c("aut", "cre"))
 Author: David Hugh-Jones [aut, cre]
 Maintainer: David Hugh-Jones <david@example.com>
