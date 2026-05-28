@@ -1,4 +1,4 @@
-# Introduction to mypaintr
+# Introduction
 
 mypaintr is a package for creating artistic sketch-like plots in R. It
 has three components:
@@ -17,7 +17,7 @@ Here are some demos.
 ``` r
 
 library(mypaintr)
-knitr::knit_hooks$set(mypaint = knitr_mypaint_hook())
+knitr::knit_hooks$set(mypaint = knitr_mypaint_hook(res = 288))
 
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -180,10 +180,11 @@ separately for each of them.
 ``` r
 
 
-
+set_brush("classic/pencil")
 set_hand(human_hand())
-plot(1:10, 1:10, type = "n")
-rect(2, 2, 8, 8, col = "green4", border = "black")
+plot.new()
+plot.window(c(0, 10), c(0, 10))
+rect(2, 2, 8, 8, col = "darkgreen", border = "grey30")
 ```
 
 ![](introduction_files/figure-html/unnamed-chunk-6-1.png)
@@ -230,11 +231,12 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 ``` r
 
 
-plot(c(0.01, 0.11), c(0.01, 0.11), type = "n", 
+
+plot(c(-0.01, 0.11), c(-0.01, 0.11), type = "n", 
      xlab = "bow", ylab = "wobble", 
      mar = rep(0.1, 4))
 
-for (wobble in 1:5 * 0.02) for (bow in 1:5 * 0.02) {
+for (wobble in 0:5 * 0.02) for (bow in 0:5 * 0.02) {
   my_hand <- hand(wobble = wobble, bow = bow)
   draw_rough_rect(
     bow - 0.008, wobble - 0.008,
@@ -365,7 +367,7 @@ and
 ggplot(diamonds) + 
   geom_mypaint_bar(aes(cut, fill = cut, colour = cut), 
                    brush = "deevad/ballpen",
-                   fill_pattern = zigzag(density = 12),
+                   fill_pattern = zigzag(),
                    hand = hand(multi_stroke = 2)) + 
    theme_minimal() 
 ```
