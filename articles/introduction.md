@@ -162,10 +162,12 @@ Combining brushes and hands, you can turn any R graphics into a sketch.
 ``` r
 
 
-set_brush("deevad/chalk")
-set_hand(human_hand())
-filled.contour(volcano, asp = 1, plot.title = "Maunga Whau",
-               xlab = "Metres North", ylab = "Metres West") 
+set_brush("classic/marker_fat")
+set_hand(human_hand(xtilt = 0.5, ytilt = -0.4))
+
+plot(mpg ~ hp, data = mtcars, col = mtcars$gear, pch = 5)
+set_brush("classic/marker_small")
+legend("top", legend = 3:5, title = "Gears", col = 3:5, pch = 5, horiz = TRUE)
 ```
 
 ![](introduction_files/figure-html/unnamed-chunk-1-1.png)
@@ -184,7 +186,7 @@ set_brush("classic/pencil")
 set_hand(human_hand())
 plot.new()
 plot.window(c(0, 10), c(0, 10))
-rect(2, 2, 8, 8, col = "darkgreen", border = "grey30")
+rect(2, 2, 8, 8, col = "darkgreen", border = "grey15")
 ```
 
 ![](introduction_files/figure-html/bad-rect-1.png)
