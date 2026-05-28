@@ -182,13 +182,72 @@ static double hand_normal(MypaintrHand *hand, double sd) {
 }
 
 static double hand_offset(double t, double c1, double c2) {
-  if (t <= 0.33) {
-    return c1 * (t / 0.33);
+  const double x0 = 0.0;
+  const double x1 = 0.33;
+  const double x2 = 0.66;
+  const double x3 = 1.0;
+  const double h0 = x1 - x0;
+  const double h1 = x2 - x1;
+  const double h2 = x3 - x2;
+  const double a11 = 2.0 * (h0 + h1);
+  const double a12 = h1;
+  const double a21 = h1;
+  const double a22 = 2.0 * (h1 + h2);
+  const double b1 = 6.0 * ((c2 - c1) / h1 - c1 / h0);
+  const double b2 = 6.0 * (-c2 / h2 - (c2 - c1) / h1);
+  const double det = a11 * a22 - a12 * a21;
+  const double m0 = 0.0;
+  const double m1 = (b1 * a22 - a12 * b2) / det;
+  const double m2 = (a11 * b2 - b1 * a21) / det;
+  const double m3 = 0.0;
+  double left_x;
+  double right_x;
+  double left_y;
+  double right_y;
+  double left_m;
+  double right_m;
+  double h;
+  double left_dist;
+  double right_dist;
+
+  if (t <= x0) {
+    return 0.0;
   }
-  if (t <= 0.66) {
-    return c1 + (c2 - c1) * ((t - 0.33) / 0.33);
+  if (t >= x3) {
+    return 0.0;
   }
-  return c2 * (1.0 - (t - 0.66) / 0.34);
+
+  if (t <= x1) {
+    left_x = x0;
+    right_x = x1;
+    left_y = 0.0;
+    right_y = c1;
+    left_m = m0;
+    right_m = m1;
+  } else if (t <= x2) {
+    left_x = x1;
+    right_x = x2;
+    left_y = c1;
+    right_y = c2;
+    left_m = m1;
+    right_m = m2;
+  } else {
+    left_x = x2;
+    right_x = x3;
+    left_y = c2;
+    right_y = 0.0;
+    left_m = m2;
+    right_m = m3;
+  }
+
+  h = right_x - left_x;
+  left_dist = right_x - t;
+  right_dist = t - left_x;
+
+  return left_m * left_dist * left_dist * left_dist / (6.0 * h) +
+    right_m * right_dist * right_dist * right_dist / (6.0 * h) +
+    (left_y - left_m * h * h / 6.0) * left_dist / h +
+    (right_y - right_m * h * h / 6.0) * right_dist / h;
 }
 
 static void point_buffer_free(PointBuffer *buf) {

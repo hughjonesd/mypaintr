@@ -2,7 +2,7 @@
 rough_control_offsets <- function(t, amplitude) {
   ctrl_x <- c(0, 0.33, 0.66, 1)
   ctrl_y <- c(0, stats::rnorm(2, sd = amplitude), 0)
-  stats::approx(ctrl_x, ctrl_y, xout = t, rule = 2)$y
+  stats::spline(ctrl_x, ctrl_y, xout = t, method = "natural")$y
 }
 
 rough_segment_path <- function(x0, y0, x1, y1, hand_spec) {
