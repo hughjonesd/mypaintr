@@ -1,8 +1,8 @@
 # Hand-drawn geometry settings
 
 `human_hand()` is the same as `hand()`, but starts from rougher defaults
-with bow, wobble, width jitter, and a human-style pressure profile
-enabled.
+with bow, wobble, width jitter, and human-style pressure and speed
+profiles enabled.
 
 ## Usage
 
@@ -15,7 +15,7 @@ hand(
   width_jitter = 0,
   endpoint_jitter = 0,
   pressure = pressure_flat(),
-  speed = 1,
+  speed = speed_flat(),
   xtilt = 0,
   ytilt = 0,
   barrel_rotation = 0
@@ -29,7 +29,7 @@ human_hand(
   width_jitter = 0.08,
   endpoint_jitter = 0,
   pressure = pressure_human(),
-  speed = 1,
+  speed = speed_human(),
   xtilt = 0,
   ytilt = 0,
   barrel_rotation = 0
@@ -73,11 +73,14 @@ human_hand(
 
 - speed:
 
-  Synthetic brush speed multiplier for
+  Speed profile function, typically created with
+  [`speed_flat()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md)
+  or
+  [`speed_human()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md).
+  A single positive number is treated as `speed_flat(speed)`. Speed
+  profiles affect
   [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
-  brush rendering. `1` preserves the default distance-based timing
-  heuristic; values greater than `1` draw faster, and values below `1`
-  draw slower.
+  brush rendering only.
 
 - xtilt, ytilt:
 
@@ -97,9 +100,11 @@ An object describing how rough geometry should be generated.
 ## Details
 
 `hand()` defaults to plain, base-R-like geometry with no bowing, wobble,
-or jitter and flat pressure. `human_hand()` has different, more
-human-like defaults, including
-[`pressure_human()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md).
+or jitter and flat pressure and speed. `human_hand()` has different,
+more human-like defaults, including
+[`pressure_human()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
+and
+[`speed_human()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md).
 
 As of now, pressure profiles only apply to open lines, not shape
 outlines. On base R devices, they are simulated and affect line width.

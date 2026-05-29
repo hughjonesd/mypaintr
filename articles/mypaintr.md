@@ -423,8 +423,9 @@ Different brushes react in different ways to each of these.
 Pressure can vary over the whole stroke. Pass a “pressure profile” in to
 `hand(pressure = ...)`. A pressure profile is a two-argument function
 which takes `(t, turn)` and returns a value between 0 and 1. `t` is the
-time through the stroke from 0 to 1. `turn` is higher for sharp turns
-and is between 0 and 1. There are three built-in pressure profiles:
+normalized progress through the stroke from 0 to 1. `turn` is higher for
+sharp turns and is between 0 and 1. There are three built-in pressure
+profiles:
 [`pressure_flat()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md),
 [`pressure_smooth()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
 and
@@ -464,26 +465,42 @@ lines(x, y + 1, lwd = 0.8, col = "red4")
 
 ![](mypaintr_files/figure-html/pressure-1.png)
 
-Many brushes are affected by speed:
+Many brushes are affected by speed. Pass a speed profile in to
+`hand(speed = ...)`; it uses the same `(t, turn)` arguments as pressure
+profiles, but returns a positive speed multiplier.
+[`speed_flat()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md)
+keeps a constant speed, while
+[`speed_human()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md)
+slows down near stroke endpoints and sharp turns.
+[`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
+uses
+[`speed_human()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md)
+by default.
 
 ``` r
 
 
 plot.new()
-plot.window(c(0, 1.5), c(0, 5.5))
+plot.window(c(0, 1.5), c(0, 7.5))
   
 set_brush("deevad/chalk")
 
-speeds <- c(0.05, 0.25, 2)
+hands <- list(
+  "speed_flat(0.25)" = hand(speed = speed_flat(0.25), pressure = pressure_human()),
+  "speed_flat(2)" = hand(speed = speed_flat(2), pressure = pressure_human()),
+  "speed_human()" = hand(speed = speed_human(), pressure = pressure_human()),
+  "human_hand()" = human_hand()
+)
 x <- 0.5 + seq(0.07, 0.93, length.out = 180)
 y <- 0.2 * sin(2 * pi * 2.1 * x)
-ybase <- 5
-col <- scales::alpha("red4", 0.75)
+ybase <- 7
+col <- grDevices::adjustcolor("red4", alpha.f = 0.75)
 
-for (s in speeds) {
-  set_hand(hand(speed = s, pressure = pressure_human()))
+for (i in seq_along(hands)) {
+  label <- names(hands)[[i]]
+  set_hand(hands[[i]])
   lines(x, y + ybase, lwd = 2.2, col = col)
-  text(0, ybase, paste("speed:", s), adj = 0)
+  text(0, ybase, label, adj = 0)
   ybase <- ybase - 2
 }
 ```

@@ -48,10 +48,11 @@ pressure_human(
 A pressure-profile function for the `pressure` argument of
 [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md) and
 [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md).
-Custom functions can also be supplied directly; they must accept `t` in
-the range `0` to `1` and `turn` in the range `0` to `1`. `turn`
-describes local path curvature: `0` is straight, larger values are
-sharper corners, and values near `1` are near reversals.
+Custom functions can also be supplied directly; they must accept `t`,
+normalized stroke progress in the range `0` to `1`, and `turn` in the
+range `0` to `1`. `turn` describes local path curvature: `0` is
+straight, larger values are sharper corners, and values near `1` are
+near reversals.
 
 ## Examples
 
