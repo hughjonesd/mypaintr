@@ -36,7 +36,6 @@ typedef struct {
   double base_opaque;
   double base_smudge;
   double base_opaque_multiply;
-  int pure_smudge;
 } MypaintrBrush;
 
 typedef struct {
@@ -725,51 +724,12 @@ static void brush_apply_gc(const MypaintrDevice *dev, MypaintrBrush *brush, int 
   );
 }
 
-static void brush_seed_from_surface(MypaintrDevice *dev, MypaintrBrush *brush, double x, double y) {
-  double sample_radius = exp(brush->base_radius_log);
-  double smudge_radius_log = mypaint_brush_get_base_value(brush->brush, MYPAINT_BRUSH_SETTING_SMUDGE_RADIUS_LOG);
-  float r, g, b, a;
-  double h, s, v;
-
-  sample_radius *= exp(smudge_radius_log);
-  if (!isfinite(sample_radius) || sample_radius <= 1e-6) {
-    sample_radius = exp(brush->base_radius_log);
-  }
-  if (!isfinite(sample_radius) || sample_radius <= 1e-6) {
-    sample_radius = 1.0;
-  }
-
-  mypaint_surface2_get_color(&dev->surface.parent, (float) x, (float) y, (float) sample_radius, &r, &g, &b, &a, -1.0f);
-  if (a <= 1e-6f) {
-    r = g = b = 1.0f;
-    a = 1.0f;
-  }
-
-  rgb_to_hsv(r, g, b, &h, &s, &v);
-  mypaint_brush_set_base_value(brush->brush, MYPAINT_BRUSH_SETTING_COLOR_H, (float) h);
-  mypaint_brush_set_base_value(brush->brush, MYPAINT_BRUSH_SETTING_COLOR_S, (float) s);
-  mypaint_brush_set_base_value(brush->brush, MYPAINT_BRUSH_SETTING_COLOR_V, (float) v);
-  mypaint_brush_set_state(brush->brush, MYPAINT_BRUSH_STATE_SMUDGE_RA, r * a);
-  mypaint_brush_set_state(brush->brush, MYPAINT_BRUSH_STATE_SMUDGE_GA, g * a);
-  mypaint_brush_set_state(brush->brush, MYPAINT_BRUSH_STATE_SMUDGE_BA, b * a);
-  mypaint_brush_set_state(brush->brush, MYPAINT_BRUSH_STATE_SMUDGE_A, a);
-  /* Pure smudge brushes are approximated as surface-sampled paint strokes. */
-  mypaint_brush_set_base_value(brush->brush, MYPAINT_BRUSH_SETTING_SMUDGE, 0.0f);
-  mypaint_brush_set_base_value(brush->brush, MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY, 1.0f);
-}
-
-static int brush_is_pure_smudge(const MypaintrBrush *brush) {
-  (void) brush;
-  return 0;
-}
-
 static void brush_apply_spec(MypaintrBrush *slot, SEXP spec) {
   configure_brush(slot->brush, spec);
   slot->base_radius_log = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_RADIUS_LOGARITHMIC);
   slot->base_opaque = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_OPAQUE);
   slot->base_smudge = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_SMUDGE);
   slot->base_opaque_multiply = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY);
-  slot->pure_smudge = brush_is_pure_smudge(slot);
 }
 
 static size_t tile_cache_index(const MypaintrDevice *dev, int tx, int ty) {
@@ -939,9 +899,6 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
 
   mypaint_brush_reset(brush->brush);
   mypaint_brush_new_stroke(brush->brush);
-  if (brush->pure_smudge) {
-    brush_seed_from_surface(dev, brush, x[0], y[0]);
-  }
   mypaint_tiled_surface2_begin_atomic(&dev->surface);
   mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) start_x, (float) start_y, 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
   if (start_len > 1e-9) {
@@ -1362,7 +1319,7 @@ static void fill_polygon_mode(MypaintrDevice *dev, int n, const double *x, const
   if (hand->enabled) {
     PointBuffer rough = {0};
     roughen_vertex_path(x, y, n, hand, 1, &rough);
-    if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge) {
+    if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
       hatch_fill_polygon(dev, &dev->fill, rough.n, rough.x, rough.y, fill);
     } else {
       solid_fill_polygon(dev, rough.n, rough.x, rough.y, fill, rule);
@@ -1371,7 +1328,7 @@ static void fill_polygon_mode(MypaintrDevice *dev, int n, const double *x, const
     return;
   }
 
-  if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge) {
+  if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
     hatch_fill_polygon(dev, &dev->fill, n, x, y, fill);
   } else {
     solid_fill_polygon(dev, n, x, y, fill, rule);
@@ -1407,7 +1364,7 @@ static void fill_rect(MypaintrDevice *dev, double x0, double y0, double x1, doub
     return;
   }
 
-  if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge && !should_solid_fill_rect(dev, x0, y0, x1, y1, fill)) {
+  if (dev->fill_style == MYPAINTR_FILL_BRUSH && !should_solid_fill_rect(dev, x0, y0, x1, y1, fill)) {
     if (dev->fill_hand.enabled) {
       fill_polygon_mode(dev, 4, xs, ys, fill, R_GE_nonZeroWindingRule, &dev->fill_hand);
     } else {
@@ -1464,7 +1421,7 @@ static void fill_circle(MypaintrDevice *dev, double x, double y, double r, int f
     return;
   }
 
-  if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge) {
+  if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
     hatch_fill_circle(dev, &dev->fill, x, y, r, fill);
     return;
   }
@@ -1724,7 +1681,7 @@ static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean w
     if (dev->fill_hand.enabled) {
       if (npoly == 1) {
         fill_polygon_mode(dev, nper[0], x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule, &dev->fill_hand);
-      } else if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge) {
+      } else if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
         hatch_fill_path(dev, &dev->fill, npoly, nper, x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule);
       } else {
         cairo_new_path(dev->cr);
@@ -1742,7 +1699,7 @@ static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean w
         cairo_fill(dev->cr);
         invalidate_tile_cache(dev);
       }
-    } else if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge) {
+    } else if (dev->fill_style == MYPAINTR_FILL_BRUSH) {
       hatch_fill_path(dev, &dev->fill, npoly, nper, x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule);
     } else {
       cairo_new_path(dev->cr);

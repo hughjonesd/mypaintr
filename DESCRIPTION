@@ -7,7 +7,7 @@ Author: David Hugh-Jones [aut, cre]
 Maintainer: David Hugh-Jones <david@example.com>
 Description: R graphics device for human-like, sketched plotting. Uses 
   libmypaint brushes to draw lines and polygons. Includes functions for
-  plotting "rough" lines and polygons. Integrates with base and "ggplot" graphics.
+  plotting "rough" lines and polygons. Integrates with base and ggplot graphics.
 License: MIT + file LICENSE
 URL: https://github.com/hughjonesd/mypaintr,
     https://hughjonesd.github.io/mypaintr/

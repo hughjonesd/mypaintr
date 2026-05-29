@@ -374,11 +374,6 @@ normalize_brush_spec <- function(brush) {
   )
 }
 
-warn_if_pure_smudge_brush <- function(spec, type = c("stroke", "fill")) {
-  type <- match.arg(type)
-  invisible(NULL)
-}
-
 warn_no_mypaintr_device <- function(fn) {
   warning(
     sprintf("%s() has no effect unless the active graphics device is mypaint_device()", fn),
@@ -419,12 +414,6 @@ warn_no_mypaintr_device <- function(fn) {
 set_brush <- function(brush = NULL, type = c("both", "stroke", "fill"), auto_solid_bg = NULL) {
   type <- match.arg(type)
   spec <- if (is.null(brush)) NULL else normalize_brush_spec(brush)
-  if (type %in% c("both", "stroke")) {
-    warn_if_pure_smudge_brush(spec, "stroke")
-  }
-  if (type %in% c("both", "fill")) {
-    warn_if_pure_smudge_brush(spec, "fill")
-  }
   stroke_spec <- fill_spec <- NULL
   stroke_style <- fill_style <- NULL
 

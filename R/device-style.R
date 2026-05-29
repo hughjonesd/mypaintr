@@ -176,8 +176,6 @@ mypaint_device <- function(filename = NULL,
   } else {
     normalize_brush_spec(fill_brush)
   }
-  warn_if_pure_smudge_brush(stroke_spec, "stroke")
-  warn_if_pure_smudge_brush(fill_spec, "fill")
   stroke_style <- if (is.null(stroke_spec)) 0L else 1L
 
   fill_style <- if (fill_brush_missing) {
