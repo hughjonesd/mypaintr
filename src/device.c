@@ -121,13 +121,6 @@ static inline unsigned char unit_to_byte(double x) {
   return (unsigned char) (y + 0.5);
 }
 
-static inline int colors_close(int lhs, int rhs, int tol) {
-  return abs(R_RED(lhs) - R_RED(rhs)) <= tol &&
-         abs(R_GREEN(lhs) - R_GREEN(rhs)) <= tol &&
-         abs(R_BLUE(lhs) - R_BLUE(rhs)) <= tol &&
-         abs(R_ALPHA(lhs) - R_ALPHA(rhs)) <= tol;
-}
-
 static inline double device_lwd_scale(const MypaintrDevice *dev) {
   return dev->res / 96.0;
 }
@@ -618,7 +611,7 @@ static double flip_y(const MypaintrDevice *dev, double y) {
   return (double) dev->height - y;
 }
 
-static void set_font_face_for_context(cairo_t *cr, double res, const pGEcontext gc) {
+static void set_font_face(const MypaintrDevice *dev, const pGEcontext gc) {
   cairo_font_slant_t slant = CAIRO_FONT_SLANT_NORMAL;
   cairo_font_weight_t weight = CAIRO_FONT_WEIGHT_NORMAL;
 
@@ -630,16 +623,12 @@ static void set_font_face_for_context(cairo_t *cr, double res, const pGEcontext 
   }
 
   cairo_select_font_face(
-    cr,
+    dev->cr,
     gc->fontfamily[0] ? gc->fontfamily : "sans",
     slant,
     weight
   );
-  cairo_set_font_size(cr, gc->cex * gc->ps * res / 72.0);
-}
-
-static void set_font_face(const MypaintrDevice *dev, const pGEcontext gc) {
-  set_font_face_for_context(dev->cr, dev->res, gc);
+  cairo_set_font_size(dev->cr, gc->cex * gc->ps * dev->res / 72.0);
 }
 
 static void apply_cairo_clip(MypaintrDevice *dev) {
@@ -1182,14 +1171,6 @@ static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int 
   }
 }
 
-static void render_polyline_mode_hand(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, const MypaintrHand *hand) {
-  if (render_style == MYPAINTR_RENDER_BRUSH) {
-    render_polyline(dev, brush, x, y, n, col, lwd, lty, hand);
-  } else {
-    solid_stroke_polyline(dev, x, y, n, col, lwd, lty, closed, hand);
-  }
-}
-
 static void render_polyline_hand(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed, MypaintrHand *hand) {
   int i;
 
@@ -1203,7 +1184,11 @@ static void render_polyline_hand(MypaintrDevice *dev, MypaintrBrush *brush, int 
     double jittered_lwd;
     roughen_vertex_path(x, y, n, hand, closed, &path);
     jittered_lwd = fmax(0.01, lwd * (1.0 + hand_normal(hand, hand->width_jitter)));
-    render_polyline_mode_hand(dev, brush, render_style, path.x, path.y, path.n, col, jittered_lwd, lty, 0, hand);
+    if (render_style == MYPAINTR_RENDER_BRUSH) {
+      render_polyline(dev, brush, path.x, path.y, path.n, col, jittered_lwd, lty, hand);
+    } else {
+      solid_stroke_polyline(dev, path.x, path.y, path.n, col, jittered_lwd, lty, 0, hand);
+    }
     point_buffer_free(&path);
   }
 }
@@ -1368,36 +1353,30 @@ static void fill_polygon_mode(MypaintrDevice *dev, int n, const double *x, const
   }
 }
 
-static int should_solid_fill_rect(const MypaintrDevice *dev, double x0, double y0, double x1, double y1, int fill) {
-  double area;
-  double device_area;
-
-  if (R_ALPHA(fill) == 0) {
-    return 1;
-  }
-  if (!dev->auto_solid_bg) {
-    return 0;
-  }
-
-  area = fabs(x1 - x0) * fabs(y1 - y0);
-  device_area = (double) dev->width * (double) dev->height;
-
-  if (area < 0.10 * device_area) {
-    return 0;
-  }
-
-  return colors_close(fill, dev->bg, 12);
-}
-
 static void fill_rect(MypaintrDevice *dev, double x0, double y0, double x1, double y1, int fill) {
   double xs[4] = {x0, x1, x1, x0};
   double ys[4] = {y0, y0, y1, y1};
+  double area = fabs(x1 - x0) * fabs(y1 - y0);
+  double device_area = (double) dev->width * (double) dev->height;
+  int should_brush_fill = dev->fill_style == MYPAINTR_FILL_BRUSH;
 
   if (R_ALPHA(fill) == 0) {
     return;
   }
 
-  if (dev->fill_style == MYPAINTR_FILL_BRUSH && !should_solid_fill_rect(dev, x0, y0, x1, y1, fill)) {
+  if (
+    should_brush_fill &&
+      dev->auto_solid_bg &&
+      area >= 0.10 * device_area &&
+      abs(R_RED(fill) - R_RED(dev->bg)) <= 12 &&
+      abs(R_GREEN(fill) - R_GREEN(dev->bg)) <= 12 &&
+      abs(R_BLUE(fill) - R_BLUE(dev->bg)) <= 12 &&
+      abs(R_ALPHA(fill) - R_ALPHA(dev->bg)) <= 12
+  ) {
+    should_brush_fill = 0;
+  }
+
+  if (should_brush_fill) {
     if (dev->fill_hand.enabled) {
       fill_polygon_mode(dev, 4, xs, ys, fill, R_GE_nonZeroWindingRule, &dev->fill_hand);
     } else {
@@ -2131,13 +2110,6 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
   int pixel_height;
   int bg;
 
-  if (TYPEOF(filename) != STRSXP || XLENGTH(filename) != 1) {
-    error("filename must be a character scalar");
-  }
-  if (TYPEOF(bg_rgba) != INTSXP || XLENGTH(bg_rgba) != 4) {
-    error("background colour must be an RGBA integer vector");
-  }
-
   pixel_width = (int) llround(asReal(width) * asReal(res));
   pixel_height = (int) llround(asReal(height) * asReal(res));
   bg = R_RGBA(INTEGER(bg_rgba)[0], INTEGER(bg_rgba)[1], INTEGER(bg_rgba)[2], INTEGER(bg_rgba)[3]);
@@ -2197,10 +2169,6 @@ SEXP mypaintr_device_set_style(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_sty
   }
 
   return R_NilValue;
-}
-
-SEXP mypaintr_device_set_brush(SEXP stroke_spec, SEXP fill_spec, SEXP stroke_style, SEXP fill_style, SEXP auto_solid_bg) {
-  return mypaintr_device_set_style(stroke_spec, fill_spec, stroke_style, fill_style, auto_solid_bg);
 }
 
 SEXP mypaintr_device_set_hand(SEXP stroke_hand, SEXP fill_hand, SEXP update_stroke, SEXP update_fill) {

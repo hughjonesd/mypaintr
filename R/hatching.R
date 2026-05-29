@@ -251,17 +251,6 @@ point_in_paths <- function(paths, x, y, rule = c("winding", "evenodd")) {
   }, logical(1))
 }
 
-path_bbox <- function(paths) {
-  xs <- unlist(lapply(paths, `[[`, "x"), use.names = FALSE)
-  ys <- unlist(lapply(paths, `[[`, "y"), use.names = FALSE)
-  list(
-    xmin = min(xs),
-    xmax = max(xs),
-    ymin = min(ys),
-    ymax = max(ys)
-  )
-}
-
 rotate_xy <- function(x, y, angle_deg) {
   theta <- angle_deg * pi / 180
   cth <- cos(theta)

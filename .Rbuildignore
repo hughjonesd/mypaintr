@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^\.DS_Store$
 ^\.github$
+^\.git$
 ^Rplots\.pdf$
 ^docs$
 ^build$
