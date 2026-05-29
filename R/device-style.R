@@ -87,14 +87,6 @@ make_style_override <- function(update_stroke = FALSE,
   )
 }
 
-normalize_render_style <- function(style) {
-  if (is.null(style)) {
-    return(NULL)
-  }
-  style <- match.arg(style, c("solid", "brush"))
-  match(style, c("solid", "brush")) - 1L
-}
-
 #' Open a libmypaint-backed graphics device
 #'
 #' @param filename Output PNG filename. If it contains `\%d`, pages are
@@ -204,48 +196,5 @@ mypaint_device <- function(filename = NULL,
     if (auto_solid_bg_missing) TRUE else isTRUE(auto_solid_bg),
     normalize_hand_spec(stroke_hand),
     normalize_hand_spec(fill_hand)
-  ))
-}
-
-#' Update the active mypaintr device style
-#'
-#' @param brush Stroke brush specification created with [tweak_brush()], an
-#'   installed brush name, `.myb` file path, JSON brush string, or `NULL` for
-#'   solid strokes.
-#' @param stroke_style Either `"brush"` or `"solid"`.
-#' @param fill_style Either `"solid"` or `"brush"`.
-#' @param fill_brush Fill brush specification created with [tweak_brush()], an
-#'   installed brush name, `.myb` file path, JSON brush string, or `NULL` for
-#'   solid fills.
-#' @param auto_solid_bg Whether large fills matching the device background should
-#'   be drawn normally.
-#' @return `NULL`, invisibly.
-#' @keywords internal
-#' @noRd
-mypaint_style <- function(brush = NULL,
-                          stroke_style = NULL,
-                          fill_style = NULL,
-                          fill_brush = NULL,
-                          auto_solid_bg = NULL) {
-  supplied_args <- names(match.call(expand.dots = FALSE))
-  brush_missing <- !("brush" %in% supplied_args)
-  fill_brush_missing <- !("fill_brush" %in% supplied_args)
-  stroke_spec <- if (brush_missing) NULL else if (is.null(brush)) NULL else normalize_brush_spec(brush)
-  fill_spec <- if (fill_brush_missing) NULL else if (is.null(fill_brush)) NULL else normalize_brush_spec(fill_brush)
-
-  stroke_style <- normalize_render_style(stroke_style)
-  fill_style <- normalize_render_style(fill_style)
-
-  if (!is_mypaintr_device()) {
-    return(invisible(NULL))
-  }
-
-  invisible(.Call(
-    mypaintr_device_set_style,
-    stroke_spec,
-    fill_spec,
-    stroke_style,
-    fill_style,
-    if (is.null(auto_solid_bg)) NULL else isTRUE(auto_solid_bg)
   ))
 }
