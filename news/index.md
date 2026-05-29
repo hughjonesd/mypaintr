@@ -12,6 +12,7 @@
 - Hand `wobble` and `bow` are now smoother.
 - [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   defaults are less wobbly and bowed.
+- Speeded up blending by using the libmypaint backend.
 
 ## mypaintr 0.0.1
 
