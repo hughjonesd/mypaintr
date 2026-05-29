@@ -144,7 +144,7 @@ barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 
 Combining brushes and hands, you can turn any R graphics into a sketch.
 
-```{r, mypaint=TRUE, fig.keep="none", fig.height=5, fig.width=5}
+```{r mtcars-plot, mypaint=TRUE, fig.keep="none", fig.height=5, fig.width=5}
 
 set_brush("classic/marker_small")
 set_hand(human_hand(xtilt = 0.5, ytilt = -0.2))

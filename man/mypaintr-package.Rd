@@ -6,7 +6,7 @@
 \alias{mypaintr-package}
 \title{mypaintr: Plot R Graphics Like a Human}
 \description{
-R graphics device for human-like, sketched plotting. Uses libmypaint brushes to draw lines and polygons. Includes functions for plotting "rough" lines and polygons. Integrates with base and "ggplot" graphics.
+R graphics device for human-like, sketched plotting. Uses libmypaint brushes to draw lines and polygons. Includes functions for plotting "rough" lines and polygons. Integrates with base and ggplot graphics.
 }
 \seealso{
 Useful links:
