@@ -1,4 +1,4 @@
-# Introduction
+# Introduction to mypaintr
 
 mypaintr is a package for creating artistic sketch-like plots in R. It
 has three components:
@@ -61,7 +61,7 @@ barplot(VADeaths, beside = TRUE, col = palette.colors(5), border = NA,
         cex.names = 0.8)
 ```
 
-![](introduction_files/figure-html/brushes-1.png)
+![](mypaintr_files/figure-html/brushes-1.png)
 
 If you want different plot elements to look different, you can use
 [`set_brush()`](https://hughjonesd.github.io/mypaintr/reference/set_brush.md)
@@ -79,7 +79,7 @@ set_brush(NULL)
 axis(side = 2, at = seq(0, 60, 20))
 ```
 
-![](introduction_files/figure-html/set-brush-1.png)
+![](mypaintr_files/figure-html/set-brush-1.png)
 
 ### Good brushes
 
@@ -143,7 +143,7 @@ set_hand(human_hand())
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
-![](introduction_files/figure-html/hand-1.png)
+![](mypaintr_files/figure-html/hand-1.png)
 
 ``` r
 
@@ -151,7 +151,7 @@ set_hand(hand(bow = 0, wobble = 0.01, multi_stroke = 2))
 barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
 ```
 
-![](introduction_files/figure-html/hand-2-1.png)
+![](mypaintr_files/figure-html/hand-2-1.png)
 
 Combining brushes and hands, you can turn any R graphics into a sketch.
 
@@ -166,7 +166,7 @@ legend("topright", legend = 3:5, title = "Gears", col = 1:3,
        horiz = TRUE, bg = "transparent", inset = 0.05, pch = 1)
 ```
 
-![](introduction_files/figure-html/unnamed-chunk-1-1.png)
+![](mypaintr_files/figure-html/unnamed-chunk-1-1.png)
 
 ## Rough lines and polygons
 
@@ -183,7 +183,7 @@ plot.window(c(0, 10), c(0, 10))
 rect(2, 2, 8, 8, col = "orange", border = "black", lwd = 2)
 ```
 
-![](introduction_files/figure-html/bad-rect-1.png)
+![](mypaintr_files/figure-html/bad-rect-1.png)
 
 The `draw_rough_*` functions do two useful things:
 
@@ -205,7 +205,7 @@ draw_rough_rect(8, 4, 5, 8, col = "blue3", fill_pattern = hatch(), hand = human_
 draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = human_hand())
 ```
 
-![](introduction_files/figure-html/rough-1.png)
+![](mypaintr_files/figure-html/rough-1.png)
 
 Control lines and fills with the `hand` argument:
 
@@ -222,7 +222,7 @@ draw_rough_rect(8, 4, 5, 8, col = "blue3", hand = my_hand, fill_pattern = hatch(
 draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 ```
 
-![](introduction_files/figure-html/rough-hand-1.png)
+![](mypaintr_files/figure-html/rough-hand-1.png)
 
 Here’s a demo of the `bow` and `wobble` parameters on an ordinary `png`
 device:
@@ -246,7 +246,7 @@ for (wobble in 0:5 * 0.02) for (bow in 0:5 * 0.02) {
 }
 ```
 
-![](introduction_files/figure-html/bow-wobble-1.png)
+![](mypaintr_files/figure-html/bow-wobble-1.png)
 
 ## Pattern Fills
 
@@ -271,7 +271,7 @@ text(c(2, 2, 8, 8), c(0.5, 5.5, 0.5, 5.5),
      labels = c("hatch", "crosshatch", "zigzag", "jumble"))
 ```
 
-![](introduction_files/figure-html/fill-pattern-1.png)
+![](mypaintr_files/figure-html/fill-pattern-1.png)
 
 ## Rough drawing and `mypaint_device`
 
@@ -298,7 +298,7 @@ draw_rough_rect(8, 4, 5, 8, col = "blue3", hand = my_hand, fill_pattern = hatch(
 draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 ```
 
-![](introduction_files/figure-html/rough-mypaint-1.png)
+![](mypaintr_files/figure-html/rough-mypaint-1.png)
 
 ## ggplot2
 
@@ -346,7 +346,7 @@ ggplot(diamonds) +
   theme_minimal() 
 ```
 
-![](introduction_files/figure-html/mypaint-wrap-1.png)
+![](mypaintr_files/figure-html/mypaint-wrap-1.png)
 
 You can also use the special geoms
 [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
@@ -369,7 +369,7 @@ ggplot(diamonds) +
    theme_minimal() 
 ```
 
-![](introduction_files/figure-html/geom-mypaint-bar-1.png)
+![](mypaintr_files/figure-html/geom-mypaint-bar-1.png)
 
 To save your output, you can either use
 [`mypaint_device()`](https://hughjonesd.github.io/mypaintr/reference/mypaint_device.md)
@@ -462,7 +462,7 @@ set_hand(hand(pressure = pressure_human(turn_taper = 1, start = 0)))
 lines(x, y + 1, lwd = 0.8, col = "red4")
 ```
 
-![](introduction_files/figure-html/pressure-1.png)
+![](mypaintr_files/figure-html/pressure-1.png)
 
 Many brushes are affected by speed:
 
@@ -488,7 +488,7 @@ for (s in speeds) {
 }
 ```
 
-![](introduction_files/figure-html/speed-1.png)
+![](mypaintr_files/figure-html/speed-1.png)
 
 `xtilt` and `ytilt` affect how the “stylus” is tilted, which changes the
 shape of some brushes:
@@ -516,7 +516,7 @@ for (xtilt in c(0, 0.5, 1)) {
 }
 ```
 
-![](introduction_files/figure-html/tilts-1.png)
+![](mypaintr_files/figure-html/tilts-1.png)
 
 I don’t actually know any pens that respond to barrel rotation, but you
 could always make your own….
