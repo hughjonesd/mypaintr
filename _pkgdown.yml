@@ -32,6 +32,8 @@ reference:
       - pressure_flat
       - pressure_smooth
       - pressure_human
+      - speed_flat
+      - speed_human
       - set_hand
 
   - title: Rough Drawing

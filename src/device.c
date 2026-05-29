@@ -52,7 +52,7 @@ typedef struct {
   double width_jitter;
   double endpoint_jitter;
   SEXP pressure_fun;
-  double speed;
+  SEXP speed_fun;
   double xtilt;
   double ytilt;
   double barrel_rotation;
@@ -358,7 +358,7 @@ static void init_hand_defaults(MypaintrHand *hand, uint64_t salt) {
   hand->width_jitter = 0.0;
   hand->endpoint_jitter = 0.0;
   hand->pressure_fun = R_NilValue;
-  hand->speed = 1.0;
+  hand->speed_fun = R_NilValue;
   hand->xtilt = 0.0;
   hand->ytilt = 0.0;
   hand->barrel_rotation = 0.0;
@@ -400,7 +400,12 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
     hand->pressure_fun = value;
   }
   value = list_element(spec, "speed");
-  if (value != R_NilValue && XLENGTH(value) == 1) hand->speed = asReal(value);
+  if (value != R_NilValue) {
+    if (!isFunction(value)) {
+      error("speed must be a function created by speed_flat(), speed_human(), or a compatible custom function");
+    }
+    hand->speed_fun = value;
+  }
   value = list_element(spec, "xtilt");
   if (value != R_NilValue && XLENGTH(value) == 1) hand->xtilt = asReal(value);
   value = list_element(spec, "ytilt");
@@ -450,6 +455,32 @@ static double stroke_pressure_at(const MypaintrHand *hand, double t, double turn
   pressure = asReal(value);
   UNPROTECT(4);
   return clamp01(pressure);
+}
+
+static double stroke_speed_at(const MypaintrHand *hand, double t, double turn_factor) {
+  SEXP t_arg;
+  SEXP turn_arg;
+  SEXP call;
+  SEXP value;
+  double speed;
+
+  PROTECT(t_arg = ScalarReal(clamp01(t)));
+  PROTECT(turn_arg = ScalarReal(clamp01(turn_factor)));
+  PROTECT(call = lang3(hand->speed_fun, t_arg, turn_arg));
+  PROTECT(value = eval(call, R_GlobalEnv));
+
+  if (XLENGTH(value) < 1) {
+    UNPROTECT(4);
+    error("speed function must return at least one value");
+  }
+
+  speed = asReal(value);
+  UNPROTECT(4);
+  if (!isfinite(speed) || speed <= 0.0) {
+    error("speed function must return a positive finite value");
+  }
+
+  return speed;
 }
 
 static double polyline_turn_factor(const double *x, const double *y, int n, int i) {
@@ -902,7 +933,8 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   mypaint_tiled_surface2_begin_atomic(&dev->surface);
   mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) start_x, (float) start_y, 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
   if (start_len > 1e-9) {
-    double dt0 = fmax(preroll / 240.0 / brush_hand->speed, 0.001);
+    double speed0 = hand ? stroke_speed_at(hand, 0.0, 0.0) : 1.0;
+    double dt0 = fmax(preroll / 240.0 / speed0, 0.001);
     mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) x[0], (float) y[0], 0.0f, xtilt, ytilt, dt0, 1.0f, 0.0f, barrel_rotation);
   }
   mypaint_brush_stroke_to_2(
@@ -934,8 +966,9 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
       double px = sx + dx * u;
       double py = sy + dy * u;
       double step_len = seg_len / (double) pieces;
-      double dt = fmax(step_len / 240.0 / brush_hand->speed, 0.001);
       double t = total_len > 1e-9 ? (cumulative_len + seg_len * u) / total_len : 1.0;
+      double speed = hand ? stroke_speed_at(hand, t, turn_factor) : 1.0;
+      double dt = fmax(step_len / 240.0 / speed, 0.001);
 
       mypaint_brush_stroke_to_2(
         brush->brush,

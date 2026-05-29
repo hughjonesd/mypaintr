@@ -113,6 +113,36 @@ as_pressure_profile <- function(x = NULL) {
   new_pressure_profile(x)
 }
 
+new_speed_profile <- function(fun) {
+  stopifnot(is.function(fun))
+  structure(
+    fun,
+    class = c("mypaintr_speed_profile", class(fun))
+  )
+}
+
+as_speed_profile <- function(x = NULL) {
+  if (is.null(x)) {
+    return(speed_flat())
+  }
+  if (is.numeric(x)) {
+    return(speed_flat(check_positive_scalar(x, "speed")))
+  }
+  if (!is.function(x)) {
+    stop("speed must be a positive number or a function, such as speed_flat() or speed_human()", call. = FALSE)
+  }
+  if (inherits(x, "mypaintr_speed_profile")) {
+    return(x)
+  }
+
+  args <- names(formals(x))
+  if (is.null(args) || !(length(args) >= 2L || "..." %in% args)) {
+    stop("speed functions must accept two arguments: t and turn", call. = FALSE)
+  }
+
+  new_speed_profile(x)
+}
+
 #' Pressure profiles for hand-drawn strokes
 #'
 #' @param value Maximum pressure supplied to the brush, in the range `0` to
@@ -126,9 +156,10 @@ as_pressure_profile <- function(x = NULL) {
 #'   `1`.
 #' @return A pressure-profile function for the `pressure` argument of [hand()]
 #'   and [human_hand()]. Custom functions can also be supplied directly; they
-#'   must accept `t` in the range `0` to `1` and `turn` in the range `0` to
-#'   `1`. `turn` describes local path curvature: `0` is straight, larger values
-#'   are sharper corners, and values near `1` are near reversals.
+#'   must accept `t`, normalized stroke progress in the range `0` to `1`, and
+#'   `turn` in the range `0` to `1`. `turn` describes local path curvature:
+#'   `0` is straight, larger values are sharper corners, and values near `1`
+#'   are near reversals.
 #' @examples
 #' plot.new()
 #' plot.window(c(0, 10), c(0, 10))
@@ -196,6 +227,78 @@ pressure_human <- function(value = 1,
   )
 }
 
+#' Speed profiles for hand-drawn strokes
+#'
+#' @param value Base speed multiplier. `1` preserves the default
+#'   distance-based timing heuristic, values greater than `1` draw faster, and
+#'   values below `1` draw slower.
+#' @param taper How strongly speed changes over the stroke. `0` keeps the speed
+#'   flat; `1` applies the full profile shape.
+#' @param start,end Relative speed at the start and end of a human-style stroke
+#'   when `taper = 1`.
+#' @param peak Relative peak speed reached during the stroke when `taper = 1`.
+#' @param peak_at Position of peak speed along the stroke, in the range `0` to
+#'   `1`.
+#' @param turn_slowdown How strongly speed is reduced at sharp turns.
+#' @param min Minimum speed multiplier returned by the profile.
+#' @return A speed-profile function for the `speed` argument of [hand()] and
+#'   [human_hand()]. Custom functions can also be supplied directly; they must
+#'   accept `t`, normalized stroke progress in the range `0` to `1`, and `turn`
+#'   in the range `0` to `1`. Speed profiles return positive speed
+#'   multipliers.
+#' @examples
+#' plot.new()
+#' plot.window(c(0, 10), c(0, 10))
+#' draw_rough_lines(c(1, 9), c(8, 8), lwd = 5,
+#'                  hand = hand(speed = speed_flat(0.5)))
+#' draw_rough_lines(c(1, 9), c(5, 5), lwd = 5,
+#'                  hand = hand(speed = speed_human()))
+#' @family speed profiles
+#' @export
+speed_flat <- function(value = 1) {
+  value <- check_positive_scalar(value, "value")
+  new_speed_profile(
+    function(t, turn) {
+      rep(value, length(t))
+    }
+  )
+}
+
+#' @rdname speed_flat
+#' @export
+speed_human <- function(value = 1,
+                        taper = 0.65,
+                        start = 0.55,
+                        end = 0.65,
+                        peak = 1.4,
+                        peak_at = 0.45,
+                        turn_slowdown = 0.45,
+                        min = 0.05) {
+  value <- check_positive_scalar(value, "value")
+  taper <- clamp01(taper)
+  start <- check_positive_scalar(start, "start")
+  end <- check_positive_scalar(end, "end")
+  peak <- check_positive_scalar(peak, "peak")
+  peak_at <- max(0.01, min(0.99, peak_at))
+  turn_slowdown <- clamp01(turn_slowdown)
+  min <- check_positive_scalar(min, "min")
+
+  new_speed_profile(
+    function(t, turn) {
+      tt <- clamp01(t)
+      smoothstep <- function(x) x * x * (3 - 2 * x)
+      shape <- ifelse(
+        tt <= peak_at,
+        start + (peak - start) * smoothstep(tt / peak_at),
+        peak - (peak - end) * smoothstep((tt - peak_at) / (1 - peak_at))
+      )
+      speed <- value * ((1 - taper) + taper * shape)
+      speed <- speed * (1 - turn_slowdown * taper * clamp01(turn))
+      pmax(min, speed)
+    }
+  )
+}
+
 #' Hand-drawn geometry settings
 #'
 #' @param seed Optional random seed used for repeatable geometry.
@@ -209,16 +312,17 @@ pressure_human <- function(value = 1,
 #' @param pressure Pressure profile function, typically created with
 #'   [pressure_flat()], [pressure_smooth()], or [pressure_human()]. A single
 #'   number is treated as `pressure_flat(pressure)`.
-#' @param speed Synthetic brush speed multiplier for [mypaint_device()] brush
-#'   rendering. `1` preserves the default distance-based timing heuristic;
-#'   values greater than `1` draw faster, and values below `1` draw slower.
+#' @param speed Speed profile function, typically created with [speed_flat()]
+#'   or [speed_human()]. A single positive number is treated as
+#'   `speed_flat(speed)`. Speed profiles affect [mypaint_device()] brush
+#'   rendering only.
 #' @param xtilt,ytilt Stylus tilt inputs passed to libmypaint, in its normalized
 #'   `-1` to `1` range.
 #' @param barrel_rotation Stylus barrel rotation, in degrees.
 #' @details
 #' `hand()` defaults to plain, base-R-like geometry with no bowing, wobble, or
-#' jitter and flat pressure. [human_hand()] has different, more human-like
-#' defaults, including [pressure_human()].
+#' jitter and flat pressure and speed. [human_hand()] has different, more
+#' human-like defaults, including [pressure_human()] and [speed_human()].
 #'
 #' As of now, pressure profiles only apply to open lines, not shape outlines. On
 #' base R devices, they are simulated and affect line width.
@@ -250,12 +354,12 @@ hand <- function(seed = NULL,
                  width_jitter = 0,
                  endpoint_jitter = 0,
                  pressure = pressure_flat(),
-                 speed = 1,
+                 speed = speed_flat(),
                  xtilt = 0,
                  ytilt = 0,
                  barrel_rotation = 0) {
   pressure <- as_pressure_profile(pressure)
-  speed <- check_positive_scalar(speed, "speed")
+  speed <- as_speed_profile(speed)
   xtilt <- check_finite_scalar(xtilt, "xtilt")
   ytilt <- check_finite_scalar(ytilt, "ytilt")
   barrel_rotation <- check_finite_scalar(barrel_rotation, "barrel_rotation")
@@ -280,7 +384,8 @@ hand <- function(seed = NULL,
 #' Hand-drawn geometry settings with rough human-style defaults
 #'
 #' `human_hand()` is the same as [hand()], but starts from rougher defaults with
-#' bow, wobble, width jitter, and a human-style pressure profile enabled.
+#' bow, wobble, width jitter, and human-style pressure and speed profiles
+#' enabled.
 #'
 #' @return An object describing how rough geometry should be generated.
 #' @rdname hand
@@ -292,7 +397,7 @@ human_hand <- function(seed = NULL,
                        width_jitter = 0.08,
                        endpoint_jitter = 0,
                        pressure = pressure_human(),
-                       speed = 1,
+                       speed = speed_human(),
                        xtilt = 0,
                        ytilt = 0,
                        barrel_rotation = 0) {
