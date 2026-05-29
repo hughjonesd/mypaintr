@@ -27,6 +27,8 @@ knitr::opts_chunk$set(
   fig.height = 5,
   out.width = "75%"
 )
+
+palette("Dark 2")
 ```
 
 To use mypaintr from the command line, open the
@@ -38,14 +40,9 @@ graphics device:
 mypaint_device("output.png")
 ```
 
-And close the device with
+Close the device with
 [`dev.off()`](https://rdrr.io/r/grDevices/dev.html) to print your plot
-to the output file:
-
-``` r
-
-dev.off()
-```
+to the output file.
 
 ## Brushes
 
@@ -59,8 +56,9 @@ via your package manager (e.g. `apt` or `brew`).
 ``` r
 
 
-set_brush("tanda/marker-01")
-barplot(VADeaths, beside = TRUE, col = NA, cex.names = 0.8)
+set_brush("tanda/pencil-8b")
+barplot(VADeaths, beside = TRUE, col = palette.colors(5), border = NA,
+        cex.names = 0.8)
 ```
 
 ![](introduction_files/figure-html/brushes-1.png)
@@ -85,11 +83,9 @@ axis(side = 2, at = seq(0, 60, 20))
 
 ### Good brushes
 
-Not all Mypaint brushes work well with mypaintr (yet). In particular,
-smudging isn’t fully implemented yet.
-
-Here are some brushes that I’ve found good to use, i.e. neither too
-crazy nor too similar to standard R:
+Not all Mypaint brushes work well with mypaintr (yet). Here are some
+brushes that I’ve found good to use, i.e. neither too crazy nor too
+similar to standard R:
 
 - classic/charcoal
 - classic/coarse_bulk_1 (and \_2 and \_3)
@@ -163,10 +159,11 @@ Combining brushes and hands, you can turn any R graphics into a sketch.
 
 
 set_brush("classic/marker_small")
-set_hand(human_hand(xtilt = 0.5, ytilt = -0.4))
-palette("Dark 2")
-plot(mpg ~ hp, data = mtcars, col = factor(mtcars$gear), pch = 19)
-legend("topright", legend = 3:5, title = "Gears", col = 1:3, pch = 19, horiz = TRUE)
+set_hand(human_hand(xtilt = 0.5, ytilt = -0.2))
+
+plot(mpg ~ hp, data = mtcars, col = factor(mtcars$gear))
+legend("topright", legend = 3:5, title = "Gears", col = 1:3, 
+       horiz = TRUE, bg = "transparent", inset = 0.05, pch = 1)
 ```
 
 ![](introduction_files/figure-html/unnamed-chunk-1-1.png)
@@ -180,11 +177,10 @@ random roughness is computed separately for each of them.
 ``` r
 
 
-set_brush("classic/pencil")
 set_hand(human_hand())
 plot.new()
 plot.window(c(0, 10), c(0, 10))
-rect(2, 2, 8, 8, col = "darkgreen", border = "grey15")
+rect(2, 2, 8, 8, col = "orange", border = "black", lwd = 2)
 ```
 
 ![](introduction_files/figure-html/bad-rect-1.png)
@@ -227,6 +223,9 @@ draw_rough_arrows(1, 9, 8, 9, col = "grey40", hand = my_hand)
 ```
 
 ![](introduction_files/figure-html/rough-hand-1.png)
+
+Here’s a demo of the `bow` and `wobble` parameters on an ordinary `png`
+device:
 
 ``` r
 
@@ -335,6 +334,8 @@ grid lines:
 
 
 library(ggplot2)
+# on the command line:
+# mypaint_device("output.png")
 
 ggplot(diamonds) + 
   mypaint_wrap(
@@ -351,8 +352,7 @@ You can also use the special geoms
 [`geom_mypaint_bar()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_bar.md)
 and
 [`geom_mypaint_col()`](https://hughjonesd.github.io/mypaintr/reference/geom_mypaint_col.md).
-As well as brushes and hands, these let you use special fill patterns,
-like
+As well as brushes and hands, these let you use fill patterns, like
 [`zigzag()`](https://hughjonesd.github.io/mypaintr/reference/zigzag.md)
 and
 [`jumble()`](https://hughjonesd.github.io/mypaintr/reference/jumble.md).
@@ -364,8 +364,8 @@ and
 ggplot(diamonds) + 
   geom_mypaint_bar(aes(cut, fill = cut, colour = cut), 
                    brush = "deevad/ballpen",
-                   fill_pattern = zigzag(),
-                   hand = hand(multi_stroke = 2)) + 
+                   fill_pattern = zigzag(padding = 0.1),
+                   hand = human_hand()) + 
    theme_minimal() 
 ```
 
@@ -407,7 +407,7 @@ One limitation is that you cannot produce more than one plot per chunk.
 If you need to do this, try setting the following chunk options:
 
 ``` r
-dev='mypaint_device', fig.ext='png', fig.keep='high', mypaint=FALSE}
+dev='mypaint_device', fig.ext='png', fig.keep='high', mypaint=FALSE
 ```
 
 this may work, *so long as you don’t edit device options within a single
@@ -497,12 +497,12 @@ shape of some brushes:
 
 
 plot.new()
-plot.window(c(0, 14), c(0, 40))
+plot.window(c(0, 14), c(0, 50))
 set_brush("classic/marker_fat")
 
 x <- 4 + seq(0.1, sqrt(10), length.out = 100)^2
 y <- sin(seq(0, 10 * pi, length.out = 100)) * 0.6
-ybase <- 36
+ybase <- 45
 
 for (xtilt in c(0, 0.5, 1)) {
   for (ytilt in c(-0.5, 0, 0.5)) {
@@ -510,7 +510,7 @@ for (xtilt in c(0, 0.5, 1)) {
     lines(x, y + ybase, col = "red4")
     text(0, ybase, adj = 0,
          labels = paste("xtilt:", xtilt, " ytilt:", ytilt))
-    ybase <- ybase - 4
+    ybase <- ybase - 5
   }
   
 }
