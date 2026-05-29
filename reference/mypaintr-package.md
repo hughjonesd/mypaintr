@@ -2,7 +2,7 @@
 
 R graphics device for human-like, sketched plotting. Uses libmypaint
 brushes to draw lines and polygons. Includes functions for plotting
-"rough" lines and polygons. Integrates with base and "ggplot" graphics.
+"rough" lines and polygons. Integrates with base and ggplot graphics.
 
 ## See also
 

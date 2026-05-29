@@ -166,7 +166,7 @@ legend("topright", legend = 3:5, title = "Gears", col = 1:3,
        horiz = TRUE, bg = "transparent", inset = 0.05, pch = 1)
 ```
 
-![](mypaintr_files/figure-html/unnamed-chunk-1-1.png)
+![](mypaintr_files/figure-html/mtcars-plot-1.png)
 
 ## Rough lines and polygons
 
