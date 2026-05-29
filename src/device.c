@@ -8,6 +8,7 @@
 #include <mypaint-brush.h>
 #include <mypaint-brush-settings.h>
 #include <mypaint-surface.h>
+#include <mypaint-tiled-surface.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -70,7 +71,7 @@ typedef struct {
 } PointBuffer;
 
 typedef struct {
-  MyPaintSurface2 surface;
+  MyPaintTiledSurface2 surface;
   unsigned int magic;
   cairo_surface_t *image_surface;
   cairo_t *cr;
@@ -78,6 +79,11 @@ typedef struct {
   int width;
   int height;
   int stride;
+  int tile_size;
+  int tile_cols;
+  int tile_rows;
+  guint16 *tile_cache;
+  unsigned char *tile_valid;
   double res;
   double pointsize;
   int bg;
@@ -101,27 +107,6 @@ typedef struct {
 } MypaintrDevice;
 
 static void configure_brush(MyPaintBrush *brush, SEXP spec);
-static void surface_get_color(
-  MyPaintSurface *surface,
-  float x,
-  float y,
-  float radius,
-  float *color_r,
-  float *color_g,
-  float *color_b,
-  float *color_a
-);
-static void surface_get_color_pigment(
-  MyPaintSurface2 *surface,
-  float x,
-  float y,
-  float radius,
-  float *color_r,
-  float *color_g,
-  float *color_b,
-  float *color_a,
-  float paint
-);
 static double flip_y(const MypaintrDevice *dev, double y);
 
 static inline double clamp01(double x) {
@@ -353,597 +338,6 @@ static void rgb_to_hsv(double r, double g, double b, double *h, double *s, doubl
   hh /= 6.0;
   if (hh < 0.0) hh += 1.0;
   *h = hh;
-}
-
-static void hsv_to_rgb(double h, double s, double v, double *r, double *g, double *b) {
-  double hh;
-  double c;
-  double x;
-  double m;
-  double rr = 0.0;
-  double gg = 0.0;
-  double bb = 0.0;
-
-  if (s <= 0.0) {
-    *r = v;
-    *g = v;
-    *b = v;
-    return;
-  }
-
-  hh = h - floor(h);
-  c = v * s;
-  hh *= 6.0;
-  x = c * (1.0 - fabs(fmod(hh, 2.0) - 1.0));
-  m = v - c;
-
-  if (hh < 1.0) {
-    rr = c; gg = x; bb = 0.0;
-  } else if (hh < 2.0) {
-    rr = x; gg = c; bb = 0.0;
-  } else if (hh < 3.0) {
-    rr = 0.0; gg = c; bb = x;
-  } else if (hh < 4.0) {
-    rr = 0.0; gg = x; bb = c;
-  } else if (hh < 5.0) {
-    rr = x; gg = 0.0; bb = c;
-  } else {
-    rr = c; gg = 0.0; bb = x;
-  }
-
-  *r = rr + m;
-  *g = gg + m;
-  *b = bb + m;
-}
-
-static const double spectral_r_small[10] = {
-  0.009281362787953, 0.009732627042016, 0.011254252737167, 0.015105578649573,
-  0.024797924177217, 0.083622585502406, 0.977865045723212, 1.000000000000000,
-  0.999961046144372, 0.999999992756822
-};
-
-static const double spectral_g_small[10] = {
-  0.002854127435775, 0.003917589679914, 0.012132151699187, 0.748259205918013,
-  1.000000000000000, 0.865695937531795, 0.037477469241101, 0.022816789725717,
-  0.021747419446456, 0.021384940572308
-};
-
-static const double spectral_b_small[10] = {
-  0.537052150373386, 0.546646402401469, 0.575501819073983, 0.258778829633924,
-  0.041709923751716, 0.012662638828324, 0.007485593127390, 0.006766900622462,
-  0.006699764779016, 0.006676219883241
-};
-
-static const double t_matrix_small[3][10] = {
-  {
-    0.026595621243689, 0.049779426257903, 0.022449850859496, -0.218453689278271,
-    -0.256894883201278, 0.445881722194840, 0.772365886289756, 0.194498761382537,
-    0.014038157587820, 0.007687264480513
-  },
-  {
-    -0.032601672674412, -0.061021043498478, -0.052490001018404, 0.206659098273522,
-    0.572496335158169, 0.317837248815438, -0.021216624031211, -0.019387668756117,
-    -0.001521339050858, -0.000835181622534
-  },
-  {
-    0.339475473216284, 0.635401374177222, 0.771520797089589, 0.113222640692379,
-    -0.055251113343776, -0.048222578468680, -0.012966666339586, -0.001523814504223,
-    -0.000094718948810, -0.000051604594741
-  }
-};
-
-static double safe_pow01(double base, double exponent) {
-  return pow(fmax(clamp01(base), 1e-6), exponent);
-}
-
-static void rgb_to_spectral10(double r, double g, double b, double *spectral) {
-  int i;
-  for (i = 0; i < 10; ++i) {
-    spectral[i] = spectral_r_small[i] * clamp01(r) +
-                  spectral_g_small[i] * clamp01(g) +
-                  spectral_b_small[i] * clamp01(b);
-  }
-}
-
-static void spectral10_to_rgb(const double *spectral, double *r, double *g, double *b) {
-  double tmp_r = 0.0;
-  double tmp_g = 0.0;
-  double tmp_b = 0.0;
-  int i;
-
-  for (i = 0; i < 10; ++i) {
-    tmp_r += t_matrix_small[0][i] * spectral[i];
-    tmp_g += t_matrix_small[1][i] * spectral[i];
-    tmp_b += t_matrix_small[2][i] * spectral[i];
-  }
-
-  *r = clamp01(tmp_r);
-  *g = clamp01(tmp_g);
-  *b = clamp01(tmp_b);
-}
-
-static void mix_rgb_paint_mode(
-  double top_r,
-  double top_g,
-  double top_b,
-  double bottom_r,
-  double bottom_g,
-  double bottom_b,
-  double top_weight,
-  double paint_mode,
-  double *out_r,
-  double *out_g,
-  double *out_b
-) {
-  double weight = clamp01(top_weight);
-  double additive_r;
-  double additive_g;
-  double additive_b;
-  double spectral_r;
-  double spectral_g;
-  double spectral_b;
-  double top_spec[10];
-  double bottom_spec[10];
-  double mixed_spec[10];
-  double pigment = clamp01(paint_mode);
-  int i;
-
-  if (weight <= 0.0) {
-    *out_r = clamp01(bottom_r);
-    *out_g = clamp01(bottom_g);
-    *out_b = clamp01(bottom_b);
-    return;
-  }
-  if (weight >= 1.0) {
-    *out_r = clamp01(top_r);
-    *out_g = clamp01(top_g);
-    *out_b = clamp01(top_b);
-    return;
-  }
-
-  additive_r = clamp01(top_r) * weight + clamp01(bottom_r) * (1.0 - weight);
-  additive_g = clamp01(top_g) * weight + clamp01(bottom_g) * (1.0 - weight);
-  additive_b = clamp01(top_b) * weight + clamp01(bottom_b) * (1.0 - weight);
-
-  if (pigment <= 0.0) {
-    *out_r = additive_r;
-    *out_g = additive_g;
-    *out_b = additive_b;
-    return;
-  }
-
-  rgb_to_spectral10(top_r, top_g, top_b, top_spec);
-  rgb_to_spectral10(bottom_r, bottom_g, bottom_b, bottom_spec);
-  for (i = 0; i < 10; ++i) {
-    mixed_spec[i] = safe_pow01(top_spec[i], weight) * safe_pow01(bottom_spec[i], 1.0 - weight);
-  }
-  spectral10_to_rgb(mixed_spec, &spectral_r, &spectral_g, &spectral_b);
-
-  *out_r = clamp01((1.0 - pigment) * additive_r + pigment * spectral_r);
-  *out_g = clamp01((1.0 - pigment) * additive_g + pigment * spectral_g);
-  *out_b = clamp01((1.0 - pigment) * additive_b + pigment * spectral_b);
-}
-
-static double posterize_channel(double value, double levels) {
-  double v = clamp01(value);
-  double steps = fmax(levels, 1.0);
-  return clamp01(round(v * steps) / steps);
-}
-
-static void apply_posterize_rgb(
-  double posterize,
-  double posterize_num,
-  double *r,
-  double *g,
-  double *b
-) {
-  double strength = clamp01(posterize);
-  double levels;
-  double post_r;
-  double post_g;
-  double post_b;
-
-  if (strength <= 0.0) {
-    return;
-  }
-
-  levels = fmax(1.0, round(fmax(posterize_num, 0.01) * 100.0));
-  post_r = posterize_channel(*r, levels);
-  post_g = posterize_channel(*g, levels);
-  post_b = posterize_channel(*b, levels);
-
-  *r = (1.0 - strength) * *r + strength * post_r;
-  *g = (1.0 - strength) * *g + strength * post_g;
-  *b = (1.0 - strength) * *b + strength * post_b;
-}
-
-static void load_pixel_rgba(const unsigned char *px, double *r, double *g, double *b, double *a) {
-  double pa = px[3] / 255.0;
-  double pr = px[2] / 255.0;
-  double pg = px[1] / 255.0;
-  double pb = px[0] / 255.0;
-
-  *a = pa;
-  if (pa <= 1e-6) {
-    *r = 0.0;
-    *g = 0.0;
-    *b = 0.0;
-    return;
-  }
-
-  *r = clamp01(pr / pa);
-  *g = clamp01(pg / pa);
-  *b = clamp01(pb / pa);
-}
-
-static void store_pixel_rgba(unsigned char *px, double r, double g, double b, double a) {
-  double pa = clamp01(a);
-  px[0] = unit_to_byte(clamp01(b) * pa);
-  px[1] = unit_to_byte(clamp01(g) * pa);
-  px[2] = unit_to_byte(clamp01(r) * pa);
-  px[3] = unit_to_byte(pa);
-}
-
-static void blend_dab_pixel(
-  double src_r,
-  double src_g,
-  double src_b,
-  double alpha,
-  double alpha_eraser,
-  double lock_alpha,
-  double colorize,
-  double *dst_r,
-  double *dst_g,
-  double *dst_b,
-  double *dst_a
-) {
-  double base_r = *dst_r;
-  double base_g = *dst_g;
-  double base_b = *dst_b;
-  double base_a = *dst_a;
-  double normal_a;
-  double normal_pr;
-  double normal_pg;
-  double normal_pb;
-  double normal_r = 0.0;
-  double normal_g = 0.0;
-  double normal_b = 0.0;
-  double final_a;
-  double final_r;
-  double final_g;
-  double final_b;
-
-  if (alpha_eraser > 0.0) {
-    double keep = 1.0 - clamp01(alpha * alpha_eraser);
-    base_a *= keep;
-  }
-
-  normal_a = alpha + base_a * (1.0 - alpha);
-  normal_pr = src_r * alpha + base_r * base_a * (1.0 - alpha);
-  normal_pg = src_g * alpha + base_g * base_a * (1.0 - alpha);
-  normal_pb = src_b * alpha + base_b * base_a * (1.0 - alpha);
-
-  if (normal_a > 1e-6) {
-    normal_r = clamp01(normal_pr / normal_a);
-    normal_g = clamp01(normal_pg / normal_a);
-    normal_b = clamp01(normal_pb / normal_a);
-  }
-
-  final_a = normal_a;
-  final_r = normal_r;
-  final_g = normal_g;
-  final_b = normal_b;
-
-  if (colorize > 0.0 && base_a > 1e-6) {
-    double src_h;
-    double src_s;
-    double src_v;
-    double dst_h;
-    double dst_s;
-    double dst_v;
-    double colorized_r;
-    double colorized_g;
-    double colorized_b;
-
-    rgb_to_hsv(src_r, src_g, src_b, &src_h, &src_s, &src_v);
-    rgb_to_hsv(base_r, base_g, base_b, &dst_h, &dst_s, &dst_v);
-    hsv_to_rgb(src_h, src_s, dst_v, &colorized_r, &colorized_g, &colorized_b);
-
-    final_r = (1.0 - colorize) * final_r + colorize * colorized_r;
-    final_g = (1.0 - colorize) * final_g + colorize * colorized_g;
-    final_b = (1.0 - colorize) * final_b + colorize * colorized_b;
-    final_a = (1.0 - colorize) * final_a + colorize * base_a;
-  }
-
-  if (lock_alpha > 0.0) {
-    final_a = (1.0 - lock_alpha) * final_a + lock_alpha * base_a;
-  }
-
-  *dst_r = clamp01(final_r);
-  *dst_g = clamp01(final_g);
-  *dst_b = clamp01(final_b);
-  *dst_a = clamp01(final_a);
-}
-
-static void blend_dab_pixel_pigment(
-  double src_r,
-  double src_g,
-  double src_b,
-  double alpha,
-  double alpha_eraser,
-  double lock_alpha,
-  double colorize,
-  double posterize,
-  double posterize_num,
-  double paint,
-  double *dst_r,
-  double *dst_g,
-  double *dst_b,
-  double *dst_a
-) {
-  double base_r = *dst_r;
-  double base_g = *dst_g;
-  double base_b = *dst_b;
-  double base_a = *dst_a;
-  double out_a;
-  double top_weight;
-  double final_r;
-  double final_g;
-  double final_b;
-  double final_a;
-
-  if (alpha_eraser > 0.0) {
-    double keep = 1.0 - clamp01(alpha * alpha_eraser);
-    base_a *= keep;
-  }
-
-  out_a = alpha + base_a * (1.0 - alpha);
-  if (out_a <= 1e-6) {
-    *dst_r = 0.0;
-    *dst_g = 0.0;
-    *dst_b = 0.0;
-    *dst_a = 0.0;
-    return;
-  }
-
-  top_weight = clamp01(alpha / out_a);
-  mix_rgb_paint_mode(
-    src_r,
-    src_g,
-    src_b,
-    base_r,
-    base_g,
-    base_b,
-    top_weight,
-    paint,
-    &final_r,
-    &final_g,
-    &final_b
-  );
-  final_a = out_a;
-
-  apply_posterize_rgb(posterize, posterize_num, &final_r, &final_g, &final_b);
-
-  if (colorize > 0.0 && base_a > 1e-6) {
-    double src_h;
-    double src_s;
-    double src_v;
-    double dst_h;
-    double dst_s;
-    double dst_v;
-    double colorized_r;
-    double colorized_g;
-    double colorized_b;
-
-    rgb_to_hsv(src_r, src_g, src_b, &src_h, &src_s, &src_v);
-    rgb_to_hsv(base_r, base_g, base_b, &dst_h, &dst_s, &dst_v);
-    hsv_to_rgb(src_h, src_s, dst_v, &colorized_r, &colorized_g, &colorized_b);
-
-    final_r = (1.0 - colorize) * final_r + colorize * colorized_r;
-    final_g = (1.0 - colorize) * final_g + colorize * colorized_g;
-    final_b = (1.0 - colorize) * final_b + colorize * colorized_b;
-    final_a = (1.0 - colorize) * final_a + colorize * base_a;
-  }
-
-  if (lock_alpha > 0.0) {
-    final_a = (1.0 - lock_alpha) * final_a + lock_alpha * base_a;
-  }
-
-  *dst_r = clamp01(final_r);
-  *dst_g = clamp01(final_g);
-  *dst_b = clamp01(final_b);
-  *dst_a = clamp01(final_a);
-}
-
-static void sample_surface_color(
-  MypaintrDevice *dev,
-  float x,
-  float y,
-  float radius,
-  float *color_r,
-  float *color_g,
-  float *color_b,
-  float *color_a
-) {
-  int x0 = (int) floor(x - radius);
-  int x1 = (int) ceil(x + radius);
-  int y0 = (int) floor(flip_y(dev, y) - radius);
-  int y1 = (int) ceil(flip_y(dev, y) + radius);
-  double total = 0.0;
-  double sr = 0.0;
-  double sg = 0.0;
-  double sb = 0.0;
-  double sa = 0.0;
-  int ix, iy;
-
-  cairo_surface_flush(dev->image_surface);
-
-  for (iy = y0; iy <= y1; ++iy) {
-    if (iy < 0 || iy >= dev->height) continue;
-    for (ix = x0; ix <= x1; ++ix) {
-      unsigned char *px;
-      double dx;
-      double dy;
-      double d2;
-      double w;
-      double r;
-      double g;
-      double b;
-      double a;
-
-      if (ix < 0 || ix >= dev->width) continue;
-
-      dx = ((double) ix + 0.5) - x;
-      dy = ((double) iy + 0.5) - flip_y(dev, y);
-      d2 = dx * dx + dy * dy;
-      if (d2 > radius * radius) continue;
-
-      w = 1.0 - sqrt(d2) / fmax(radius, 1e-6);
-      px = dev->data + (size_t) iy * (size_t) dev->stride + (size_t) ix * 4U;
-      load_pixel_rgba(px, &r, &g, &b, &a);
-      sr += (r * a) * w;
-      sg += (g * a) * w;
-      sb += (b * a) * w;
-      sa += a * w;
-      total += w;
-    }
-  }
-
-  if (total <= 0.0) {
-    *color_r = 0.0f;
-    *color_g = 0.0f;
-    *color_b = 0.0f;
-    *color_a = 0.0f;
-    return;
-  }
-
-  *color_a = (float) (sa / total);
-  if (*color_a <= 1e-6f) {
-    *color_r = 0.0f;
-    *color_g = 0.0f;
-    *color_b = 0.0f;
-    *color_a = 0.0f;
-    return;
-  }
-
-  *color_r = (float) clamp01((sr / total) / *color_a);
-  *color_g = (float) clamp01((sg / total) / *color_a);
-  *color_b = (float) clamp01((sb / total) / *color_a);
-}
-
-static void sample_surface_color_pigment(
-  MypaintrDevice *dev,
-  float x,
-  float y,
-  float radius,
-  float paint,
-  float *color_r,
-  float *color_g,
-  float *color_b,
-  float *color_a
-) {
-  int x0;
-  int x1;
-  int y0;
-  int y1;
-  double total = 0.0;
-  double alpha_sum = 0.0;
-  double avg_r = 0.0;
-  double avg_g = 0.0;
-  double avg_b = 0.0;
-  int have_rgb = 0;
-  int ix;
-  int iy;
-
-  if (paint < 0.0f || paint <= 1e-6f) {
-    sample_surface_color(dev, x, y, radius, color_r, color_g, color_b, color_a);
-    return;
-  }
-
-  x0 = (int) floor(x - radius);
-  x1 = (int) ceil(x + radius);
-  y0 = (int) floor(flip_y(dev, y) - radius);
-  y1 = (int) ceil(flip_y(dev, y) + radius);
-
-  cairo_surface_flush(dev->image_surface);
-
-  for (iy = y0; iy <= y1; ++iy) {
-    if (iy < 0 || iy >= dev->height) continue;
-    for (ix = x0; ix <= x1; ++ix) {
-      unsigned char *px;
-      double dx;
-      double dy;
-      double d2;
-      double w;
-      double r;
-      double g;
-      double b;
-      double a;
-      double weighted_alpha;
-
-      if (ix < 0 || ix >= dev->width) continue;
-
-      dx = ((double) ix + 0.5) - x;
-      dy = ((double) iy + 0.5) - flip_y(dev, y);
-      d2 = dx * dx + dy * dy;
-      if (d2 > radius * radius) continue;
-
-      w = 1.0 - sqrt(d2) / fmax(radius, 1e-6);
-      total += w;
-
-      px = dev->data + (size_t) iy * (size_t) dev->stride + (size_t) ix * 4U;
-      load_pixel_rgba(px, &r, &g, &b, &a);
-      weighted_alpha = w * a;
-      if (weighted_alpha <= 1e-9) {
-        continue;
-      }
-
-      if (!have_rgb) {
-        avg_r = r;
-        avg_g = g;
-        avg_b = b;
-        have_rgb = 1;
-      } else {
-        double fac_new = weighted_alpha / (alpha_sum + weighted_alpha);
-        mix_rgb_paint_mode(
-          r,
-          g,
-          b,
-          avg_r,
-          avg_g,
-          avg_b,
-          fac_new,
-          paint,
-          &avg_r,
-          &avg_g,
-          &avg_b
-        );
-      }
-
-      alpha_sum += weighted_alpha;
-    }
-  }
-
-  if (total <= 0.0 || alpha_sum <= 1e-9) {
-    *color_r = 0.0f;
-    *color_g = 0.0f;
-    *color_b = 0.0f;
-    *color_a = 0.0f;
-    return;
-  }
-
-  *color_a = (float) clamp01(alpha_sum / total);
-  if (*color_a <= 1e-6f) {
-    *color_r = 0.0f;
-    *color_g = 0.0f;
-    *color_b = 0.0f;
-    *color_a = 0.0f;
-    return;
-  }
-
-  *color_r = (float) clamp01(avg_r);
-  *color_g = (float) clamp01(avg_g);
-  *color_b = (float) clamp01(avg_b);
 }
 
 static void set_cairo_source(cairo_t *cr, int col) {
@@ -1236,6 +630,9 @@ static void clear_device(MypaintrDevice *dev, int col) {
   set_cairo_source(dev->cr, col);
   cairo_paint(dev->cr);
   cairo_restore(dev->cr);
+  if (dev->tile_valid) {
+    memset(dev->tile_valid, 0, (size_t) dev->tile_cols * (size_t) dev->tile_rows);
+  }
 }
 
 static char *page_filename(const MypaintrDevice *dev, int page) {
@@ -1342,7 +739,7 @@ static void brush_seed_from_surface(MypaintrDevice *dev, MypaintrBrush *brush, d
     sample_radius = 1.0;
   }
 
-  sample_surface_color(dev, (float) x, (float) y, (float) sample_radius, &r, &g, &b, &a);
+  mypaint_surface2_get_color(&dev->surface.parent, (float) x, (float) y, (float) sample_radius, &r, &g, &b, &a, -1.0f);
   if (a <= 1e-6f) {
     r = g = b = 1.0f;
     a = 1.0f;
@@ -1375,287 +772,122 @@ static void brush_apply_spec(MypaintrBrush *slot, SEXP spec) {
   slot->pure_smudge = brush_is_pure_smudge(slot);
 }
 
-static int surface_draw_dab(
-  MyPaintSurface *surface,
-  float x,
-  float y,
-  float radius,
-  float color_r,
-  float color_g,
-  float color_b,
-  float opaque,
-  float hardness,
-  float alpha_eraser,
-  float aspect_ratio,
-  float angle,
-  float lock_alpha,
-  float colorize
-) {
+static size_t tile_cache_index(const MypaintrDevice *dev, int tx, int ty) {
+  return (size_t) ty * (size_t) dev->tile_cols + (size_t) tx;
+}
+
+static void invalidate_tile_cache(MypaintrDevice *dev) {
+  if (dev->tile_valid) {
+    memset(dev->tile_valid, 0, (size_t) dev->tile_cols * (size_t) dev->tile_rows);
+  }
+}
+
+static void tile_request_start(MyPaintTiledSurface2 *surface, MyPaintTileRequest *request) {
   MypaintrDevice *dev = (MypaintrDevice *) surface;
-  double src_r = clamp01(color_r);
-  double src_g = clamp01(color_g);
-  double src_b = clamp01(color_b);
-  int x0, x1, y0, y1;
-  int ix, iy;
-  double c = cos(angle);
-  double s = sin(angle);
-  double a_ratio = aspect_ratio > 1e-6 ? aspect_ratio : 1.0;
-  double rx = radius * a_ratio;
-  double ry = radius / a_ratio;
-  double maxr = fmax(rx, ry);
-  double py_center = flip_y(dev, y);
+  int tile_size = dev->tile_size;
+  int base_x = request->tx * tile_size;
+  int base_y = request->ty * tile_size;
+  int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
+  size_t tile_idx = cached ? tile_cache_index(dev, request->tx, request->ty) : 0;
+  guint16 *buffer = cached ?
+    dev->tile_cache + tile_idx * (size_t) tile_size * (size_t) tile_size * 4U :
+    (guint16 *) calloc((size_t) tile_size * (size_t) tile_size * 4U, sizeof(guint16));
 
-  x0 = (int) floor(x - maxr - 1.0);
-  x1 = (int) ceil(x + maxr + 1.0);
-  y0 = (int) floor(py_center - maxr - 1.0);
-  y1 = (int) ceil(py_center + maxr + 1.0);
+  if (!buffer) {
+    error("failed to allocate libmypaint tile buffer");
+  }
 
-  if (x1 < 0 || y1 < 0 || x0 >= dev->width || y0 >= dev->height) {
-    return 1;
+  request->buffer = buffer;
+  request->context = cached ? NULL : buffer;
+  if (cached && dev->tile_valid[tile_idx]) {
+    return;
   }
 
   cairo_surface_flush(dev->image_surface);
+  for (int row = 0; row < tile_size; ++row) {
+    int y = base_y + row;
+    int cairo_y = dev->height - 1 - y;
+    if (cairo_y < 0 || cairo_y >= dev->height) continue;
 
-  for (iy = y0; iy <= y1; ++iy) {
-    unsigned char *row;
-    double ddy;
+    for (int col = 0; col < tile_size; ++col) {
+      int x = base_x + col;
+      guint16 *dst = buffer + ((size_t) row * (size_t) tile_size + (size_t) col) * 4U;
+      unsigned char *src;
+      if (x < 0 || x >= dev->width) continue;
 
-    if (iy < 0 || iy >= dev->height) continue;
-    if (iy < (int) floor(flip_y(dev, dev->clip_top)) ||
-        iy > (int) ceil(flip_y(dev, dev->clip_bottom))) {
-      continue;
+      src = dev->data + (size_t) cairo_y * (size_t) dev->stride + (size_t) x * 4U;
+      dst[0] = (guint16) (((unsigned int) src[2] * 32768U + 127U) / 255U);
+      dst[1] = (guint16) (((unsigned int) src[1] * 32768U + 127U) / 255U);
+      dst[2] = (guint16) (((unsigned int) src[0] * 32768U + 127U) / 255U);
+      dst[3] = (guint16) (((unsigned int) src[3] * 32768U + 127U) / 255U);
     }
+  }
+  if (cached) {
+    dev->tile_valid[tile_idx] = 1;
+  }
+}
 
-    row = dev->data + (size_t) iy * (size_t) dev->stride;
-    ddy = ((double) iy + 0.5) - py_center;
+static void tile_request_end(MyPaintTiledSurface2 *surface, MyPaintTileRequest *request) {
+  MypaintrDevice *dev = (MypaintrDevice *) surface;
+  int tile_size = dev->tile_size;
+  int base_x = request->tx * tile_size;
+  int base_y = request->ty * tile_size;
+  int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
+  guint16 *buffer = cached ?
+    dev->tile_cache + tile_cache_index(dev, request->tx, request->ty) * (size_t) tile_size * (size_t) tile_size * 4U :
+    (guint16 *) request->context;
+  int dirty_left = dev->width;
+  int dirty_right = -1;
+  int dirty_top = dev->height;
+  int dirty_bottom = -1;
 
-    for (ix = x0; ix <= x1; ++ix) {
-      unsigned char *px;
-      double ddx;
-      double ex;
-      double ey;
-      double dist;
-      double cover;
-      double alpha;
-      double dst_b;
-      double dst_g;
-      double dst_r;
-      double dst_a;
+  if (!buffer) return;
 
-      if (ix < 0 || ix >= dev->width) continue;
-      if (ix < (int) floor(dev->clip_left) || ix > (int) ceil(dev->clip_right)) continue;
+  if (!request->readonly) {
+    for (int row = 0; row < tile_size; ++row) {
+      int y = base_y + row;
+      int cairo_y = dev->height - 1 - y;
+      if (cairo_y < 0 || cairo_y >= dev->height) continue;
 
-      ddx = ((double) ix + 0.5) - x;
-      ex = (ddx * c + ddy * s) / rx;
-      ey = (-ddx * s + ddy * c) / ry;
-      dist = sqrt(ex * ex + ey * ey);
-      if (dist > 1.0) continue;
+      for (int col = 0; col < tile_size; ++col) {
+        int x = base_x + col;
+        guint16 *src = buffer + ((size_t) row * (size_t) tile_size + (size_t) col) * 4U;
+        unsigned char *dst;
+        if (x < 0 || x >= dev->width) continue;
 
-      if (dist <= hardness || hardness >= 0.999) {
-        cover = 1.0;
-      } else {
-        cover = 1.0 - (dist - hardness) / (1.0 - hardness);
+        dst = dev->data + (size_t) cairo_y * (size_t) dev->stride + (size_t) x * 4U;
+        dst[2] = (unsigned char) fmin(255U, ((unsigned int) src[0] * 255U + 16384U) / 32768U);
+        dst[1] = (unsigned char) fmin(255U, ((unsigned int) src[1] * 255U + 16384U) / 32768U);
+        dst[0] = (unsigned char) fmin(255U, ((unsigned int) src[2] * 255U + 16384U) / 32768U);
+        dst[3] = (unsigned char) fmin(255U, ((unsigned int) src[3] * 255U + 16384U) / 32768U);
+
+        if (x < dirty_left) dirty_left = x;
+        if (x > dirty_right) dirty_right = x;
+        if (cairo_y < dirty_top) dirty_top = cairo_y;
+        if (cairo_y > dirty_bottom) dirty_bottom = cairo_y;
       }
+    }
 
-      alpha = clamp01(opaque * cover);
-      if (alpha <= 0.0) continue;
-
-      px = row + (size_t) ix * 4U;
-      load_pixel_rgba(px, &dst_r, &dst_g, &dst_b, &dst_a);
-      blend_dab_pixel(
-        src_r,
-        src_g,
-        src_b,
-        alpha,
-        alpha_eraser,
-        clamp01(lock_alpha),
-        clamp01(colorize),
-        &dst_r,
-        &dst_g,
-        &dst_b,
-        &dst_a
+    if (dirty_right >= dirty_left && dirty_bottom >= dirty_top) {
+      cairo_surface_mark_dirty_rectangle(
+        dev->image_surface,
+        dirty_left,
+        dirty_top,
+        dirty_right - dirty_left + 1,
+        dirty_bottom - dirty_top + 1
       );
-      store_pixel_rgba(px, dst_r, dst_g, dst_b, dst_a);
     }
   }
 
-  cairo_surface_mark_dirty(dev->image_surface);
-  return 1;
-}
-
-static int surface_draw_dab_pigment(
-  MyPaintSurface2 *surface,
-  float x,
-  float y,
-  float radius,
-  float color_r,
-  float color_g,
-  float color_b,
-  float opaque,
-  float hardness,
-  float alpha_eraser,
-  float aspect_ratio,
-  float angle,
-  float lock_alpha,
-  float colorize,
-  float posterize,
-  float posterize_num,
-  float paint
-) {
-  MypaintrDevice *dev = (MypaintrDevice *) surface;
-  double src_r = clamp01(color_r);
-  double src_g = clamp01(color_g);
-  double src_b = clamp01(color_b);
-  int x0, x1, y0, y1;
-  int ix, iy;
-  double c = cos(angle);
-  double s = sin(angle);
-  double a_ratio = aspect_ratio > 1e-6 ? aspect_ratio : 1.0;
-  double rx = radius * a_ratio;
-  double ry = radius / a_ratio;
-  double maxr = fmax(rx, ry);
-  double py_center = flip_y(dev, y);
-
-  x0 = (int) floor(x - maxr - 1.0);
-  x1 = (int) ceil(x + maxr + 1.0);
-  y0 = (int) floor(py_center - maxr - 1.0);
-  y1 = (int) ceil(py_center + maxr + 1.0);
-
-  if (x1 < 0 || y1 < 0 || x0 >= dev->width || y0 >= dev->height) {
-    return 1;
+  if (!cached) {
+    free(buffer);
   }
-
-  cairo_surface_flush(dev->image_surface);
-
-  for (iy = y0; iy <= y1; ++iy) {
-    unsigned char *row;
-    double ddy;
-
-    if (iy < 0 || iy >= dev->height) continue;
-    if (iy < (int) floor(flip_y(dev, dev->clip_top)) ||
-        iy > (int) ceil(flip_y(dev, dev->clip_bottom))) {
-      continue;
-    }
-
-    row = dev->data + (size_t) iy * (size_t) dev->stride;
-    ddy = ((double) iy + 0.5) - py_center;
-
-    for (ix = x0; ix <= x1; ++ix) {
-      unsigned char *px;
-      double ddx;
-      double ex;
-      double ey;
-      double dist;
-      double cover;
-      double alpha;
-      double dst_b;
-      double dst_g;
-      double dst_r;
-      double dst_a;
-
-      if (ix < 0 || ix >= dev->width) continue;
-      if (ix < (int) floor(dev->clip_left) || ix > (int) ceil(dev->clip_right)) continue;
-
-      ddx = ((double) ix + 0.5) - x;
-      ex = (ddx * c + ddy * s) / rx;
-      ey = (-ddx * s + ddy * c) / ry;
-      dist = sqrt(ex * ex + ey * ey);
-      if (dist > 1.0) continue;
-
-      if (dist <= hardness || hardness >= 0.999) {
-        cover = 1.0;
-      } else {
-        cover = 1.0 - (dist - hardness) / (1.0 - hardness);
-      }
-
-      alpha = clamp01(opaque * cover);
-      if (alpha <= 0.0) continue;
-
-      px = row + (size_t) ix * 4U;
-      load_pixel_rgba(px, &dst_r, &dst_g, &dst_b, &dst_a);
-      blend_dab_pixel_pigment(
-        src_r,
-        src_g,
-        src_b,
-        alpha,
-        alpha_eraser,
-        clamp01(lock_alpha),
-        clamp01(colorize),
-        clamp01(posterize),
-        posterize_num,
-        clamp01(paint),
-        &dst_r,
-        &dst_g,
-        &dst_b,
-        &dst_a
-      );
-      store_pixel_rgba(px, dst_r, dst_g, dst_b, dst_a);
-    }
-  }
-
-  cairo_surface_mark_dirty(dev->image_surface);
-  return 1;
-}
-
-static void surface_get_color(
-  MyPaintSurface *surface,
-  float x,
-  float y,
-  float radius,
-  float *color_r,
-  float *color_g,
-  float *color_b,
-  float *color_a
-) {
-  MypaintrDevice *dev = (MypaintrDevice *) surface;
-  sample_surface_color(dev, x, y, radius, color_r, color_g, color_b, color_a);
-}
-
-static void surface_get_color_pigment(
-  MyPaintSurface2 *surface,
-  float x,
-  float y,
-  float radius,
-  float *color_r,
-  float *color_g,
-  float *color_b,
-  float *color_a,
-  float paint
-) {
-  sample_surface_color_pigment((MypaintrDevice *) surface, x, y, radius, paint, color_r, color_g, color_b, color_a);
-}
-
-static void surface_begin_atomic(MyPaintSurface *surface) {
-  MypaintrDevice *dev = (MypaintrDevice *) surface;
-  cairo_surface_flush(dev->image_surface);
-}
-
-static void surface_end_atomic(MyPaintSurface *surface, MyPaintRectangle *roi) {
-  MypaintrDevice *dev = (MypaintrDevice *) surface;
-  (void) roi;
-  cairo_surface_mark_dirty(dev->image_surface);
-}
-
-static void surface_end_atomic_multi(MyPaintSurface2 *surface, MyPaintRectangles *roi) {
-  MypaintrDevice *dev = (MypaintrDevice *) surface;
-  (void) roi;
-  cairo_surface_mark_dirty(dev->image_surface);
-}
-
-static void surface_destroy(MyPaintSurface *surface) {
-  (void) surface;
+  request->buffer = NULL;
+  request->context = NULL;
 }
 
 static void init_surface(MypaintrDevice *dev) {
-  mypaint_surface_init(&dev->surface.parent);
-  dev->surface.parent.draw_dab = surface_draw_dab;
-  dev->surface.parent.get_color = surface_get_color;
-  dev->surface.parent.begin_atomic = surface_begin_atomic;
-  dev->surface.parent.end_atomic = surface_end_atomic;
-  dev->surface.parent.destroy = surface_destroy;
-  dev->surface.draw_dab_pigment = surface_draw_dab_pigment;
-  dev->surface.get_color_pigment = surface_get_color_pigment;
-  dev->surface.end_atomic_multi = surface_end_atomic_multi;
+  mypaint_tiled_surface2_init(&dev->surface, tile_request_start, tile_request_end);
 }
 
 static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, const MypaintrHand *hand) {
@@ -1710,15 +942,15 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   if (brush->pure_smudge) {
     brush_seed_from_surface(dev, brush, x[0], y[0]);
   }
-  mypaint_surface_begin_atomic((MyPaintSurface *) &dev->surface);
-  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) start_x, (float) start_y, 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
+  mypaint_tiled_surface2_begin_atomic(&dev->surface);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) start_x, (float) start_y, 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
   if (start_len > 1e-9) {
     double dt0 = fmax(preroll / 240.0 / brush_hand->speed, 0.001);
-    mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[0], (float) y[0], 0.0f, xtilt, ytilt, dt0, 1.0f, 0.0f, barrel_rotation);
+    mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) x[0], (float) y[0], 0.0f, xtilt, ytilt, dt0, 1.0f, 0.0f, barrel_rotation);
   }
   mypaint_brush_stroke_to_2(
     brush->brush,
-    &dev->surface,
+    &dev->surface.parent,
     (float) x[0],
     (float) y[0],
     (float) stroke_pressure_at(brush_hand, 0.0, 0.0),
@@ -1750,7 +982,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
 
       mypaint_brush_stroke_to_2(
         brush->brush,
-        &dev->surface,
+        &dev->surface.parent,
         (float) px,
         (float) py,
         (float) stroke_pressure_at(brush_hand, t, turn_factor),
@@ -1766,8 +998,12 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     cumulative_len += seg_len;
   }
 
-  mypaint_brush_stroke_to_2(brush->brush, &dev->surface, (float) x[n - 1], (float) y[n - 1], 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
-  mypaint_surface_end_atomic((MyPaintSurface *) &dev->surface, NULL);
+  mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) x[n - 1], (float) y[n - 1], 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
+  {
+    MyPaintRectangle rectangles[16];
+    MyPaintRectangles roi = {16, rectangles};
+    mypaint_tiled_surface2_end_atomic(&dev->surface, &roi);
+  }
 }
 
 static int decode_lty(int lty, double lwd, double *pattern, int max_pattern) {
@@ -1870,6 +1106,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
     }
 
     cairo_restore(dev->cr);
+    invalidate_tile_cache(dev);
     return;
   }
 
@@ -1889,6 +1126,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
   cairo_set_lty(dev->cr, lty, scaled_lwd);
   cairo_stroke(dev->cr);
   cairo_restore(dev->cr);
+  invalidate_tile_cache(dev);
 }
 
 static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty, const MypaintrHand *hand) {
@@ -1998,6 +1236,7 @@ static void solid_fill_polygon(MypaintrDevice *dev, int n, const double *x, cons
   cairo_set_fill_rule(dev->cr, rule == R_GE_nonZeroWindingRule ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
   set_cairo_source(dev->cr, fill);
   cairo_fill(dev->cr);
+  invalidate_tile_cache(dev);
 }
 
 static int cmp_intersection(const void *lhs, const void *rhs) {
@@ -2192,6 +1431,7 @@ static void fill_rect(MypaintrDevice *dev, double x0, double y0, double x1, doub
   );
   set_cairo_source(dev->cr, fill);
   cairo_fill(dev->cr);
+  invalidate_tile_cache(dev);
 }
 
 static void fill_circle(MypaintrDevice *dev, double x, double y, double r, int fill) {
@@ -2233,6 +1473,7 @@ static void fill_circle(MypaintrDevice *dev, double x, double y, double r, int f
   cairo_arc(dev->cr, x, flip_y(dev, y), r, 0.0, 2.0 * M_PI);
   set_cairo_source(dev->cr, fill);
   cairo_fill(dev->cr);
+  invalidate_tile_cache(dev);
 }
 
 static void configure_brush(MyPaintBrush *brush, SEXP spec) {
@@ -2325,8 +1566,11 @@ static void destroy_device_state(MypaintrDevice *dev) {
   if (dev->fill_hand_spec && dev->fill_hand_spec != R_NilValue) R_ReleaseObject(dev->fill_hand_spec);
   if (dev->stroke.brush) mypaint_brush_unref(dev->stroke.brush);
   if (dev->fill.brush) mypaint_brush_unref(dev->fill.brush);
+  mypaint_tiled_surface2_destroy(&dev->surface);
   if (dev->cr) cairo_destroy(dev->cr);
   if (dev->image_surface) cairo_surface_destroy(dev->image_surface);
+  free(dev->tile_cache);
+  free(dev->tile_valid);
   free(dev->filename);
   free(dev);
 }
@@ -2496,6 +1740,7 @@ static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean w
         cairo_set_fill_rule(dev->cr, winding ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
         set_cairo_source(dev->cr, gc->fill);
         cairo_fill(dev->cr);
+        invalidate_tile_cache(dev);
       }
     } else if (dev->fill_style == MYPAINTR_FILL_BRUSH && !dev->fill.pure_smudge) {
       hatch_fill_path(dev, &dev->fill, npoly, nper, x, y, gc->fill, winding ? R_GE_nonZeroWindingRule : R_GE_evenOddRule);
@@ -2513,6 +1758,7 @@ static void mypaintr_path(double *x, double *y, int npoly, int *nper, Rboolean w
       cairo_set_fill_rule(dev->cr, winding ? CAIRO_FILL_RULE_WINDING : CAIRO_FILL_RULE_EVEN_ODD);
       set_cairo_source(dev->cr, gc->fill);
       cairo_fill(dev->cr);
+      invalidate_tile_cache(dev);
     }
   }
 
@@ -2581,6 +1827,7 @@ static void mypaintr_raster(unsigned int *raster, int w, int h, double x, double
   cairo_pattern_set_filter(cairo_get_source(tmp_cr), interpolate ? CAIRO_FILTER_BILINEAR : CAIRO_FILTER_NEAREST);
   cairo_paint(tmp_cr);
   cairo_restore(tmp_cr);
+  invalidate_tile_cache(dev);
 
   cairo_surface_destroy(tmp_surface);
   free(tmp_data);
@@ -2635,6 +1882,7 @@ static void mypaintr_text_impl(double x, double y, const char *str, double rot, 
   cairo_move_to(dev->cr, -hadj * extents.x_advance, 0.0);
   cairo_show_text(dev->cr, str);
   cairo_restore(dev->cr);
+  invalidate_tile_cache(dev);
 }
 
 static void mypaintr_text(double x, double y, const char *str, double rot, double hadj, const pGEcontext gc, pDevDesc dd) {
@@ -2830,6 +2078,9 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
   dev->magic = MYPAINTR_MAGIC;
   dev->width = width;
   dev->height = height;
+  dev->tile_size = MYPAINT_TILE_SIZE;
+  dev->tile_cols = (width + dev->tile_size - 1) / dev->tile_size;
+  dev->tile_rows = (height + dev->tile_size - 1) / dev->tile_size;
   dev->res = res;
   dev->pointsize = pointsize;
   dev->bg = bg;
@@ -2852,8 +2103,23 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
 
   dev->data = cairo_image_surface_get_data(dev->image_surface);
   dev->stride = cairo_image_surface_get_stride(dev->image_surface);
+  dev->tile_cache = (guint16 *) calloc(
+    (size_t) dev->tile_cols * (size_t) dev->tile_rows * (size_t) dev->tile_size * (size_t) dev->tile_size * 4U,
+    sizeof(guint16)
+  );
+  dev->tile_valid = (unsigned char *) calloc((size_t) dev->tile_cols * (size_t) dev->tile_rows, sizeof(unsigned char));
+  if (!dev->tile_cache || !dev->tile_valid) {
+    free(dev->tile_cache);
+    free(dev->tile_valid);
+    cairo_surface_destroy(dev->image_surface);
+    free(dev->filename);
+    free(dev);
+    error("failed to allocate libmypaint tile cache");
+  }
   dev->cr = cairo_create(dev->image_surface);
   if (cairo_status(dev->cr) != CAIRO_STATUS_SUCCESS) {
+    free(dev->tile_cache);
+    free(dev->tile_valid);
     cairo_surface_destroy(dev->image_surface);
     free(dev->filename);
     free(dev);
