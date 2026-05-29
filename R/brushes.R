@@ -33,13 +33,9 @@ normalize_brush_source <- function(brush) {
     stop("unknown brush file: ", brush, call. = FALSE)
   }
   new_mypaintr_brush(
-    json = read_mypaint_brush(brush_file),
+    json = paste(readLines(brush_file, warn = FALSE, encoding = "UTF-8"), collapse = "\n"),
     source = normalizePath(brush_file, winslash = "/", mustWork = TRUE)
   )
-}
-
-is_json_brush_string <- function(brush) {
-  is.character(brush) && length(brush) == 1L && startsWith(trimws(brush), "{")
 }
 
 default_mypaint_brush_dirs <- function() {
@@ -138,11 +134,6 @@ normalize_settings <- function(settings) {
   settings
 }
 
-read_mypaint_brush <- function(path) {
-  paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
-}
-
-
 json_brush_base_value <- function(json, setting) {
   pattern <- sprintf(
     '"%s"[[:space:]]*:[[:space:]]*\\{[^}]*"base_value"[[:space:]]*:[[:space:]]*([-+0-9.eE]+)',
@@ -154,25 +145,6 @@ json_brush_base_value <- function(json, setting) {
     return(NA_real_)
   }
   suppressWarnings(as.numeric(captures[[2L]]))
-}
-
-normalize_adjustments <- function(brush, normalize = "none") {
-  normalize <- normalize_mode(normalize)
-  settings <- numeric()
-  if (normalize %in% c("all", "tracking")) {
-    settings[c("slow_tracking", "slow_tracking_per_dab")] <- 0
-  }
-  if (normalize %in% c("all", "size")) {
-    current_radius <- if ("radius_logarithmic" %in% names(brush$settings %||% numeric())) {
-      as.numeric(brush$settings[["radius_logarithmic"]])
-    } else {
-      json_brush_base_value(brush$json %||% "", "radius_logarithmic")
-    }
-    if (is.finite(current_radius) && current_radius > log(3)) {
-      settings["radius_logarithmic"] <- log(3)
-    }
-  }
-  settings
 }
 
 #' Tweak a brush specification
@@ -343,8 +315,19 @@ tweak_brush <- function(brush,
   brush <- normalize_brush_source(brush)
   normalize <- normalize_mode(normalize)
   settings <- brush$settings %||% numeric()
-  normalized <- normalize_adjustments(brush, normalize)
-  settings[names(normalized)] <- normalized
+  if (normalize %in% c("all", "tracking")) {
+    settings[c("slow_tracking", "slow_tracking_per_dab")] <- 0
+  }
+  if (normalize %in% c("all", "size")) {
+    current_radius <- if ("radius_logarithmic" %in% names(settings)) {
+      as.numeric(settings[["radius_logarithmic"]])
+    } else {
+      json_brush_base_value(brush$json %||% "", "radius_logarithmic")
+    }
+    if (is.finite(current_radius) && current_radius > log(3)) {
+      settings["radius_logarithmic"] <- log(3)
+    }
+  }
   overrides <- as.list(match.call())[-1]
   overrides$normalize <- NULL
   overrides$brush <- NULL
@@ -364,7 +347,10 @@ normalize_brush_spec <- function(brush) {
   if (is.null(brush)) {
     return(NULL)
   }
-  if (!inherits(brush, "mypaintr_brush") && !is_json_brush_string(brush)) {
+  if (
+    !inherits(brush, "mypaintr_brush") &&
+      !(is.character(brush) && length(brush) == 1L && startsWith(trimws(brush), "{"))
+  ) {
     brush <- tweak_brush(brush, normalize = "all")
   }
   brush <- normalize_brush_source(brush)
@@ -432,7 +418,7 @@ set_brush <- function(brush = NULL, type = c("both", "stroke", "fill"), auto_sol
   }
 
   invisible(.Call(
-    mypaintr_device_set_brush,
+    mypaintr_device_set_style,
     stroke_spec,
     fill_spec,
     if (is.null(stroke_style)) NULL else as.integer(stroke_style),
