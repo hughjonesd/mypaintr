@@ -37,9 +37,10 @@ stroke when \code{taper = 1}.}
 \value{
 A pressure-profile function for the \code{pressure} argument of \code{\link[=hand]{hand()}}
 and \code{\link[=human_hand]{human_hand()}}. Custom functions can also be supplied directly; they
-must accept \code{t} in the range \code{0} to \code{1} and \code{turn} in the range \code{0} to
-\code{1}. \code{turn} describes local path curvature: \code{0} is straight, larger values
-are sharper corners, and values near \code{1} are near reversals.
+must accept \code{t}, normalized stroke progress in the range \code{0} to \code{1}, and
+\code{turn} in the range \code{0} to \code{1}. \code{turn} describes local path curvature:
+\code{0} is straight, larger values are sharper corners, and values near \code{1}
+are near reversals.
 }
 \description{
 Pressure profiles for hand-drawn strokes

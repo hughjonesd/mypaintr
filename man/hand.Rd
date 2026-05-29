@@ -13,7 +13,7 @@ hand(
   width_jitter = 0,
   endpoint_jitter = 0,
   pressure = pressure_flat(),
-  speed = 1,
+  speed = speed_flat(),
   xtilt = 0,
   ytilt = 0,
   barrel_rotation = 0
@@ -27,7 +27,7 @@ human_hand(
   width_jitter = 0.08,
   endpoint_jitter = 0,
   pressure = pressure_human(),
-  speed = 1,
+  speed = speed_human(),
   xtilt = 0,
   ytilt = 0,
   barrel_rotation = 0
@@ -52,9 +52,10 @@ length.}
 \code{\link[=pressure_flat]{pressure_flat()}}, \code{\link[=pressure_smooth]{pressure_smooth()}}, or \code{\link[=pressure_human]{pressure_human()}}. A single
 number is treated as \code{pressure_flat(pressure)}.}
 
-\item{speed}{Synthetic brush speed multiplier for \code{\link[=mypaint_device]{mypaint_device()}} brush
-rendering. \code{1} preserves the default distance-based timing heuristic;
-values greater than \code{1} draw faster, and values below \code{1} draw slower.}
+\item{speed}{Speed profile function, typically created with \code{\link[=speed_flat]{speed_flat()}}
+or \code{\link[=speed_human]{speed_human()}}. A single positive number is treated as
+\code{speed_flat(speed)}. Speed profiles affect \code{\link[=mypaint_device]{mypaint_device()}} brush
+rendering only.}
 
 \item{xtilt, ytilt}{Stylus tilt inputs passed to libmypaint, in its normalized
 \code{-1} to \code{1} range.}
@@ -68,12 +69,13 @@ An object describing how rough geometry should be generated.
 }
 \description{
 \code{human_hand()} is the same as \code{\link[=hand]{hand()}}, but starts from rougher defaults with
-bow, wobble, width jitter, and a human-style pressure profile enabled.
+bow, wobble, width jitter, and human-style pressure and speed profiles
+enabled.
 }
 \details{
 \code{hand()} defaults to plain, base-R-like geometry with no bowing, wobble, or
-jitter and flat pressure. \code{\link[=human_hand]{human_hand()}} has different, more human-like
-defaults, including \code{\link[=pressure_human]{pressure_human()}}.
+jitter and flat pressure and speed. \code{\link[=human_hand]{human_hand()}} has different, more
+human-like defaults, including \code{\link[=pressure_human]{pressure_human()}} and \code{\link[=speed_human]{speed_human()}}.
 
 As of now, pressure profiles only apply to open lines, not shape outlines. On
 base R devices, they are simulated and affect line width.
