@@ -61,7 +61,7 @@ for (idx in seq_along(brushes)) {
 }
 
 dev.off()
-#> agg_record_1d2b4c30019b 
+#> agg_record_1ca159e8ef5e 
 #>                       2 
 img <- png::readPNG(ex_file)
 grid::grid.raster(img)

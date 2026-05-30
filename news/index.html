@@ -42,13 +42,12 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="mypaintr-development-version">mypaintr (development version)<a class="anchor" aria-label="anchor" href="#mypaintr-development-version"></a></h2>
 <ul><li>
-<code><a href="../reference/hand.html">hand()</a></code> and <code><a href="../reference/hand.html">human_hand()</a></code> now accept <code>speed</code>, <code>xtilt</code>, <code>ytilt</code>, and <code>barrel_rotation</code> for libmypaint brush rendering.</li>
-<li>
-<code>hand(pressure = 0.5)</code> is now shorthand for <code>hand(pressure = pressure_flat(0.5))</code>.</li>
+<code><a href="../reference/hand.html">hand()</a></code> and <code><a href="../reference/hand.html">human_hand()</a></code> now accept <code>speed</code>, <code>pressure</code>, <code>xtilt</code>, <code>ytilt</code>, and <code>barrel_rotation</code> for libmypaint brush rendering.</li>
+<li>Pressure and speed profiles (<code>pressure_flat/human/smooth()</code>, <code>speed_flat/human()</code>) let you vary speed and pressure over the whole stroke.</li>
 <li>Hand <code>wobble</code> and <code>bow</code> are now smoother.</li>
 <li>
 <code><a href="../reference/hand.html">human_hand()</a></code> defaults are less wobbly and bowed.</li>
-<li>Speeded up blending by using the libmypaint backend.</li>
+<li>mypaintr now use the libmypaint backend for blending, rather than its own hand-rolled solution.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.1" id="mypaintr-001">mypaintr 0.0.1<a class="anchor" aria-label="anchor" href="#mypaintr-001"></a></h2>
