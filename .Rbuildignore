@@ -14,6 +14,7 @@
 ^src/Makevars\.win$
 ^vignettes/articles($|/)
 ^src/vendor/libmypaint/.*\.(o|so|dll|dylib)$
+^src/vendor/libmypaint/\.travis\.yml$
 ^README\.Rmd$
 ^\.positai$
 ^\.claude$

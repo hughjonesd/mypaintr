@@ -139,9 +139,7 @@ struct MyPaintBrush {
 void settings_base_values_have_changed (MyPaintBrush *self);
 
 
-#if MYPAINT_CONFIG_USE_GLIB
 #include "glib/mypaint-brush.c"
-#endif
 
 void
 brush_reset(MyPaintBrush *self)

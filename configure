@@ -47,6 +47,25 @@ pkg_libs() {
   "$PKG_CONFIG_BIN" --libs "$@"
 }
 
+vendored_version=1.6.1
+vendored_objects="device.o init.o \
+vendor/libmypaint/brushmodes.o \
+vendor/libmypaint/fifo.o \
+vendor/libmypaint/helpers.o \
+vendor/libmypaint/mypaint-brush-settings.o \
+vendor/libmypaint/mypaint-brush.o \
+vendor/libmypaint/mypaint-fixed-tiled-surface.o \
+vendor/libmypaint/mypaint-mapping.o \
+vendor/libmypaint/mypaint-matrix.o \
+vendor/libmypaint/mypaint-rectangle.o \
+vendor/libmypaint/mypaint-surface.o \
+vendor/libmypaint/mypaint-symmetry.o \
+vendor/libmypaint/mypaint-tiled-surface.o \
+vendor/libmypaint/mypaint.o \
+vendor/libmypaint/operationqueue.o \
+vendor/libmypaint/rng-double.o \
+vendor/libmypaint/tilemap.o"
+
 if [ "$lib_mode" = auto ]; then
   if have_pkg libmypaint cairo; then
     lib_mode=system
@@ -81,15 +100,15 @@ EOF
     fi
     cflags=$(pkg_cflags cairo json-c)
     libs=$(pkg_libs cairo json-c)
-    cat > src/Makevars <<EOF
-PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
-PKG_LIBS = $libs
-OBJECTS = device.o init.o vendor/libmypaint/brushmodes.o vendor/libmypaint/fifo.o vendor/libmypaint/helpers.o vendor/libmypaint/mypaint-brush-settings.o vendor/libmypaint/mypaint-brush.o vendor/libmypaint/mypaint-mapping.o vendor/libmypaint/mypaint-rectangle.o vendor/libmypaint/mypaint-surface.o vendor/libmypaint/mypaint.o vendor/libmypaint/rng-double.o
-EOF
     cat > src/Makevars.win <<EOF
 PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
 PKG_LIBS = $libs
-OBJECTS = device.o init.o vendor/libmypaint/brushmodes.o vendor/libmypaint/fifo.o vendor/libmypaint/helpers.o vendor/libmypaint/mypaint-brush-settings.o vendor/libmypaint/mypaint-brush.o vendor/libmypaint/mypaint-mapping.o vendor/libmypaint/mypaint-rectangle.o vendor/libmypaint/mypaint-surface.o vendor/libmypaint/mypaint.o vendor/libmypaint/rng-double.o
+OBJECTS = $vendored_objects
+EOF
+    cat > src/Makevars <<EOF
+PKG_CPPFLAGS = -Ivendor/libmypaint $cflags
+PKG_LIBS = $libs
+OBJECTS = $vendored_objects
 EOF
     ;;
 esac
@@ -102,4 +121,7 @@ brushes_mode: $brush_mode
 EOF
 
 echo "Configured mypaintr with libmypaint mode: $lib_mode" >&2
+if [ "$lib_mode" = vendored ]; then
+  echo "Using vendored libmypaint version: $vendored_version" >&2
+fi
 echo "Brush lookup mode at runtime: $brush_mode (override with MYPAINTR_BRUSHES)" >&2
