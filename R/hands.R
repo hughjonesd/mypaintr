@@ -159,7 +159,8 @@ as_speed_profile <- function(x = NULL) {
 #'   must accept `t`, normalized stroke progress in the range `0` to `1`, and
 #'   `turn` in the range `0` to `1`. `turn` describes local path curvature:
 #'   `0` is straight, larger values are sharper corners, and values near `1`
-#'   are near reversals.
+#'   are near reversals. Custom functions must be vectorized over `t` and
+#'   `turn`, and return either length `1` or `length(t)`.
 #' @examples
 #' plot.new()
 #' plot.window(c(0, 10), c(0, 10))
@@ -245,7 +246,8 @@ pressure_human <- function(value = 1,
 #'   [human_hand()]. Custom functions can also be supplied directly; they must
 #'   accept `t`, normalized stroke progress in the range `0` to `1`, and `turn`
 #'   in the range `0` to `1`. Speed profiles return positive speed
-#'   multipliers.
+#'   multipliers. Custom functions must be vectorized over `t` and `turn`, and
+#'   return either length `1` or `length(t)`.
 #' @examples
 #' plot.new()
 #' plot.window(c(0, 10), c(0, 10))

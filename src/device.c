@@ -424,56 +424,76 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
   }
 }
 
-static double stroke_pressure_at(const MypaintrHand *hand, double t, double turn_factor) {
+static void eval_profile_vector(SEXP fun,
+                                const char *name,
+                                const double *t,
+                                const double *turn,
+                                int n,
+                                double default_value,
+                                int clamp_unit,
+                                int require_positive,
+                                double *out) {
   SEXP t_arg;
   SEXP turn_arg;
   SEXP call;
   SEXP value;
-  double pressure;
+  R_xlen_t value_n;
+  int i;
 
-  if (!hand || hand->pressure_fun == R_NilValue) {
-    return 1.0;
+  if (n <= 0) {
+    return;
   }
 
-  PROTECT(t_arg = ScalarReal(clamp01(t)));
-  PROTECT(turn_arg = ScalarReal(clamp01(turn_factor)));
-  PROTECT(call = lang3(hand->pressure_fun, t_arg, turn_arg));
+  if (fun == R_NilValue) {
+    for (i = 0; i < n; ++i) {
+      out[i] = default_value;
+    }
+    return;
+  }
+
+  PROTECT(t_arg = allocVector(REALSXP, n));
+  PROTECT(turn_arg = allocVector(REALSXP, n));
+  for (i = 0; i < n; ++i) {
+    REAL(t_arg)[i] = clamp01(t[i]);
+    REAL(turn_arg)[i] = clamp01(turn[i]);
+  }
+
+  PROTECT(call = lang3(fun, t_arg, turn_arg));
   PROTECT(value = eval(call, R_GlobalEnv));
 
-  if (XLENGTH(value) < 1) {
+  if (!(TYPEOF(value) == REALSXP || TYPEOF(value) == INTSXP)) {
     UNPROTECT(4);
-    error("pressure function must return at least one value");
+    error("%s function must return a numeric vector", name);
   }
 
-  pressure = asReal(value);
-  UNPROTECT(4);
-  return clamp01(pressure);
-}
-
-static double stroke_speed_at(const MypaintrHand *hand, double t, double turn_factor) {
-  SEXP t_arg;
-  SEXP turn_arg;
-  SEXP call;
-  SEXP value;
-  double speed;
-
-  PROTECT(t_arg = ScalarReal(clamp01(t)));
-  PROTECT(turn_arg = ScalarReal(clamp01(turn_factor)));
-  PROTECT(call = lang3(hand->speed_fun, t_arg, turn_arg));
-  PROTECT(value = eval(call, R_GlobalEnv));
-
-  if (XLENGTH(value) < 1) {
+  value_n = XLENGTH(value);
+  if (!(value_n == 1 || value_n == n)) {
     UNPROTECT(4);
-    error("speed function must return at least one value");
+    error("%s function must return length 1 or length %d", name, n);
   }
 
-  speed = asReal(value);
+  for (i = 0; i < n; ++i) {
+    R_xlen_t idx = value_n == 1 ? 0 : i;
+    double x;
+
+    if (TYPEOF(value) == INTSXP && INTEGER(value)[idx] == NA_INTEGER) {
+      UNPROTECT(4);
+      error("%s function must return finite values", name);
+    }
+    x = TYPEOF(value) == REALSXP ? REAL(value)[idx] : (double) INTEGER(value)[idx];
+
+    if (!isfinite(x)) {
+      UNPROTECT(4);
+      error("%s function must return finite values", name);
+    }
+    if (require_positive && x <= 0.0) {
+      UNPROTECT(4);
+      error("%s function must return positive values", name);
+    }
+    out[i] = clamp_unit ? clamp01(x) : x;
+  }
+
   UNPROTECT(4);
-  if (!isfinite(speed) || speed <= 0.0) {
-    error("speed function must return a positive finite value");
-  }
-
-  return speed;
 }
 
 static double polyline_turn_factor(const double *x, const double *y, int n, int i) {
@@ -874,6 +894,13 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   int i;
   double total_len = 0.0;
   double cumulative_len = 0.0;
+  int total_pieces = 0;
+  int profile_n;
+  int profile_i;
+  double *profile_t;
+  double *profile_turn;
+  double *pressure;
+  double *speed;
   double start_dx;
   double start_dy;
   double start_len;
@@ -894,7 +921,9 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   for (i = 1; i < n; ++i) {
     double dx = x[i] - x[i - 1];
     double dy = y[i] - y[i - 1];
-    total_len += sqrt(dx * dx + dy * dy);
+    double seg_len = sqrt(dx * dx + dy * dy);
+    total_len += seg_len;
+    total_pieces += (int) fmax(1.0, ceil(seg_len / 120.0));
   }
 
   init_hand_defaults(&neutral_hand, 1ULL);
@@ -917,12 +946,57 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     start_y = y[0];
   }
 
+  profile_n = total_pieces + 1 + (start_len > 1e-9 ? 1 : 0);
+  profile_t = (double *) malloc((size_t) profile_n * sizeof(double));
+  profile_turn = (double *) malloc((size_t) profile_n * sizeof(double));
+  pressure = (double *) malloc((size_t) profile_n * sizeof(double));
+  speed = (double *) malloc((size_t) profile_n * sizeof(double));
+  if (!profile_t || !profile_turn || !pressure || !speed) {
+    free(profile_t);
+    free(profile_turn);
+    free(pressure);
+    free(speed);
+    error("failed to allocate stroke profile buffer");
+  }
+
+  profile_i = 0;
+  if (start_len > 1e-9) {
+    profile_t[profile_i] = 0.0;
+    profile_turn[profile_i] = 0.0;
+    profile_i += 1;
+  }
+  profile_t[profile_i] = 0.0;
+  profile_turn[profile_i] = 0.0;
+  profile_i += 1;
+  for (i = 1; i < n; ++i) {
+    double sx = x[i - 1];
+    double sy = y[i - 1];
+    double dx = x[i] - sx;
+    double dy = y[i] - sy;
+    double seg_len = sqrt(dx * dx + dy * dy);
+    double turn_factor = polyline_turn_factor(x, y, n, i);
+    int pieces = (int) fmax(1.0, ceil(seg_len / 120.0));
+    int j;
+
+    for (j = 1; j <= pieces; ++j) {
+      double u = (double) j / (double) pieces;
+      profile_t[profile_i] = total_len > 1e-9 ? (cumulative_len + seg_len * u) / total_len : 1.0;
+      profile_turn[profile_i] = turn_factor;
+      profile_i += 1;
+    }
+
+    cumulative_len += seg_len;
+  }
+  eval_profile_vector(brush_hand->pressure_fun, "pressure", profile_t, profile_turn, profile_n, 1.0, 1, 0, pressure);
+  eval_profile_vector(brush_hand->speed_fun, "speed", profile_t, profile_turn, profile_n, 1.0, 0, 1, speed);
+
   mypaint_brush_reset(brush->brush);
   mypaint_brush_new_stroke(brush->brush);
   mypaint_tiled_surface2_begin_atomic(&dev->surface);
   mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) start_x, (float) start_y, 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
+  profile_i = 0;
   if (start_len > 1e-9) {
-    double speed0 = hand ? stroke_speed_at(hand, 0.0, 0.0) : 1.0;
+    double speed0 = speed[profile_i++];
     double dt0 = fmax(preroll / 240.0 / speed0, 0.001);
     mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) x[0], (float) y[0], 0.0f, xtilt, ytilt, dt0, 1.0f, 0.0f, barrel_rotation);
   }
@@ -931,7 +1005,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     &dev->surface.parent,
     (float) x[0],
     (float) y[0],
-    (float) stroke_pressure_at(brush_hand, 0.0, 0.0),
+    (float) pressure[profile_i++],
     xtilt,
     ytilt,
     0.001,
@@ -946,7 +1020,6 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     double dx = x[i] - sx;
     double dy = y[i] - sy;
     double seg_len = sqrt(dx * dx + dy * dy);
-    double turn_factor = polyline_turn_factor(x, y, n, i);
     int pieces = (int) fmax(1.0, ceil(seg_len / 120.0));
     int j;
 
@@ -955,16 +1028,17 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
       double px = sx + dx * u;
       double py = sy + dy * u;
       double step_len = seg_len / (double) pieces;
-      double t = total_len > 1e-9 ? (cumulative_len + seg_len * u) / total_len : 1.0;
-      double speed = hand ? stroke_speed_at(hand, t, turn_factor) : 1.0;
-      double dt = fmax(step_len / 240.0 / speed, 0.001);
+      double stroke_speed = speed[profile_i];
+      double stroke_pressure = pressure[profile_i];
+      double dt = fmax(step_len / 240.0 / stroke_speed, 0.001);
+      profile_i += 1;
 
       mypaint_brush_stroke_to_2(
         brush->brush,
         &dev->surface.parent,
         (float) px,
         (float) py,
-        (float) stroke_pressure_at(brush_hand, t, turn_factor),
+        (float) stroke_pressure,
         xtilt,
         ytilt,
         dt,
@@ -974,7 +1048,6 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
       );
     }
 
-    cumulative_len += seg_len;
   }
 
   mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) x[n - 1], (float) y[n - 1], 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
@@ -983,6 +1056,10 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     MyPaintRectangles roi = {16, rectangles};
     mypaint_tiled_surface2_end_atomic(&dev->surface, &roi);
   }
+  free(profile_t);
+  free(profile_turn);
+  free(pressure);
+  free(speed);
 }
 
 static int decode_lty(int lty, double lwd, double *pattern, int max_pattern) {
@@ -1022,6 +1099,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
   double total_len = 0.0;
   double scaled_lwd = device_lwd(dev, lwd);
   int emulate_pressure = 0;
+  int total_pieces = 0;
 
   if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
     return;
@@ -1035,12 +1113,60 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
     for (i = 1; i < n; ++i) {
       double dx = x[i] - x[i - 1];
       double dy = y[i] - y[i - 1];
-      total_len += sqrt(dx * dx + dy * dy);
+      double seg_len = sqrt(dx * dx + dy * dy);
+      total_len += seg_len;
+      if (seg_len > 1e-9) {
+        total_pieces += (int) fmax(1.0, ceil(seg_len / 6.0));
+      }
     }
   }
 
   if (emulate_pressure && total_len > 1e-9) {
     double cumulative = 0.0;
+    double *profile_t = (double *) malloc((size_t) total_pieces * sizeof(double));
+    double *profile_turn = (double *) malloc((size_t) total_pieces * sizeof(double));
+    double *pressure = (double *) malloc((size_t) total_pieces * sizeof(double));
+    int profile_i = 0;
+
+    if (!profile_t || !profile_turn || !pressure) {
+      free(profile_t);
+      free(profile_turn);
+      free(pressure);
+      error("failed to allocate stroke profile buffer");
+    }
+
+    for (i = 1; i < n; ++i) {
+      double sx = x[i - 1];
+      double sy = y[i - 1];
+      double ex = x[i];
+      double ey = y[i];
+      double dx = ex - sx;
+      double dy = ey - sy;
+      double seg_len = sqrt(dx * dx + dy * dy);
+      double turn_factor = polyline_turn_factor(x, y, n, i - 1);
+      int pieces;
+      int j;
+
+      if (seg_len <= 1e-9) {
+        continue;
+      }
+
+      pieces = (int) fmax(1.0, ceil(seg_len / 6.0));
+      for (j = 0; j < pieces; ++j) {
+        double u0 = (double) j / (double) pieces;
+        double u1 = (double) (j + 1) / (double) pieces;
+        double mid = cumulative + seg_len * (u0 + u1) * 0.5;
+        profile_t[profile_i] = mid / total_len;
+        profile_turn[profile_i] = turn_factor;
+        profile_i += 1;
+      }
+
+      cumulative += seg_len;
+    }
+
+    eval_profile_vector(hand->pressure_fun, "pressure", profile_t, profile_turn, total_pieces, 1.0, 1, 0, pressure);
+    profile_i = 0;
+    cumulative = 0.0;
 
     cairo_save(dev->cr);
     set_cairo_source(dev->cr, col);
@@ -1070,9 +1196,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
         double y0 = sy + dy * u0;
         double x1 = sx + dx * u1;
         double y1 = sy + dy * u1;
-        double mid = cumulative + seg_len * (u0 + u1) * 0.5;
-        double t = mid / total_len;
-        double width = fmax(1e-3, scaled_lwd * stroke_pressure_at(hand, t, polyline_turn_factor(x, y, n, i - 1)));
+        double width = fmax(1e-3, scaled_lwd * pressure[profile_i++]);
 
         cairo_new_path(dev->cr);
         cairo_move_to(dev->cr, x0, flip_y(dev, y0));
@@ -1086,6 +1210,9 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
 
     cairo_restore(dev->cr);
     invalidate_tile_cache(dev);
+    free(profile_t);
+    free(profile_turn);
+    free(pressure);
     return;
   }
 

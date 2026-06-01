@@ -314,8 +314,15 @@ is_solid_lty <- function(lty) {
 
 stroke_pressure_at_r <- function(hand_spec, t, turn_factor = 0) {
   profile <- hand_spec$pressure
-  pressure <- profile(t, turn_factor)
-  max(0, min(1, pressure[[1L]]))
+  pressure <- profile(clamp01(t), clamp01(turn_factor))
+  if (!is.numeric(pressure) || !length(pressure) %in% c(1L, length(t))) {
+    stop("pressure function must return a numeric vector of length 1 or length(t)", call. = FALSE)
+  }
+  pressure <- rep_len(pressure, length(t))
+  if (any(!is.finite(pressure))) {
+    stop("pressure function must return finite values", call. = FALSE)
+  }
+  clamp01(pressure)
 }
 
 polyline_turn_factor_r <- function(x, y, i) {
@@ -375,6 +382,8 @@ draw_pressure_path <- function(path, hand_spec, args, closed = FALSE) {
   base_args$lty <- NULL
 
   cumulative <- 0
+  profile_t <- numeric()
+  profile_turn <- numeric()
   for (i in seq_len(n - 1L)) {
     dx <- x[i + 1] - x[i]
     dy <- y[i + 1] - y[i]
@@ -388,14 +397,32 @@ draw_pressure_path <- function(path, hand_spec, args, closed = FALSE) {
       u1 <- j / pieces
       mid <- cumulative + seg_len[i] * (u0 + u1) * 0.5
       t <- mid / total_len
-      width <- max(0.01, lwd * stroke_pressure_at_r(hand_spec, t, turn_factor))
+      profile_t <- c(profile_t, t)
+      profile_turn <- c(profile_turn, turn_factor)
+    }
+    cumulative <- cumulative + seg_len[i]
+  }
+
+  pressure <- stroke_pressure_at_r(hand_spec, profile_t, profile_turn)
+  pressure_idx <- 1L
+  for (i in seq_len(n - 1L)) {
+    dx <- x[i + 1] - x[i]
+    dy <- y[i + 1] - y[i]
+    if (!is.finite(seg_len[i]) || seg_len[i] <= 0) {
+      next
+    }
+    pieces <- segment_subdivisions(dx, dy)
+    for (j in seq_len(pieces)) {
+      u0 <- (j - 1) / pieces
+      u1 <- j / pieces
+      width <- max(0.01, lwd * pressure[[pressure_idx]])
+      pressure_idx <- pressure_idx + 1L
       args_i <- base_args
       args_i$x <- c(x[i] + dx * u0, x[i] + dx * u1)
       args_i$y <- c(y[i] + dy * u0, y[i] + dy * u1)
       args_i$lwd <- width
       do.call(graphics::lines, args_i)
     }
-    cumulative <- cumulative + seg_len[i]
   }
 
   TRUE
