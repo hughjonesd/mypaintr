@@ -77,8 +77,8 @@ enabled.
 jitter and flat pressure and speed. \code{\link[=human_hand]{human_hand()}} has different, more
 human-like defaults, including \code{\link[=pressure_human]{pressure_human()}} and \code{\link[=speed_human]{speed_human()}}.
 
-As of now, pressure profiles only apply to open lines, not shape outlines. On
-base R devices, they are simulated and affect line width.
+Pressure and speed profile functions are called with \code{t}, \code{turn}, and
+\code{length}, where \code{length} is the total stroke length in device units.
 
 The \code{speed}, \code{xtilt}, \code{ytilt}, and \code{barrel_rotation} arguments affect only
 brush rendering on \code{\link[=mypaint_device]{mypaint_device()}}. They are ignored by standard graphics

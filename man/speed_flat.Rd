@@ -41,9 +41,9 @@ when \code{taper = 1}.}
 \value{
 A speed-profile function for the \code{speed} argument of \code{\link[=hand]{hand()}} and
 \code{\link[=human_hand]{human_hand()}}. Custom functions can also be supplied directly; they must
-accept \code{t}, normalized stroke progress in the range \code{0} to \code{1}, and \code{turn}
-in the range \code{0} to \code{1}. Speed profiles return positive speed
-multipliers.
+accept \code{t}, normalized stroke progress in the range \code{0} to \code{1}, \code{turn}
+in the range \code{0} to \code{1}, and \code{length}, the total stroke length in device
+units. Speed profiles return positive speed multipliers.
 }
 \description{
 Speed profiles for hand-drawn strokes

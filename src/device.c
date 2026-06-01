@@ -429,12 +429,14 @@ static void eval_profile_vector(SEXP fun,
                                 const double *t,
                                 const double *turn,
                                 int n,
+                                double length,
                                 double default_value,
                                 int clamp_unit,
                                 int require_positive,
                                 double *out) {
   SEXP t_arg;
   SEXP turn_arg;
+  SEXP length_arg;
   SEXP call;
   SEXP value;
   R_xlen_t value_n;
@@ -453,22 +455,23 @@ static void eval_profile_vector(SEXP fun,
 
   PROTECT(t_arg = allocVector(REALSXP, n));
   PROTECT(turn_arg = allocVector(REALSXP, n));
+  PROTECT(length_arg = ScalarReal(length));
   for (i = 0; i < n; ++i) {
     REAL(t_arg)[i] = clamp01(t[i]);
     REAL(turn_arg)[i] = clamp01(turn[i]);
   }
 
-  PROTECT(call = lang3(fun, t_arg, turn_arg));
+  PROTECT(call = lang4(fun, t_arg, turn_arg, length_arg));
   PROTECT(value = eval(call, R_GlobalEnv));
 
   if (!(TYPEOF(value) == REALSXP || TYPEOF(value) == INTSXP)) {
-    UNPROTECT(4);
+    UNPROTECT(5);
     error("%s function must return a numeric vector", name);
   }
 
   value_n = XLENGTH(value);
   if (!(value_n == 1 || value_n == n)) {
-    UNPROTECT(4);
+    UNPROTECT(5);
     error("%s function must return length 1 or length %d", name, n);
   }
 
@@ -477,23 +480,23 @@ static void eval_profile_vector(SEXP fun,
     double x;
 
     if (TYPEOF(value) == INTSXP && INTEGER(value)[idx] == NA_INTEGER) {
-      UNPROTECT(4);
+      UNPROTECT(5);
       error("%s function must return finite values", name);
     }
     x = TYPEOF(value) == REALSXP ? REAL(value)[idx] : (double) INTEGER(value)[idx];
 
     if (!isfinite(x)) {
-      UNPROTECT(4);
+      UNPROTECT(5);
       error("%s function must return finite values", name);
     }
     if (require_positive && x <= 0.0) {
-      UNPROTECT(4);
+      UNPROTECT(5);
       error("%s function must return positive values", name);
     }
     out[i] = clamp_unit ? clamp01(x) : x;
   }
 
-  UNPROTECT(4);
+  UNPROTECT(5);
 }
 
 static double polyline_turn_factor(const double *x, const double *y, int n, int i) {
@@ -890,7 +893,38 @@ static void init_surface(MypaintrDevice *dev) {
   mypaint_tiled_surface2_init(&dev->surface, tile_request_start, tile_request_end);
 }
 
-static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, const MypaintrHand *hand) {
+static int standard_dash_lty(int lty) {
+  return lty == LTY_DASHED ||
+    lty == LTY_DOTTED ||
+    lty == LTY_DOTDASH ||
+    lty == LTY_LONGDASH ||
+    lty == LTY_TWODASH;
+}
+
+static int dash_pattern_on(const double *pattern, int pattern_n, double distance) {
+  double cycle = 0.0;
+  double phase;
+  int i;
+
+  for (i = 0; i < pattern_n; ++i) {
+    cycle += pattern[i];
+  }
+  if (!pattern || pattern_n <= 0 || cycle <= 1e-9) {
+    return 1;
+  }
+
+  phase = fmod(fmax(distance, 0.0), cycle);
+  for (i = 0; i < pattern_n; ++i) {
+    if (phase < pattern[i] || i + 1 == pattern_n) {
+      return (i % 2) == 0;
+    }
+    phase -= pattern[i];
+  }
+
+  return 1;
+}
+
+static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, const MypaintrHand *hand, const double *dash_pattern, int dash_pattern_n) {
   int i;
   double total_len = 0.0;
   double cumulative_len = 0.0;
@@ -969,10 +1003,8 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   profile_turn[profile_i] = 0.0;
   profile_i += 1;
   for (i = 1; i < n; ++i) {
-    double sx = x[i - 1];
-    double sy = y[i - 1];
-    double dx = x[i] - sx;
-    double dy = y[i] - sy;
+    double dx = x[i] - x[i - 1];
+    double dy = y[i] - y[i - 1];
     double seg_len = sqrt(dx * dx + dy * dy);
     double turn_factor = polyline_turn_factor(x, y, n, i);
     int pieces = (int) fmax(1.0, ceil(seg_len / 120.0));
@@ -980,15 +1012,24 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
 
     for (j = 1; j <= pieces; ++j) {
       double u = (double) j / (double) pieces;
-      profile_t[profile_i] = total_len > 1e-9 ? (cumulative_len + seg_len * u) / total_len : 1.0;
+      double next = seg_len * u;
+      profile_t[profile_i] = total_len > 1e-9 ? (cumulative_len + next) / total_len : 1.0;
       profile_turn[profile_i] = turn_factor;
       profile_i += 1;
     }
 
     cumulative_len += seg_len;
   }
-  eval_profile_vector(brush_hand->pressure_fun, "pressure", profile_t, profile_turn, profile_n, 1.0, 1, 0, pressure);
-  eval_profile_vector(brush_hand->speed_fun, "speed", profile_t, profile_turn, profile_n, 1.0, 0, 1, speed);
+  eval_profile_vector(brush_hand->pressure_fun, "pressure", profile_t, profile_turn, profile_n, total_len, 1.0, 1, 0, pressure);
+  eval_profile_vector(brush_hand->speed_fun, "speed", profile_t, profile_turn, profile_n, total_len, 1.0, 0, 1, speed);
+  if (dash_pattern_n > 0) {
+    for (i = 0; i < profile_n; ++i) {
+      double distance = profile_t[i] * total_len;
+      if (!dash_pattern_on(dash_pattern, dash_pattern_n, distance)) {
+        pressure[i] = 0.0;
+      }
+    }
+  }
 
   mypaint_brush_reset(brush->brush);
   mypaint_brush_new_stroke(brush->brush);
@@ -1014,6 +1055,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     barrel_rotation
   );
 
+  cumulative_len = 0.0;
   for (i = 1; i < n; ++i) {
     double sx = x[i - 1];
     double sy = y[i - 1];
@@ -1048,6 +1090,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
       );
     }
 
+    cumulative_len += seg_len;
   }
 
   mypaint_brush_stroke_to_2(brush->brush, &dev->surface.parent, (float) x[n - 1], (float) y[n - 1], 0.0f, xtilt, ytilt, 0.01, 1.0f, 0.0f, barrel_rotation);
@@ -1164,7 +1207,7 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
       cumulative += seg_len;
     }
 
-    eval_profile_vector(hand->pressure_fun, "pressure", profile_t, profile_turn, total_pieces, 1.0, 1, 0, pressure);
+    eval_profile_vector(hand->pressure_fun, "pressure", profile_t, profile_turn, total_pieces, total_len, 1.0, 1, 0, pressure);
     profile_i = 0;
     cumulative = 0.0;
 
@@ -1238,56 +1281,21 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
 static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty, const MypaintrHand *hand) {
   double pattern[8];
   int pattern_n = decode_lty(lty, device_lwd(dev, lwd), pattern, 8);
-  int pattern_i = 0;
-  double remaining;
-  int draw_on = 1;
-  int i;
 
   if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
     return;
   }
 
   if (pattern_n <= 0) {
-    render_polyline_solid(dev, brush, x, y, n, col, lwd, hand);
+    render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, NULL, 0);
     return;
   }
 
-  remaining = pattern[0];
-
-  for (i = 1; i < n; ++i) {
-    double sx = x[i - 1];
-    double sy = y[i - 1];
-    double ex = x[i];
-    double ey = y[i];
-    double dx = ex - sx;
-    double dy = ey - sy;
-    double seg_len = sqrt(dx * dx + dy * dy);
-
-    while (seg_len > 1e-9) {
-      double step = fmin(remaining, seg_len);
-      double ux = (ex - sx) / seg_len;
-      double uy = (ey - sy) / seg_len;
-      double nx = sx + ux * step;
-      double ny = sy + uy * step;
-
-      if (draw_on && step > 1e-9) {
-        double segx[2] = {sx, nx};
-        double segy[2] = {sy, ny};
-        render_polyline_solid(dev, brush, segx, segy, 2, col, lwd, hand);
-      }
-
-      sx = nx;
-      sy = ny;
-      seg_len -= step;
-      remaining -= step;
-
-      if (remaining <= 1e-9) {
-        pattern_i = (pattern_i + 1) % pattern_n;
-        remaining = pattern[pattern_i];
-        draw_on = !draw_on;
-      }
-    }
+  if (!standard_dash_lty(lty)) {
+    error("custom dash patterns are not supported by mypaint_device() brush rendering; use lty = 1:6 or an explicit pressure profile");
   }
+
+  render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, pattern, pattern_n);
 }
 
 static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed) {
