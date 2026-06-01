@@ -312,9 +312,9 @@ is_solid_lty <- function(lty) {
   identical(lty, 1L) || identical(lty, "solid")
 }
 
-stroke_pressure_at_r <- function(hand_spec, t, turn_factor = 0) {
+stroke_pressure_at_r <- function(hand_spec, t, turn_factor = 0, length) {
   profile <- hand_spec$pressure
-  pressure <- profile(clamp01(t), clamp01(turn_factor))
+  pressure <- profile(clamp01(t), clamp01(turn_factor), length)
   if (!is.numeric(pressure) || !length(pressure) %in% c(1L, length(t))) {
     stop("pressure function must return a numeric vector of length 1 or length(t)", call. = FALSE)
   }
@@ -403,7 +403,7 @@ draw_pressure_path <- function(path, hand_spec, args, closed = FALSE) {
     cumulative <- cumulative + seg_len[i]
   }
 
-  pressure <- stroke_pressure_at_r(hand_spec, profile_t, profile_turn)
+  pressure <- stroke_pressure_at_r(hand_spec, profile_t, profile_turn, total_len)
   pressure_idx <- 1L
   for (i in seq_len(n - 1L)) {
     dx <- x[i + 1] - x[i]

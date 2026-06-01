@@ -4,6 +4,8 @@
 \alias{pressure_flat}
 \alias{pressure_smooth}
 \alias{pressure_human}
+\alias{pressure_dashed}
+\alias{pressure_dashed_smooth}
 \title{Pressure profiles for hand-drawn strokes}
 \usage{
 pressure_flat(value = 1)
@@ -18,6 +20,10 @@ pressure_human(
   peak = 0.45,
   turn_taper = 0.35
 )
+
+pressure_dashed(value = 1, pattern = c(24, 12))
+
+pressure_dashed_smooth(value = 1, pattern = c(24, 12), taper = 1)
 }
 \arguments{
 \item{value}{Maximum pressure supplied to the brush, in the range \code{0} to
@@ -33,14 +39,20 @@ stroke when \code{taper = 1}.}
 
 \item{peak}{Position of peak pressure along the stroke, in the range \code{0} to
 \code{1}.}
+
+\item{pattern}{Alternating on/off dash lengths in device units. The default
+uses a 2:1 on/off ratio like base R's dashed line, at a moderate brush-scale
+length.}
 }
 \value{
 A pressure-profile function for the \code{pressure} argument of \code{\link[=hand]{hand()}}
 and \code{\link[=human_hand]{human_hand()}}. Custom functions can also be supplied directly; they
-must accept \code{t}, normalized stroke progress in the range \code{0} to \code{1}, and
-\code{turn} in the range \code{0} to \code{1}. \code{turn} describes local path curvature:
-\code{0} is straight, larger values are sharper corners, and values near \code{1}
-are near reversals.
+must accept \code{t}, normalized stroke progress in the range \code{0} to \code{1},
+\code{turn} in the range \code{0} to \code{1}, and \code{length}, the total stroke length in
+device units. \code{turn} describes local path curvature: \code{0} is straight,
+larger values are sharper corners, and values near \code{1} are near reversals.
+Custom functions must be vectorized over \code{t} and \code{turn}, and return either
+length \code{1} or \code{length(t)}.
 }
 \description{
 Pressure profiles for hand-drawn strokes

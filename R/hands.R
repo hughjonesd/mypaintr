@@ -105,11 +105,6 @@ as_pressure_profile <- function(x = NULL) {
     return(x)
   }
 
-  args <- names(formals(x))
-  if (is.null(args) || !(length(args) >= 2L || "..." %in% args)) {
-    stop("pressure functions must accept two arguments: t and turn", call. = FALSE)
-  }
-
   new_pressure_profile(x)
 }
 
@@ -135,12 +130,20 @@ as_speed_profile <- function(x = NULL) {
     return(x)
   }
 
-  args <- names(formals(x))
-  if (is.null(args) || !(length(args) >= 2L || "..." %in% args)) {
-    stop("speed functions must accept two arguments: t and turn", call. = FALSE)
-  }
-
   new_speed_profile(x)
+}
+
+normalize_dash_pattern <- function(pattern) {
+  if (!is.numeric(pattern) || length(pattern) < 2L || any(!is.finite(pattern)) || any(pattern <= 0)) {
+    stop("pattern must be a numeric vector of at least two positive finite lengths", call. = FALSE)
+  }
+  pattern
+}
+
+dash_profile_index <- function(t, length, pattern) {
+  distance <- clamp01(t) * length
+  phase <- distance %% sum(pattern)
+  findInterval(phase, c(0, cumsum(pattern)), rightmost.closed = TRUE)
 }
 
 #' Pressure profiles for hand-drawn strokes
@@ -154,13 +157,17 @@ as_speed_profile <- function(x = NULL) {
 #'   stroke when `taper = 1`.
 #' @param peak Position of peak pressure along the stroke, in the range `0` to
 #'   `1`.
+#' @param pattern Alternating on/off dash lengths in device units. The default
+#'   uses a 2:1 on/off ratio like base R's dashed line, at a moderate brush-scale
+#'   length.
 #' @return A pressure-profile function for the `pressure` argument of [hand()]
 #'   and [human_hand()]. Custom functions can also be supplied directly; they
-#'   must accept `t`, normalized stroke progress in the range `0` to `1`, and
-#'   `turn` in the range `0` to `1`. `turn` describes local path curvature:
-#'   `0` is straight, larger values are sharper corners, and values near `1`
-#'   are near reversals. Custom functions must be vectorized over `t` and
-#'   `turn`, and return either length `1` or `length(t)`.
+#'   must accept `t`, normalized stroke progress in the range `0` to `1`,
+#'   `turn` in the range `0` to `1`, and `length`, the total stroke length in
+#'   device units. `turn` describes local path curvature: `0` is straight,
+#'   larger values are sharper corners, and values near `1` are near reversals.
+#'   Custom functions must be vectorized over `t` and `turn`, and return either
+#'   length `1` or `length(t)`.
 #' @examples
 #' plot.new()
 #' plot.window(c(0, 10), c(0, 10))
@@ -175,7 +182,7 @@ as_speed_profile <- function(x = NULL) {
 pressure_flat <- function(value = 1) {
   value <- clamp01(value)
   new_pressure_profile(
-    function(t, turn) {
+    function(t, turn, length) {
       rep(value, length(t))
     }
   )
@@ -188,7 +195,7 @@ pressure_smooth <- function(value = 1, taper = 1, turn_taper = 0.35) {
   taper <- clamp01(taper)
   turn_taper <- clamp01(turn_taper)
   new_pressure_profile(
-    function(t, turn) {
+    function(t, turn, length) {
       tt <- clamp01(t)
       pressure <- value * ((1 - taper) + taper * sin(pi * tt))
       pressure <- pressure * (1 - turn_taper * taper * clamp01(turn))
@@ -213,7 +220,7 @@ pressure_human <- function(value = 1,
   turn_taper <- clamp01(turn_taper)
 
   new_pressure_profile(
-    function(t, turn) {
+    function(t, turn, length) {
       tt <- clamp01(t)
       smoothstep <- function(x) x * x * (3 - 2 * x)
       shape <- ifelse(
@@ -224,6 +231,40 @@ pressure_human <- function(value = 1,
       pressure <- value * ((1 - taper) + taper * shape)
       pressure <- pressure * (1 - turn_taper * taper * clamp01(turn))
       clamp01(pressure)
+    }
+  )
+}
+
+#' @rdname pressure_flat
+#' @export
+pressure_dashed <- function(value = 1, pattern = c(24, 12)) {
+  value <- clamp01(value)
+  pattern <- normalize_dash_pattern(pattern)
+
+  new_pressure_profile(
+    function(t, turn, length) {
+      idx <- dash_profile_index(t, length, pattern)
+      ifelse(idx %% 2 == 1, value, 0)
+    }
+  )
+}
+
+#' @rdname pressure_flat
+#' @export
+pressure_dashed_smooth <- function(value = 1, pattern = c(24, 12), taper = 1) {
+  value <- clamp01(value)
+  taper <- clamp01(taper)
+  pattern <- normalize_dash_pattern(pattern)
+  starts <- c(0, cumsum(pattern)[-length(pattern)])
+
+  new_pressure_profile(
+    function(t, turn, length) {
+      idx <- dash_profile_index(t, length, pattern)
+      on <- idx %% 2 == 1
+      phase <- (clamp01(t) * length) %% sum(pattern)
+      local_t <- (phase - starts[idx]) / pattern[idx]
+      pressure <- value * ((1 - taper) + taper * sin(pi * local_t))
+      ifelse(on, clamp01(pressure), 0)
     }
   )
 }
@@ -244,10 +285,11 @@ pressure_human <- function(value = 1,
 #' @param min Minimum speed multiplier returned by the profile.
 #' @return A speed-profile function for the `speed` argument of [hand()] and
 #'   [human_hand()]. Custom functions can also be supplied directly; they must
-#'   accept `t`, normalized stroke progress in the range `0` to `1`, and `turn`
-#'   in the range `0` to `1`. Speed profiles return positive speed
-#'   multipliers. Custom functions must be vectorized over `t` and `turn`, and
-#'   return either length `1` or `length(t)`.
+#'   accept `t`, normalized stroke progress in the range `0` to `1`, `turn` in
+#'   the range `0` to `1`, and `length`, the total stroke length in device
+#'   units. Speed profiles return positive speed multipliers. Custom functions
+#'   must be vectorized over `t` and `turn`, and return either length `1` or
+#'   `length(t)`.
 #' @examples
 #' plot.new()
 #' plot.window(c(0, 10), c(0, 10))
@@ -260,7 +302,7 @@ pressure_human <- function(value = 1,
 speed_flat <- function(value = 1) {
   value <- check_positive_scalar(value, "value")
   new_speed_profile(
-    function(t, turn) {
+    function(t, turn, length) {
       rep(value, length(t))
     }
   )
@@ -286,7 +328,7 @@ speed_human <- function(value = 1,
   min <- check_positive_scalar(min, "min")
 
   new_speed_profile(
-    function(t, turn) {
+    function(t, turn, length) {
       tt <- clamp01(t)
       smoothstep <- function(x) x * x * (3 - 2 * x)
       shape <- ifelse(
@@ -326,8 +368,8 @@ speed_human <- function(value = 1,
 #' jitter and flat pressure and speed. [human_hand()] has different, more
 #' human-like defaults, including [pressure_human()] and [speed_human()].
 #'
-#' As of now, pressure profiles only apply to open lines, not shape outlines. On
-#' base R devices, they are simulated and affect line width.
+#' Pressure and speed profile functions are called with `t`, `turn`, and
+#' `length`, where `length` is the total stroke length in device units.
 #'
 #' The `speed`, `xtilt`, `ytilt`, and `barrel_rotation` arguments affect only
 #' brush rendering on [mypaint_device()]. They are ignored by standard graphics
