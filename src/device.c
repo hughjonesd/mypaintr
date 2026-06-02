@@ -1274,14 +1274,6 @@ static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const dou
     return;
   }
 
-  if (!(lty == LTY_DASHED ||
-      lty == LTY_DOTTED ||
-      lty == LTY_DOTDASH ||
-      lty == LTY_LONGDASH ||
-      lty == LTY_TWODASH)) {
-    error("custom dash patterns are not supported by mypaint_device() brush rendering; use lty = 1:6 or an explicit pressure profile");
-  }
-
   pressure_override = PROTECT(make_dashed_pressure_profile(pattern, pattern_n));
   render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, pressure_override);
   UNPROTECT(1);
