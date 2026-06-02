@@ -373,7 +373,7 @@ static void configure_hand(MypaintrHand *hand, SEXP spec, uint64_t salt) {
   hand->enabled = 1;
   value = list_element(spec, "seed");
   if (value != R_NilValue && XLENGTH(value) == 1) {
-    hand->rng_state = mix64((uint64_t) llround(asReal(value)) ^ salt);
+    hand->rng_state = mix64((uint64_t) llround(asReal(value)));
   }
   value = list_element(spec, "bow");
   if (value != R_NilValue && XLENGTH(value) == 1) hand->bow = asReal(value);
