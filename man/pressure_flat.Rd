@@ -51,6 +51,8 @@ must accept \code{t}, normalized stroke progress in the range \code{0} to \code{
 \code{turn} in the range \code{0} to \code{1}, and \code{length}, the total stroke length in
 device units. \code{turn} describes local path curvature: \code{0} is straight,
 larger values are sharper corners, and values near \code{1} are near reversals.
+Custom functions must be vectorized over \code{t} and \code{turn}, and return either
+length \code{1} or \code{length(t)}.
 }
 \description{
 Pressure profiles for hand-drawn strokes

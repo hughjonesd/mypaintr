@@ -893,38 +893,27 @@ static void init_surface(MypaintrDevice *dev) {
   mypaint_tiled_surface2_init(&dev->surface, tile_request_start, tile_request_end);
 }
 
-static int standard_dash_lty(int lty) {
-  return lty == LTY_DASHED ||
-    lty == LTY_DOTTED ||
-    lty == LTY_DOTDASH ||
-    lty == LTY_LONGDASH ||
-    lty == LTY_TWODASH;
-}
-
-static int dash_pattern_on(const double *pattern, int pattern_n, double distance) {
-  double cycle = 0.0;
-  double phase;
+static SEXP make_dashed_pressure_profile(const double *pattern, int pattern_n) {
+  SEXP ns_name = PROTECT(mkString("mypaintr"));
+  SEXP ns = PROTECT(R_FindNamespace(ns_name));
+  SEXP fun = PROTECT(findFun(install("pressure_dashed"), ns));
+  SEXP value_arg = PROTECT(ScalarReal(1.0));
+  SEXP pattern_arg = PROTECT(allocVector(REALSXP, pattern_n));
+  SEXP call;
+  SEXP profile;
   int i;
 
   for (i = 0; i < pattern_n; ++i) {
-    cycle += pattern[i];
-  }
-  if (!pattern || pattern_n <= 0 || cycle <= 1e-9) {
-    return 1;
+    REAL(pattern_arg)[i] = pattern[i];
   }
 
-  phase = fmod(fmax(distance, 0.0), cycle);
-  for (i = 0; i < pattern_n; ++i) {
-    if (phase < pattern[i] || i + 1 == pattern_n) {
-      return (i % 2) == 0;
-    }
-    phase -= pattern[i];
-  }
-
-  return 1;
+  call = PROTECT(lang3(fun, value_arg, pattern_arg));
+  profile = eval(call, ns);
+  UNPROTECT(6);
+  return profile;
 }
 
-static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, const MypaintrHand *hand, const double *dash_pattern, int dash_pattern_n) {
+static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, const MypaintrHand *hand, SEXP pressure_override) {
   int i;
   double total_len = 0.0;
   double cumulative_len = 0.0;
@@ -944,6 +933,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
   double radius;
   MypaintrHand neutral_hand;
   const MypaintrHand *brush_hand;
+  double sample_step = pressure_override == R_NilValue ? 120.0 : 4.0;
   float xtilt;
   float ytilt;
   float barrel_rotation;
@@ -957,7 +947,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     double dy = y[i] - y[i - 1];
     double seg_len = sqrt(dx * dx + dy * dy);
     total_len += seg_len;
-    total_pieces += (int) fmax(1.0, ceil(seg_len / 120.0));
+    total_pieces += (int) fmax(1.0, ceil(seg_len / sample_step));
   }
 
   init_hand_defaults(&neutral_hand, 1ULL);
@@ -1007,7 +997,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     double dy = y[i] - y[i - 1];
     double seg_len = sqrt(dx * dx + dy * dy);
     double turn_factor = polyline_turn_factor(x, y, n, i);
-    int pieces = (int) fmax(1.0, ceil(seg_len / 120.0));
+    int pieces = (int) fmax(1.0, ceil(seg_len / sample_step));
     int j;
 
     for (j = 1; j <= pieces; ++j) {
@@ -1020,16 +1010,8 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
 
     cumulative_len += seg_len;
   }
-  eval_profile_vector(brush_hand->pressure_fun, "pressure", profile_t, profile_turn, profile_n, total_len, 1.0, 1, 0, pressure);
+  eval_profile_vector(pressure_override == R_NilValue ? brush_hand->pressure_fun : pressure_override, "pressure", profile_t, profile_turn, profile_n, total_len, 1.0, 1, 0, pressure);
   eval_profile_vector(brush_hand->speed_fun, "speed", profile_t, profile_turn, profile_n, total_len, 1.0, 0, 1, speed);
-  if (dash_pattern_n > 0) {
-    for (i = 0; i < profile_n; ++i) {
-      double distance = profile_t[i] * total_len;
-      if (!dash_pattern_on(dash_pattern, dash_pattern_n, distance)) {
-        pressure[i] = 0.0;
-      }
-    }
-  }
 
   mypaint_brush_reset(brush->brush);
   mypaint_brush_new_stroke(brush->brush);
@@ -1062,7 +1044,7 @@ static void render_polyline_solid(MypaintrDevice *dev, MypaintrBrush *brush, con
     double dx = x[i] - sx;
     double dy = y[i] - sy;
     double seg_len = sqrt(dx * dx + dy * dy);
-    int pieces = (int) fmax(1.0, ceil(seg_len / 120.0));
+    int pieces = (int) fmax(1.0, ceil(seg_len / sample_step));
     int j;
 
     for (j = 1; j <= pieces; ++j) {
@@ -1281,21 +1263,28 @@ static void solid_stroke_polyline(MypaintrDevice *dev, const double *x, const do
 static void render_polyline(MypaintrDevice *dev, MypaintrBrush *brush, const double *x, const double *y, int n, int col, double lwd, int lty, const MypaintrHand *hand) {
   double pattern[8];
   int pattern_n = decode_lty(lty, device_lwd(dev, lwd), pattern, 8);
+  SEXP pressure_override;
 
   if (n < 2 || R_ALPHA(col) == 0 || lty == LTY_BLANK) {
     return;
   }
 
   if (pattern_n <= 0) {
-    render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, NULL, 0);
+    render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, R_NilValue);
     return;
   }
 
-  if (!standard_dash_lty(lty)) {
+  if (!(lty == LTY_DASHED ||
+      lty == LTY_DOTTED ||
+      lty == LTY_DOTDASH ||
+      lty == LTY_LONGDASH ||
+      lty == LTY_TWODASH)) {
     error("custom dash patterns are not supported by mypaint_device() brush rendering; use lty = 1:6 or an explicit pressure profile");
   }
 
-  render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, pattern, pattern_n);
+  pressure_override = PROTECT(make_dashed_pressure_profile(pattern, pattern_n));
+  render_polyline_solid(dev, brush, x, y, n, col, lwd, hand, pressure_override);
+  UNPROTECT(1);
 }
 
 static void render_polyline_mode(MypaintrDevice *dev, MypaintrBrush *brush, int render_style, const double *x, const double *y, int n, int col, double lwd, int lty, int closed) {
