@@ -143,8 +143,8 @@ rendering only.</p></dd>
     <p><code>hand()</code> defaults to plain, base-R-like geometry with no bowing, wobble, or
 jitter and flat pressure and speed. <code>human_hand()</code> has different, more
 human-like defaults, including <code><a href="pressure_flat.html">pressure_human()</a></code> and <code><a href="speed_flat.html">speed_human()</a></code>.</p>
-<p>As of now, pressure profiles only apply to open lines, not shape outlines. On
-base R devices, they are simulated and affect line width.</p>
+<p>Pressure and speed profile functions are called with <code>t</code>, <code>turn</code>, and
+<code>length</code>, where <code>length</code> is the total stroke length in device units.</p>
 <p>The <code>speed</code>, <code>xtilt</code>, <code>ytilt</code>, and <code>barrel_rotation</code> arguments affect only
 brush rendering on <code><a href="mypaint_device.html">mypaint_device()</a></code>. They are ignored by standard graphics
 devices.</p>

@@ -106,8 +106,8 @@ more human-like defaults, including
 and
 [`speed_human()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md).
 
-As of now, pressure profiles only apply to open lines, not shape
-outlines. On base R devices, they are simulated and affect line width.
+Pressure and speed profile functions are called with `t`, `turn`, and
+`length`, where `length` is the total stroke length in device units.
 
 The `speed`, `xtilt`, `ytilt`, and `barrel_rotation` arguments affect
 only brush rendering on

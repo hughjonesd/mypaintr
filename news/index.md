@@ -7,9 +7,10 @@
   [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   now accept `speed`, `pressure`, `xtilt`, `ytilt`, and
   `barrel_rotation` for libmypaint brush rendering.
-- Pressure and speed profiles (`pressure_flat/human/smooth()`,
-  `speed_flat/human()`) let you vary speed and pressure over the whole
-  stroke.
+- Pressure and speed profiles (`pressure_*()`, `speed_*()`) let you vary
+  speed and pressure over the whole stroke.
+- Dashed lines (`lty` from 2 to 6) are implemented using
+  [`pressure_dashed()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md).
 - Hand `wobble` and `bow` are now smoother.
 - [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
   defaults are less wobbly and bowed.

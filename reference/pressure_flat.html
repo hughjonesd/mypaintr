@@ -57,7 +57,11 @@
 <span>  end <span class="op">=</span> <span class="fl">0.55</span>,</span>
 <span>  peak <span class="op">=</span> <span class="fl">0.45</span>,</span>
 <span>  turn_taper <span class="op">=</span> <span class="fl">0.35</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">pressure_dashed</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">1</span>, pattern <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">pressure_dashed_smooth</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">1</span>, pattern <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">12</span><span class="op">)</span>, taper <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -87,15 +91,23 @@ stroke when <code>taper = 1</code>.</p></dd>
 <dd><p>Position of peak pressure along the stroke, in the range <code>0</code> to
 <code>1</code>.</p></dd>
 
+
+<dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
+<dd><p>Alternating on/off dash lengths in device units. The default
+uses a 2:1 on/off ratio like base R's dashed line, at a moderate brush-scale
+length.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A pressure-profile function for the <code>pressure</code> argument of <code><a href="hand.html">hand()</a></code>
 and <code><a href="hand.html">human_hand()</a></code>. Custom functions can also be supplied directly; they
-must accept <code>t</code>, normalized stroke progress in the range <code>0</code> to <code>1</code>, and
-<code>turn</code> in the range <code>0</code> to <code>1</code>. <code>turn</code> describes local path curvature:
-<code>0</code> is straight, larger values are sharper corners, and values near <code>1</code>
-are near reversals.</p>
+must accept <code>t</code>, normalized stroke progress in the range <code>0</code> to <code>1</code>,
+<code>turn</code> in the range <code>0</code> to <code>1</code>, and <code>length</code>, the total stroke length in
+device units. <code>turn</code> describes local path curvature: <code>0</code> is straight,
+larger values are sharper corners, and values near <code>1</code> are near reversals.
+Custom functions must be vectorized over <code>t</code> and <code>turn</code>, and return either
+length <code>1</code> or <code>length(t)</code>.</p>
     </div>
 
     <div class="section level2">

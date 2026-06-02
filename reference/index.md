@@ -30,6 +30,8 @@
 - [`pressure_flat()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
   [`pressure_smooth()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
   [`pressure_human()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
+  [`pressure_dashed()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
+  [`pressure_dashed_smooth()`](https://hughjonesd.github.io/mypaintr/reference/pressure_flat.md)
   : Pressure profiles for hand-drawn strokes
 - [`speed_flat()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md)
   [`speed_human()`](https://hughjonesd.github.io/mypaintr/reference/speed_flat.md)

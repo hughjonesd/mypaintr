@@ -59,8 +59,11 @@ A speed-profile function for the `speed` argument of
 [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md) and
 [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md).
 Custom functions can also be supplied directly; they must accept `t`,
-normalized stroke progress in the range `0` to `1`, and `turn` in the
-range `0` to `1`. Speed profiles return positive speed multipliers.
+normalized stroke progress in the range `0` to `1`, `turn` in the range
+`0` to `1`, and `length`, the total stroke length in device units. Speed
+profiles return positive speed multipliers. Custom functions must be
+vectorized over `t` and `turn`, and return either length `1` or
+`length(t)`.
 
 ## Examples
 

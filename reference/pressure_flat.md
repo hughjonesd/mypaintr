@@ -17,6 +17,10 @@ pressure_human(
   peak = 0.45,
   turn_taper = 0.35
 )
+
+pressure_dashed(value = 1, pattern = c(24, 12))
+
+pressure_dashed_smooth(value = 1, pattern = c(24, 12), taper = 1)
 ```
 
 ## Arguments
@@ -43,16 +47,24 @@ pressure_human(
 
   Position of peak pressure along the stroke, in the range `0` to `1`.
 
+- pattern:
+
+  Alternating on/off dash lengths in device units. The default uses a
+  2:1 on/off ratio like base R's dashed line, at a moderate brush-scale
+  length.
+
 ## Value
 
 A pressure-profile function for the `pressure` argument of
 [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md) and
 [`human_hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md).
 Custom functions can also be supplied directly; they must accept `t`,
-normalized stroke progress in the range `0` to `1`, and `turn` in the
-range `0` to `1`. `turn` describes local path curvature: `0` is
-straight, larger values are sharper corners, and values near `1` are
-near reversals.
+normalized stroke progress in the range `0` to `1`, `turn` in the range
+`0` to `1`, and `length`, the total stroke length in device units.
+`turn` describes local path curvature: `0` is straight, larger values
+are sharper corners, and values near `1` are near reversals. Custom
+functions must be vectorized over `t` and `turn`, and return either
+length `1` or `length(t)`.
 
 ## Examples
 
