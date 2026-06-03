@@ -66,6 +66,21 @@ jobs:
         if: runner.os == 'macOS'
         run: R -q -e 'requireNamespace("ggplot2", quietly = TRUE)'
 
+      - name: Debug macOS test crash under lldb
+        if: runner.os == 'macOS'
+        run: |
+          R CMD INSTALL --preclean .
+          cat > /tmp/mypaintr-testthat.R <<'EOF'
+          library(testthat)
+          library(mypaintr)
+          test_check("mypaintr")
+          EOF
+          R_EXEC="$(R RHOME)/bin/exec/R"
+          lldb --batch \
+            -o "run" \
+            -k "thread backtrace all" \
+            -- "$R_EXEC" --vanilla -f /tmp/mypaintr-testthat.R
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: always
