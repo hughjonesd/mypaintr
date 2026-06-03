@@ -477,7 +477,7 @@ set_brush(tweak_brush(pen, radius_by_random = 0.2))
 abline(h = 1, lwd = 3)
 
 dev.off()
-#> agg_record_1dcc5bff8476 
+#> agg_record_1dd271b295d0 
 #>                       2 
 img <- png::readPNG(ex_file)
 grid::grid.raster(img)
