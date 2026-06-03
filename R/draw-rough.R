@@ -428,6 +428,13 @@ draw_pressure_path <- function(path, hand_spec, args, closed = FALSE) {
   TRUE
 }
 
+with_mypaintr_rough_hand <- function(hand_spec, expr) {
+  state <- current_device_style()
+  on.exit(apply_device_style_state(state), add = TRUE)
+  set_hand(hand_spec)
+  invisible(force(expr))
+}
+
 #' @rdname rough_lines
 #' @param ... Graphics parameters passed to [graphics::lines()].
 #' @examples
@@ -441,6 +448,18 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
   xy <- grDevices::xy.coords(x, y)
   ok <- stats::complete.cases(xy$x, xy$y)
   groups <- cumsum(!ok)
+
+  if (is_mypaintr_device()) {
+    return(with_mypaintr_rough_hand(hand_spec, {
+      for (g in unique(groups[ok])) {
+        keep <- ok & groups == g
+        if (sum(keep) >= 2L) {
+          graphics::lines(xy$x[keep], xy$y[keep], ...)
+        }
+      }
+      NULL
+    }))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     for (g in unique(groups[ok])) {
@@ -467,6 +486,12 @@ draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
 #' @export
 draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
+  if (is_mypaintr_device()) {
+    return(with_mypaintr_rough_hand(hand_spec, {
+      graphics::segments(x0, y0, x1, y1, ...)
+    }))
+  }
+
   invisible(with_hand_seed(hand_spec$seed, {
     for (j in seq_len(max(1L, hand_spec$multi_stroke))) {
       geom <- rough_segments_data(x0, y0, x1, y1, hand_spec)
@@ -494,6 +519,18 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
 draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
                               hand = NULL, ...) {
   hand_spec <- as_hand(hand)
+
+  if (is_mypaintr_device()) {
+    return(with_mypaintr_rough_hand(hand_spec, {
+      graphics::segments(x0, y0, x1, y1, ...)
+      heads <- arrowhead_segments(x0, y0, x1, y1, length = length, angle = angle, code = code)
+      if (base::length(heads$x0)) {
+        graphics::segments(heads$x0, heads$y0, heads$x1, heads$y1, ...)
+      }
+      NULL
+    }))
+  }
+
   hand_draw <- hand_spec
   hand_draw$seed <- NULL
 
@@ -530,12 +567,8 @@ draw_mypaintr_rough_shape <- function(primitive, shape_args, paths, hand_spec,
                                       fill_pattern, col, border, rule = NULL, ...) {
   dots <- list(...)
 
-  state <- current_device_style()
-  on.exit(apply_device_style_state(state), add = TRUE)
-  set_hand(hand_spec)
-
   neutral_hand <- hand(seed = hand_spec$seed)
-  invisible(with_hand_seed(seed = neutral_hand$seed, expr = {
+  with_mypaintr_rough_hand(hand_spec, with_hand_seed(seed = neutral_hand$seed, expr = {
     if (is.null(fill_pattern)) {
       if (is_visible_col(col) || is_visible_col(border)) {
         do.call(primitive, c(shape_args, list(col = col, border = border), dots))
@@ -766,6 +799,12 @@ draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {
   xy <- grDevices::xy.coords(x, y)
   usr <- graphics::par("usr")
   scale <- 0.01 * sqrt((usr[2] - usr[1]) * (usr[4] - usr[3]))
+
+  if (is_mypaintr_device()) {
+    return(with_mypaintr_rough_hand(hand_spec, {
+      graphics::points(xy$x, xy$y, ...)
+    }))
+  }
 
   invisible(with_hand_seed(hand_spec$seed, {
     for (i in seq_len(max(1L, hand_spec$multi_stroke))) {
