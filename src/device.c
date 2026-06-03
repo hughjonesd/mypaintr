@@ -2163,7 +2163,7 @@ static void init_dev_desc(pDevDesc dd, MypaintrDevice *dev) {
   dd->strWidthUTF8 = mypaintr_str_width_utf8;
   dd->wantSymbolUTF8 = FALSE;
   dd->useRotatedTextInContour = TRUE;
-  dd->deviceVersion = R_GE_glyphs;
+  dd->deviceVersion = R_GE_group;
   dd->deviceClip = FALSE;
   dd->defineGroup = mypaintr_define_group;
   dd->useGroup = mypaintr_use_group;

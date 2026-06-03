@@ -62,19 +62,6 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - name: Smoke load ggplot2 on macOS
-        if: runner.os == 'macOS'
-        run: R -q -e 'requireNamespace("ggplot2", quietly = TRUE)'
-
-      - name: Debug macOS R CMD check tests under lldb
-        if: runner.os == 'macOS'
-        env:
-          MYPAINTR_LLDB_TESTTHAT: true
-        run: |
-          R CMD build --no-manual --compact-vignettes=gs+qpdf .
-          PKG_TARBALL="$(ls -t mypaintr_*.tar.gz | head -n 1)"
-          R CMD check --no-manual --as-cran "$PKG_TARBALL"
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: always

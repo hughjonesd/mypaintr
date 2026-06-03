@@ -23,16 +23,12 @@ test_that("representative brushes render repeatably on the canonical snapshot pl
   for (brush in snapshot_brushes) {
     testthat::skip_if_not(brush %in% available, paste("brush is unavailable:", brush))
     stable_brush <- deterministic_brush(brush)
-    ci_trace("repeatability", brush, "first")
     first <- render_brush_scene(stable_brush)
-    ci_trace("repeatability", brush, "second")
     second <- render_brush_scene(stable_brush)
-    ci_trace("repeatability", brush, "compare")
     testthat::expect_true(
       compare_png_stable(first, second),
       info = paste("brush should render repeatably:", brush)
     )
-    ci_trace("repeatability", brush, "done")
   }
 })
 
@@ -40,7 +36,6 @@ test_that("stable brush snapshots cover a representative brush matrix", {
   available <- brushes()
   for (brush in snapshot_brushes) {
     testthat::skip_if_not(brush %in% available, paste("brush is unavailable:", brush))
-    ci_trace("snapshot", brush, "start")
     expect_mypaintr_snapshot(
       paste0("brush-", gsub("[^A-Za-z0-9]+", "-", brush)),
       "mypaint",
@@ -56,6 +51,5 @@ test_that("stable brush snapshots cover a representative brush matrix", {
         graphics::lines(c(0.6, 9.4), c(2, 2), col = "yellow")
       }
     )
-    ci_trace("snapshot", brush, "done")
   }
 })

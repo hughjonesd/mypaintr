@@ -63,9 +63,7 @@ test_that("mypaint device snapshots default NULL brush and default rough hand", 
 })
 
 test_that("mypaint_wrap snapshots a ggplot layer on mypaint device", {
-  ci_trace("ggplot", "skip_if_not_installed", "start")
   testthat::skip_if_not_installed("ggplot2")
-  ci_trace("ggplot", "skip_if_not_installed", "done")
   expect_mypaintr_snapshot("ggplot-wrapped-layer", "mypaint", brush = deterministic_brush("classic/pen"), {
     p <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
       mypaint_wrap(
