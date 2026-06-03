@@ -73,7 +73,6 @@ test_that("pressure profiles snapshot on mypaint device", {
   pressure_brush <- deterministic_brush("classic/pen")
   expect_mypaintr_snapshot("pressure-profiles", "mypaint", brush = pressure_brush, {
     setup_plot_window()
-    graphics::rect(0, 0, 10, 10, col = "white", border = NA)
     profiles <- list(
       pressure_flat(0.8),
       pressure_smooth(value = 1, taper = 0.35),
