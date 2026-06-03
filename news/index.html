@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mypaintr</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.0.1.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Unreleased version">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="mypaintr-development-version">mypaintr (development version)<a class="anchor" aria-label="anchor" href="#mypaintr-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="mypaintr-010">mypaintr 0.1.0<a class="anchor" aria-label="anchor" href="#mypaintr-010"></a></h2>
 <ul><li>
 <code><a href="../reference/hand.html">hand()</a></code> and <code><a href="../reference/hand.html">human_hand()</a></code> now accept <code>speed</code>, <code>pressure</code>, <code>xtilt</code>, <code>ytilt</code>, and <code>barrel_rotation</code> for libmypaint brush rendering.</li>
 <li>Pressure and speed profiles (<code>pressure_*()</code>, <code>speed_*()</code>) let you vary speed and pressure over the whole stroke.</li>
@@ -50,6 +50,7 @@
 <code><a href="../reference/hand.html">human_hand()</a></code> defaults are less wobbly and bowed.</li>
 <li>mypaintr now use the libmypaint backend for blending, rather than its own hand-rolled solution.</li>
 <li>Updated libmypaint to vendor the whole source and fix build problems.</li>
+<li>We now have tests including many snapshot tests. I guess that means this is a real package…</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.1" id="mypaintr-001">mypaintr 0.0.1<a class="anchor" aria-label="anchor" href="#mypaintr-001"></a></h2>
