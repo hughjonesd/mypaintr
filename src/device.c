@@ -79,10 +79,6 @@ typedef struct {
   int height;
   int stride;
   int tile_size;
-  int tile_cols;
-  int tile_rows;
-  guint16 *tile_cache;
-  unsigned char *tile_valid;
   double res;
   double pointsize;
   int bg;
@@ -674,9 +670,6 @@ static void clear_device(MypaintrDevice *dev, int col) {
   set_cairo_source(dev->cr, col);
   cairo_paint(dev->cr);
   cairo_restore(dev->cr);
-  if (dev->tile_valid) {
-    memset(dev->tile_valid, 0, (size_t) dev->tile_cols * (size_t) dev->tile_rows);
-  }
 }
 
 static char *page_filename(const MypaintrDevice *dev, int page) {
@@ -777,14 +770,8 @@ static void brush_apply_spec(MypaintrBrush *slot, SEXP spec) {
   slot->base_opaque_multiply = mypaint_brush_get_base_value(slot->brush, MYPAINT_BRUSH_SETTING_OPAQUE_MULTIPLY);
 }
 
-static size_t tile_cache_index(const MypaintrDevice *dev, int tx, int ty) {
-  return (size_t) ty * (size_t) dev->tile_cols + (size_t) tx;
-}
-
 static void invalidate_tile_cache(MypaintrDevice *dev) {
-  if (dev->tile_valid) {
-    memset(dev->tile_valid, 0, (size_t) dev->tile_cols * (size_t) dev->tile_rows);
-  }
+  (void) dev;
 }
 
 static void tile_request_start(MyPaintTiledSurface2 *surface, MyPaintTileRequest *request) {
@@ -792,21 +779,14 @@ static void tile_request_start(MyPaintTiledSurface2 *surface, MyPaintTileRequest
   int tile_size = dev->tile_size;
   int base_x = request->tx * tile_size;
   int base_y = request->ty * tile_size;
-  int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
-  size_t tile_idx = cached ? tile_cache_index(dev, request->tx, request->ty) : 0;
-  guint16 *buffer = cached ?
-    dev->tile_cache + tile_idx * (size_t) tile_size * (size_t) tile_size * 4U :
-    (guint16 *) calloc((size_t) tile_size * (size_t) tile_size * 4U, sizeof(guint16));
+  guint16 *buffer = (guint16 *) calloc((size_t) tile_size * (size_t) tile_size * 4U, sizeof(guint16));
 
   if (!buffer) {
     error("failed to allocate libmypaint tile buffer");
   }
 
   request->buffer = buffer;
-  request->context = cached ? NULL : buffer;
-  if (cached && dev->tile_valid[tile_idx]) {
-    return;
-  }
+  request->context = buffer;
 
   cairo_surface_flush(dev->image_surface);
   for (int row = 0; row < tile_size; ++row) {
@@ -827,9 +807,6 @@ static void tile_request_start(MyPaintTiledSurface2 *surface, MyPaintTileRequest
       dst[3] = (guint16) (((unsigned int) src[3] * 32768U + 127U) / 255U);
     }
   }
-  if (cached) {
-    dev->tile_valid[tile_idx] = 1;
-  }
 }
 
 static void tile_request_end(MyPaintTiledSurface2 *surface, MyPaintTileRequest *request) {
@@ -837,10 +814,7 @@ static void tile_request_end(MyPaintTiledSurface2 *surface, MyPaintTileRequest *
   int tile_size = dev->tile_size;
   int base_x = request->tx * tile_size;
   int base_y = request->ty * tile_size;
-  int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
-  guint16 *buffer = cached ?
-    dev->tile_cache + tile_cache_index(dev, request->tx, request->ty) * (size_t) tile_size * (size_t) tile_size * 4U :
-    (guint16 *) request->context;
+  guint16 *buffer = (guint16 *) request->context;
   int dirty_left = dev->width;
   int dirty_right = -1;
   int dirty_top = dev->height;
@@ -884,9 +858,7 @@ static void tile_request_end(MyPaintTiledSurface2 *surface, MyPaintTileRequest *
     }
   }
 
-  if (!cached) {
-    free(buffer);
-  }
+  free(buffer);
   request->buffer = NULL;
   request->context = NULL;
 }
@@ -1656,8 +1628,6 @@ static void destroy_device_state(MypaintrDevice *dev) {
   mypaint_tiled_surface2_destroy(&dev->surface);
   if (dev->cr) cairo_destroy(dev->cr);
   if (dev->image_surface) cairo_surface_destroy(dev->image_surface);
-  free(dev->tile_cache);
-  free(dev->tile_valid);
   free(dev->filename);
   free(dev);
 }
@@ -2206,8 +2176,6 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
   dev->width = width;
   dev->height = height;
   dev->tile_size = MYPAINT_TILE_SIZE;
-  dev->tile_cols = (width + dev->tile_size - 1) / dev->tile_size;
-  dev->tile_rows = (height + dev->tile_size - 1) / dev->tile_size;
   dev->res = res;
   dev->pointsize = pointsize;
   dev->bg = bg;
@@ -2230,23 +2198,8 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
 
   dev->data = cairo_image_surface_get_data(dev->image_surface);
   dev->stride = cairo_image_surface_get_stride(dev->image_surface);
-  dev->tile_cache = (guint16 *) calloc(
-    (size_t) dev->tile_cols * (size_t) dev->tile_rows * (size_t) dev->tile_size * (size_t) dev->tile_size * 4U,
-    sizeof(guint16)
-  );
-  dev->tile_valid = (unsigned char *) calloc((size_t) dev->tile_cols * (size_t) dev->tile_rows, sizeof(unsigned char));
-  if (!dev->tile_cache || !dev->tile_valid) {
-    free(dev->tile_cache);
-    free(dev->tile_valid);
-    cairo_surface_destroy(dev->image_surface);
-    free(dev->filename);
-    free(dev);
-    error("failed to allocate libmypaint tile cache");
-  }
   dev->cr = cairo_create(dev->image_surface);
   if (cairo_status(dev->cr) != CAIRO_STATUS_SUCCESS) {
-    free(dev->tile_cache);
-    free(dev->tile_valid);
     cairo_surface_destroy(dev->image_surface);
     free(dev->filename);
     free(dev);
