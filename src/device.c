@@ -2276,7 +2276,7 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
 
   init_dev_desc(dd, dev);
   gdd = GEcreateDevDesc(dd);
-  GEaddDevice2f(gdd, "mypaintr", CHAR(STRING_ELT(filename, 0)));
+  GEaddDevice2f(gdd, "mypaintr", dev->filename);
   GEinitDisplayList(gdd);
 
   return R_NilValue;
