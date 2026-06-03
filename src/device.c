@@ -1,5 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
+#include <Rversion.h>
 #include <R_ext/Boolean.h>
 #include <R_ext/GraphicsEngine.h>
 #include <R_ext/Rdynload.h>
@@ -2293,7 +2294,11 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
     fill_hand
   );
 
+#if R_VERSION >= R_Version(4, 6, 0)
   dd = GEcreateDD();
+#else
+  dd = (pDevDesc) calloc(1, sizeof(DevDesc));
+#endif
   if (!dd) {
     destroy_device_state(dev);
     error("failed to allocate device descriptor");
