@@ -280,17 +280,19 @@ static SEXP list_element(SEXP list, const char *name) {
 }
 
 static void replace_preserved(SEXP *slot, SEXP value) {
-  if (*slot && *slot != R_NilValue) {
-    R_ReleaseObject(*slot);
+  SEXP old = *slot;
+  SEXP copy = R_NilValue;
+
+  if (value != R_NilValue) {
+    copy = PROTECT(Rf_duplicate(value));
+    R_PreserveObject(copy);
+    UNPROTECT(1);
   }
 
-  if (value == R_NilValue) {
-    *slot = R_NilValue;
-    return;
+  if (old && old != R_NilValue) {
+    R_ReleaseObject(old);
   }
-
-  *slot = Rf_duplicate(value);
-  R_PreserveObject(*slot);
+  *slot = copy;
 }
 
 static SEXP duplicate_or_nil(SEXP value) {
