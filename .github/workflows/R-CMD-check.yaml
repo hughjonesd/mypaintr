@@ -66,20 +66,14 @@ jobs:
         if: runner.os == 'macOS'
         run: R -q -e 'requireNamespace("ggplot2", quietly = TRUE)'
 
-      - name: Debug macOS test crash under lldb
+      - name: Debug macOS R CMD check tests under lldb
         if: runner.os == 'macOS'
+        env:
+          MYPAINTR_LLDB_TESTTHAT: true
         run: |
-          R CMD INSTALL --preclean .
-          cat > /tmp/mypaintr-testthat.R <<'EOF'
-          library(testthat)
-          library(mypaintr)
-          test_check("mypaintr")
-          EOF
-          R_EXEC="$(R RHOME)/bin/exec/R"
-          lldb --batch \
-            -o "run" \
-            -k "thread backtrace all" \
-            -- "$R_EXEC" --vanilla -f /tmp/mypaintr-testthat.R
+          R CMD build --no-manual --compact-vignettes=gs+qpdf .
+          PKG_TARBALL="$(ls -t mypaintr_*.tar.gz | head -n 1)"
+          R CMD check --no-manual --as-cran "$PKG_TARBALL"
 
       - uses: r-lib/actions/check-r-package@v2
         with:
