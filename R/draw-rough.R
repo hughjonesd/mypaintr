@@ -45,21 +45,98 @@ rough_segment_path <- function(x0, y0, x1, y1, hand_spec) {
   )
 }
 
-rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
+rough_stroke_count <- function(strokes) {
+  max(1L, as.integer(strokes))
+}
+
+rough_path_data <- function(paths, hand_spec, closed = FALSE, strokes = 1L,
+                            min_points = 1L) {
+  out_x <- numeric()
+  out_y <- numeric()
+  out_id <- integer()
+  next_id <- 0L
+
+  for (stroke in seq_len(rough_stroke_count(strokes))) {
+    for (path in paths) {
+      if (length(path$x) < min_points) {
+        next
+      }
+      rough <- roughen_vertex_path(path$x, path$y, hand_spec, closed = closed)
+      next_id <- next_id + 1L
+      out_x <- c(out_x, rough$x)
+      out_y <- c(out_y, rough$y)
+      out_id <- c(out_id, rep.int(next_id, length(rough$x)))
+    }
+  }
+
+  list(x = out_x, y = out_y, id = out_id)
+}
+
+rough_segment_data <- function(x0, y0, x1, y1, hand_spec, strokes = 1L) {
   n <- max(length(x0), length(y0), length(x1), length(y1))
   x0 <- rep_len(x0, n)
   y0 <- rep_len(y0, n)
   x1 <- rep_len(x1, n)
   y1 <- rep_len(y1, n)
 
+  paths <- vector("list", n)
+  for (i in seq_len(n)) {
+    paths[[i]] <- list(x = c(x0[i], x1[i]), y = c(y0[i], y1[i]))
+  }
+
+  rough_path_data(paths, hand_spec, closed = FALSE, strokes = strokes, min_points = 2L)
+}
+
+rough_line_paths <- function(x, y = NULL) {
+  xy <- grDevices::xy.coords(x, y)
+  ok <- stats::complete.cases(xy$x, xy$y)
+  groups <- cumsum(!ok)
+  keep_groups <- unique(groups[ok])
+
+  paths <- list()
+  for (group in keep_groups) {
+    keep <- ok & groups == group
+    if (sum(keep) >= 2L) {
+      paths[[length(paths) + 1L]] <- list(x = xy$x[keep], y = xy$y[keep])
+    }
+  }
+
+  paths
+}
+
+rough_line_data <- function(x, y = NULL, hand_spec, strokes = 1L) {
+  rough_path_data(
+    rough_line_paths(x, y),
+    hand_spec,
+    closed = FALSE,
+    strokes = strokes,
+    min_points = 2L
+  )
+}
+
+rough_polygon_data <- function(x, y = NULL, hand_spec, strokes = 1L) {
+  xy <- grDevices::xy.coords(x, y)
+  rough_path_data(
+    list(list(x = xy$x, y = xy$y)),
+    hand_spec,
+    closed = TRUE,
+    strokes = strokes,
+    min_points = 1L
+  )
+}
+
+rough_points_data <- function(x, y = NULL, hand_spec, strokes = 1L) {
+  xy <- grDevices::xy.coords(x, y)
+  usr <- graphics::par("usr")
+  scale <- 0.01 * sqrt((usr[2] - usr[1]) * (usr[4] - usr[3]))
+
   out_x <- numeric()
   out_y <- numeric()
   out_id <- integer()
-  for (i in seq_len(n)) {
-    seg <- rough_segment_path(x0[i], y0[i], x1[i], y1[i], hand_spec)
-    out_x <- c(out_x, seg$x)
-    out_y <- c(out_y, seg$y)
-    out_id <- c(out_id, rep.int(i, length(seg$x)))
+  for (stroke in seq_len(rough_stroke_count(strokes))) {
+    out_x <- c(out_x, xy$x + stats::rnorm(length(xy$x), sd = hand_spec$endpoint_jitter * scale))
+    out_y <- c(out_y, xy$y + stats::rnorm(length(xy$y), sd = hand_spec$endpoint_jitter * scale))
+    out_id <- c(out_id, rep.int(stroke, length(xy$x)))
   }
 
   list(x = out_x, y = out_y, id = out_id)
@@ -71,13 +148,14 @@ rough_segments_data <- function(x0, y0, x1, y1, hand_spec) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x` and `y` components containing a roughened closed
 #'   outline suitable for plotting with [graphics::lines()].
+#' @inheritSection rough_lines Rough geometry layer
 #' @export
 rough_polygons <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
-  xy <- grDevices::xy.coords(x, y)
 
   with_hand_seed(hand_spec$seed, {
-    roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
+    geom <- rough_polygon_data(x, y, hand_spec)
+    list(x = geom$x, y = geom$y)
   })
 }
 
@@ -89,6 +167,7 @@ rough_polygons <- function(x, y = NULL, hand = NULL) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x` and `y` components containing a roughened closed
 #'   outline suitable for plotting with [graphics::lines()].
+#' @inheritSection rough_lines Rough geometry layer
 #' @export
 rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
   rough_polygons(
@@ -105,33 +184,13 @@ rough_rect <- function(x0, y0, x1, y1, hand = NULL) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x`, `y`, and `id` components describing roughened
 #'   polyline geometry for each segment.
+#' @inheritSection rough_lines Rough geometry layer
 #' @export
 rough_segments <- function(x0, y0, x1, y1, hand = NULL) {
   hand_spec <- as_hand(hand)
   with_hand_seed(hand_spec$seed, {
-    rough_segments_data(x0, y0, x1, y1, hand_spec)
+    rough_segment_data(x0, y0, x1, y1, hand_spec)
   })
-}
-
-rough_lines_data <- function(x, y = NULL, hand_spec) {
-  xy <- grDevices::xy.coords(x, y)
-  ok <- stats::complete.cases(xy$x, xy$y)
-  groups <- cumsum(!ok)
-  keep_groups <- unique(groups[ok])
-
-  out_x <- numeric()
-  out_y <- numeric()
-  out_id <- integer()
-  for (i in seq_along(keep_groups)) {
-    keep <- ok & groups == keep_groups[[i]]
-    if (sum(keep) >= 2L) {
-      out_x <- c(out_x, xy$x[keep])
-      out_y <- c(out_y, xy$y[keep])
-      out_id <- c(out_id, rep.int(i, sum(keep)))
-    }
-  }
-
-  list(x = out_x, y = out_y, id = out_id)
 }
 
 #' Compute or draw rough connected lines
@@ -140,11 +199,16 @@ rough_lines_data <- function(x, y = NULL, hand_spec) {
 #' @inheritParams mypaintr-rough-hand
 #' @return A list with `x`, `y`, and `id` components describing roughened
 #'   polyline geometry for each connected run.
+#' @section Rough geometry layer:
+#' On standard graphics devices, `draw_rough_*()` helpers render paths generated
+#' by the same rough geometry layer as their `rough_*()` counterparts. On
+#' [mypaint_device()] outputs, they pass clean graphics primitives to the native
+#' renderer so brush strokes and path roughening are handled by the device.
 #' @export
 rough_lines <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
   with_hand_seed(hand_spec$seed, {
-    rough_lines_data(x, y, hand_spec)
+    rough_line_data(x, y, hand_spec)
   })
 }
 
@@ -217,36 +281,45 @@ arrowhead_segments <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code =
 #' @inheritParams mypaintr-rough-hand
 #' @return A list with `x`, `y`, and `id` components describing roughened
 #'   polyline geometry for arrow shafts and heads.
+#' @inheritSection rough_lines Rough geometry layer
 #' @export
 rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
                          hand = NULL) {
   hand_spec <- as_hand(hand)
   with_hand_seed(hand_spec$seed, {
-    body <- rough_segments_data(x0, y0, x1, y1, hand_spec)
-    heads <- arrowhead_segments(x0, y0, x1, y1, length = length, angle = angle, code = code)
-    if (!base::length(heads$x0)) {
-      return(body)
-    }
-    heads_geom <- rough_segments_data(heads$x0, heads$y0, heads$x1, heads$y1, hand_spec)
-    list(
-      x = c(body$x, heads_geom$x),
-      y = c(body$y, heads_geom$y),
-      id = c(body$id, heads_geom$id + max(body$id, 0L))
-    )
+    rough_arrow_data(x0, y0, x1, y1, length = length, angle = angle, code = code, hand_spec = hand_spec)
   })
 }
 
-rough_polypath_data <- function(paths, hand_spec, rule) {
-  out_x <- numeric()
-  out_y <- numeric()
-  out_id <- integer()
-  for (i in seq_along(paths)) {
-    path <- roughen_vertex_path(paths[[i]]$x, paths[[i]]$y, hand_spec, closed = TRUE)
-    out_x <- c(out_x, path$x)
-    out_y <- c(out_y, path$y)
-    out_id <- c(out_id, rep.int(i, length(path$x)))
+rough_arrow_data <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 2,
+                             hand_spec, strokes = 1L) {
+  heads <- arrowhead_segments(x0, y0, x1, y1, length = length, angle = angle, code = code)
+  out <- list(x = numeric(), y = numeric(), id = integer())
+  next_id <- 0L
+
+  for (stroke in seq_len(rough_stroke_count(strokes))) {
+    body <- rough_segment_data(x0, y0, x1, y1, hand_spec)
+    out$x <- c(out$x, body$x)
+    out$y <- c(out$y, body$y)
+    out$id <- c(out$id, body$id + next_id)
+    next_id <- if (length(out$id)) max(out$id) else next_id
+
+    if (base::length(heads$x0)) {
+      heads_geom <- rough_segment_data(heads$x0, heads$y0, heads$x1, heads$y1, hand_spec)
+      out$x <- c(out$x, heads_geom$x)
+      out$y <- c(out$y, heads_geom$y)
+      out$id <- c(out$id, heads_geom$id + next_id)
+      next_id <- if (length(out$id)) max(out$id) else next_id
+    }
   }
-  list(x = out_x, y = out_y, id = out_id, rule = rule)
+
+  out
+}
+
+rough_polypath_data <- function(paths, hand_spec, rule, strokes = 1L) {
+  geom <- rough_path_data(paths, hand_spec, closed = TRUE, strokes = strokes, min_points = 1L)
+  geom$rule <- rule
+  geom
 }
 
 split_polypath <- function(x, y = NULL, id = NULL) {
@@ -272,6 +345,7 @@ split_polypath <- function(x, y = NULL, id = NULL) {
 #' @param hand Hand-drawn geometry settings created with [hand()].
 #' @return A list with `x`, `y`, `id`, and `rule` components describing
 #'   roughened closed rings.
+#' @inheritSection rough_lines Rough geometry layer
 #' @export
 rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"), hand = NULL) {
   hand_spec <- as_hand(hand)
@@ -284,22 +358,17 @@ rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "evenodd"
 }
 
 
-draw_path_strokes <- function(path, hand_spec, draw_fun, ..., closed = FALSE, base_path = NULL) {
+draw_rough_path_data <- function(geom, hand_spec, draw_fun, ..., closed = FALSE) {
   args <- list(...)
-  strokes <- max(1L, as.integer(hand_spec$multi_stroke))
-  for (i in seq_len(strokes)) {
-    lwd <- args$lwd %||% graphics::par("lwd")
-    jittered_lwd <- max(0.01, lwd * (1 + stats::rnorm(1, sd = hand_spec$width_jitter)))
-    path_i <- if (i == 1L && !is.null(base_path)) {
-      base_path
-    } else {
-      roughen_vertex_path(path$x, path$y, hand_spec, closed = closed)
-    }
+  for (i in unique(geom$id)) {
+    keep <- geom$id == i
+    path <- list(x = geom$x[keep], y = geom$y[keep])
     args_i <- args
-    args_i$x <- path_i$x
-    args_i$y <- path_i$y
-    args_i$lwd <- jittered_lwd
-    if (!draw_pressure_path(path_i, hand_spec, args_i, closed = closed)) {
+    args_i$x <- path$x
+    args_i$y <- path$y
+    lwd <- args_i$lwd %||% graphics::par("lwd")
+    args_i$lwd <- max(0.01, lwd * (1 + stats::rnorm(1, sd = hand_spec$width_jitter)))
+    if (!draw_pressure_path(path, hand_spec, args_i, closed = closed)) {
       do.call(draw_fun, args_i)
     }
   }
@@ -445,34 +514,20 @@ with_mypaintr_rough_hand <- function(hand_spec, expr) {
 #' @export
 draw_rough_lines <- function(x, y = NULL, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
-  xy <- grDevices::xy.coords(x, y)
-  ok <- stats::complete.cases(xy$x, xy$y)
-  groups <- cumsum(!ok)
+  paths <- rough_line_paths(x, y)
 
   if (is_mypaintr_device()) {
     return(with_mypaintr_rough_hand(hand_spec, {
-      for (g in unique(groups[ok])) {
-        keep <- ok & groups == g
-        if (sum(keep) >= 2L) {
-          graphics::lines(xy$x[keep], xy$y[keep], ...)
-        }
+      for (path in paths) {
+        graphics::lines(path$x, path$y, ...)
       }
       NULL
     }))
   }
 
   invisible(with_hand_seed(hand_spec$seed, {
-    for (g in unique(groups[ok])) {
-      keep <- ok & groups == g
-      if (sum(keep) >= 2L) {
-        draw_path_strokes(
-          list(x = xy$x[keep], y = xy$y[keep]),
-          hand_spec,
-          graphics::lines,
-          ...
-        )
-      }
-    }
+    geom <- rough_line_data(x, y, hand_spec, strokes = hand_spec$multi_stroke)
+    draw_rough_path_data(geom, hand_spec, graphics::lines, ...)
     NULL
   }))
 }
@@ -493,18 +548,8 @@ draw_rough_segments <- function(x0, y0, x1, y1, hand = NULL, ...) {
   }
 
   invisible(with_hand_seed(hand_spec$seed, {
-    for (j in seq_len(max(1L, hand_spec$multi_stroke))) {
-      geom <- rough_segments_data(x0, y0, x1, y1, hand_spec)
-      for (i in unique(geom$id)) {
-        keep <- geom$id == i
-        args <- list(...)
-        args$x <- geom$x[keep]
-        args$y <- geom$y[keep]
-        if (!draw_pressure_path(list(x = args$x, y = args$y), hand_spec, args, closed = FALSE)) {
-          do.call(graphics::lines, args)
-        }
-      }
-    }
+    geom <- rough_segment_data(x0, y0, x1, y1, hand_spec, strokes = hand_spec$multi_stroke)
+    draw_rough_path_data(geom, hand_spec, graphics::lines, ...)
     NULL
   }))
 }
@@ -531,15 +576,16 @@ draw_rough_arrows <- function(x0, y0, x1, y1, length = 0.25, angle = 30, code = 
     }))
   }
 
-  hand_draw <- hand_spec
-  hand_draw$seed <- NULL
-
   invisible(with_hand_seed(hand_spec$seed, {
-    draw_rough_segments(x0, y0, x1, y1, hand = hand_draw, ...)
-    heads <- arrowhead_segments(x0, y0, x1, y1, length = length, angle = angle, code = code)
-    if (base::length(heads$x0)) {
-      draw_rough_segments(heads$x0, heads$y0, heads$x1, heads$y1, hand = hand_draw, ...)
-    }
+    geom <- rough_arrow_data(
+      x0, y0, x1, y1,
+      length = length,
+      angle = angle,
+      code = code,
+      hand_spec = hand_spec,
+      strokes = hand_spec$multi_stroke
+    )
+    draw_rough_path_data(geom, hand_spec, graphics::lines, ...)
     NULL
   }))
 }
@@ -631,12 +677,14 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
   }
 
   invisible(with_hand_seed(hand_spec$seed, {
-    geom <- rough_polypath_data(paths0, hand_spec, rule)
+    strokes <- if (is_visible_col(border)) hand_spec$multi_stroke else 1L
+    geom <- rough_polypath_data(paths0, hand_spec, rule, strokes = strokes)
     paths <- split_polypath(geom$x, geom$y, geom$id)
+    fill_paths <- paths[seq_along(paths0)]
 
     if (is_visible_col(col)) {
       if (is.null(fill_pattern)) {
-        solid_path <- join_polypath_na(paths)
+        solid_path <- join_polypath_na(fill_paths)
         do.call(
           graphics::polypath,
           c(
@@ -646,7 +694,7 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
         )
       } else {
         draw_rough_fill_pattern(
-          paths,
+          fill_paths,
           hand_spec,
           col = col,
           fill_pattern = fill_pattern,
@@ -656,17 +704,7 @@ draw_rough_polypath <- function(x, y = NULL, id = NULL, rule = c("winding", "eve
       }
     }
     if (is_visible_col(border)) {
-      for (j in seq_len(max(1L, hand_spec$multi_stroke))) {
-        paths_j <- if (j == 1L) {
-          paths
-        } else {
-          geom_j <- rough_polypath_data(paths0, hand_spec, rule)
-          split_polypath(geom_j$x, geom_j$y, geom_j$id)
-        }
-        for (path in paths_j) {
-          graphics::lines(path$x, path$y, col = border, ...)
-        }
-      }
+      draw_rough_path_data(geom, hand_spec, graphics::lines, col = border, closed = TRUE, ...)
     }
     NULL
   }))
@@ -704,7 +742,10 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
   }
 
   invisible(with_hand_seed(hand_spec$seed, {
-    rough_outline <- roughen_vertex_path(xy$x, xy$y, hand_spec, closed = TRUE)
+    strokes <- if (is_visible_col(border)) hand_spec$multi_stroke else 1L
+    geom <- rough_polygon_data(x, y, hand_spec, strokes = strokes)
+    paths <- split_polypath(geom$x, geom$y, geom$id)
+    rough_outline <- paths[[1L]]
     if (is_visible_col(col)) {
       if (is.null(fill_pattern)) {
         do.call(
@@ -725,15 +766,7 @@ draw_rough_polygons <- function(x, y = NULL, hand = NULL, col = NA, border = gra
       }
     }
     if (is_visible_col(border)) {
-      draw_path_strokes(
-        list(x = xy$x, y = xy$y),
-        hand_spec,
-        graphics::lines,
-        col = border,
-        base_path = rough_outline,
-        closed = TRUE,
-        ...
-      )
+      draw_rough_path_data(geom, hand_spec, graphics::lines, col = border, closed = TRUE, ...)
     }
     NULL
   }))
@@ -770,18 +803,14 @@ draw_rough_rect <- function(x0, y0, x1, y1, hand = NULL, col = NA, border = grap
 #' @param x,y Point coordinates as for [graphics::points()].
 #' @inheritParams mypaintr-rough-hand
 #' @return A list with jittered `x` and `y` point locations.
+#' @inheritSection rough_lines Rough geometry layer
 #' @export
 rough_points <- function(x, y = NULL, hand = NULL) {
   hand_spec <- as_hand(hand)
-  xy <- grDevices::xy.coords(x, y)
-  usr <- graphics::par("usr")
-  scale <- 0.01 * sqrt((usr[2] - usr[1]) * (usr[4] - usr[3]))
 
   with_hand_seed(hand_spec$seed, {
-    list(
-      x = xy$x + stats::rnorm(length(xy$x), sd = hand_spec$endpoint_jitter * scale),
-      y = xy$y + stats::rnorm(length(xy$y), sd = hand_spec$endpoint_jitter * scale)
-    )
+    geom <- rough_points_data(x, y, hand_spec)
+    list(x = geom$x, y = geom$y)
   })
 }
 
@@ -797,8 +826,6 @@ rough_points <- function(x, y = NULL, hand = NULL) {
 draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {
   hand_spec <- as_hand(hand)
   xy <- grDevices::xy.coords(x, y)
-  usr <- graphics::par("usr")
-  scale <- 0.01 * sqrt((usr[2] - usr[1]) * (usr[4] - usr[3]))
 
   if (is_mypaintr_device()) {
     return(with_mypaintr_rough_hand(hand_spec, {
@@ -807,13 +834,8 @@ draw_rough_points <- function(x, y = NULL, hand = NULL, ...) {
   }
 
   invisible(with_hand_seed(hand_spec$seed, {
-    for (i in seq_len(max(1L, hand_spec$multi_stroke))) {
-      graphics::points(
-        xy$x + stats::rnorm(length(xy$x), sd = hand_spec$endpoint_jitter * scale),
-        xy$y + stats::rnorm(length(xy$y), sd = hand_spec$endpoint_jitter * scale),
-        ...
-      )
-    }
+    geom <- rough_points_data(x, y, hand_spec, strokes = hand_spec$multi_stroke)
+    graphics::points(geom$x, geom$y, ...)
     NULL
   }))
 }

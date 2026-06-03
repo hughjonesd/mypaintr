@@ -22,6 +22,14 @@ A list with jittered \code{x} and \code{y} point locations.
 \description{
 Compute or draw rough points
 }
+\section{Rough geometry layer}{
+
+On standard graphics devices, \verb{draw_rough_*()} helpers render paths generated
+by the same rough geometry layer as their \verb{rough_*()} counterparts. On
+\code{\link[=mypaint_device]{mypaint_device()}} outputs, they pass clean graphics primitives to the native
+renderer so brush strokes and path roughening are handled by the device.
+}
+
 \examples{
 plot(1:10, 1:10, type = "n")
 draw_rough_points(1:10, 1:10,

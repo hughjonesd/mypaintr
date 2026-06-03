@@ -403,7 +403,7 @@ segment_data <- function(x0, y0, x1, y1, hand_spec = NULL) {
     ))
   }
 
-  rough_segments_data(x0, y0, x1, y1, hand_spec)
+  rough_segment_data(x0, y0, x1, y1, hand_spec)
 }
 
 rough_fill_pattern_data <- function(paths, hand_spec = NULL, fill_pattern = NULL,
