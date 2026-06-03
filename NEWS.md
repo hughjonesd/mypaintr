@@ -1,4 +1,4 @@
-# mypaintr (development version)
+# mypaintr 0.1.0
 
 * `hand()` and `human_hand()` now accept `speed`, `pressure`, `xtilt`, `ytilt`, 
   and `barrel_rotation` for libmypaint brush rendering.
