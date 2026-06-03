@@ -1647,13 +1647,13 @@ static void destroy_device_state(MypaintrDevice *dev) {
   if (!dev) {
     return;
   }
-  mypaint_tiled_surface2_destroy(&dev->surface);
-  if (dev->stroke.brush) mypaint_brush_unref(dev->stroke.brush);
-  if (dev->fill.brush) mypaint_brush_unref(dev->fill.brush);
   if (dev->stroke_spec && dev->stroke_spec != R_NilValue) R_ReleaseObject(dev->stroke_spec);
   if (dev->fill_spec && dev->fill_spec != R_NilValue) R_ReleaseObject(dev->fill_spec);
   if (dev->stroke_hand_spec && dev->stroke_hand_spec != R_NilValue) R_ReleaseObject(dev->stroke_hand_spec);
   if (dev->fill_hand_spec && dev->fill_hand_spec != R_NilValue) R_ReleaseObject(dev->fill_hand_spec);
+  if (dev->stroke.brush) mypaint_brush_unref(dev->stroke.brush);
+  if (dev->fill.brush) mypaint_brush_unref(dev->fill.brush);
+  mypaint_tiled_surface2_destroy(&dev->surface);
   if (dev->cr) cairo_destroy(dev->cr);
   if (dev->image_surface) cairo_surface_destroy(dev->image_surface);
   free(dev->tile_cache);
@@ -2303,7 +2303,7 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
 
   init_dev_desc(dd, dev);
   gdd = GEcreateDevDesc(dd);
-  GEaddDevice2f(gdd, "mypaintr", dev->filename);
+  GEaddDevice2f(gdd, "mypaintr", "mypaintr");
   GEinitDisplayList(gdd);
 
   return R_NilValue;
