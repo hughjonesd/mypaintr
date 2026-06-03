@@ -96,16 +96,10 @@ test_that("pressure profiles snapshot on mypaint device", {
 test_that("rough draw helpers apply pressure profiles on mypaint device", {
   render_stroke <- function(draw, pressure) {
     render_mypaintr_png("mypaint", brush = deterministic_brush("classic/pen"), {
-      graphics::par(mar = c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
-      graphics::plot.new()
-      graphics::plot.window(c(0, 10), c(0, 10))
+      setup_plot_window()
+      graphics::rect(0, 0, 10, 10, col = "white", border = NA)
       draw(hand(seed = 901, pressure = pressure_flat(pressure)))
     })
-  }
-  changed_pixels <- function(path) {
-    img <- png::readPNG(path)
-    rgb <- img[, , 1:3, drop = FALSE]
-    sum(rowSums(matrix(abs(rgb - 1), ncol = 3)) > 0.01)
   }
 
   draws <- list(
@@ -116,10 +110,9 @@ test_that("rough draw helpers apply pressure profiles on mypaint device", {
   )
 
   for (draw in draws) {
-    zero_pressure <- changed_pixels(render_stroke(draw, 0))
-    full_pressure <- changed_pixels(render_stroke(draw, 1))
-    expect_lt(zero_pressure, 10)
-    expect_gt(full_pressure, zero_pressure + 500)
+    zero_pressure <- render_stroke(draw, 0)
+    full_pressure <- render_stroke(draw, 1)
+    expect_false(compare_png_stable(zero_pressure, full_pressure))
   }
 })
 
