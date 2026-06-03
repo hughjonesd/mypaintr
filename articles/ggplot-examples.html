@@ -216,9 +216,6 @@ might work well here….</p>
 <span>    fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guide_bins.html" class="external-link">guide_bins</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># a workaround because guide_colorbar() looks weird</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span>, transform <span class="op">=</span> <span class="st">"log10"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Warning: Computation failed in `stat_binhex()`.</span></span>
-<span><span class="co">#&gt; Caused by error in `compute_group()`:</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> The package "hexbin" is required for `stat_bin_hex()`.</span></span></code></pre>
 <p><img src="ggplot-examples_files/figure-html/geom-hex-1.png" alt="" width="75%"></p>
 <p><a href="https://ggplot2.tidyverse.org/reference/geom_hex.html#ref-examples" class="external-link">Original.</a></p>
 </div>
@@ -231,7 +228,7 @@ hand-drawn look.</p>
 <p>Obviously if you wobble your graph lines, you have to be careful not
 to mislead the reader! Here it probably doesn’t matter since the
 dotplots convey the information.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mpg</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/mypaint_wrap.html">mypaint_wrap</a></span><span class="op">(</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_dotplot.html" class="external-link">geom_dotplot</a></span><span class="op">(</span>binwidth <span class="op">=</span> <span class="fl">1.5</span>, fill <span class="op">=</span> <span class="st">'yellow'</span>, colour <span class="op">=</span> <span class="st">"blue2"</span><span class="op">)</span>,</span>
@@ -262,7 +259,7 @@ dotplots convey the information.</p>
 sensible, given the small number of observations.</p>
 <p>I’m not sure if I love or hate this colour scheme. It is vaguely <a href="https://thunderbirds.fandom.com/wiki/Lady_Penelope_Creighton-Ward" class="external-link">Lady
 Penelope</a>.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cyl</span><span class="op">)</span>, <span class="va">mpg</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="../reference/mypaint_wrap.html">mypaint_wrap</a></span><span class="op">(</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_violin.html" class="external-link">geom_violin</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"brown4"</span>, linewidth <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span>,</span>

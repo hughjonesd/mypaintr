@@ -157,10 +157,6 @@ ggplot(diamonds, aes(carat, price)) +
   scale_fill_viridis_c(option = "C", transform = "log10")
 ```
 
-    #> Warning: Computation failed in `stat_binhex()`.
-    #> Caused by error in `compute_group()`:
-    #> ! The package "hexbin" is required for `stat_bin_hex()`.
-
 ![](ggplot-examples_files/figure-html/geom-hex-1.png)
 
 [Original.](https://ggplot2.tidyverse.org/reference/geom_hex.html#ref-examples)
