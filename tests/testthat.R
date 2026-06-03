@@ -17,18 +17,22 @@ if (identical(Sys.getenv("MYPAINTR_LLDB_TESTTHAT"), "true") &&
   }
   script <- normalizePath(script, mustWork = TRUE)
 
+  crash_commands <- tempfile("mypaintr-lldb-crash-")
+  writeLines(c("thread backtrace all", "process kill", "quit"), crash_commands)
+
   Sys.setenv(MYPAINTR_UNDER_LLDB = "true")
   status <- system2(
     "lldb",
     c(
       "--batch",
       "--one-line", "run",
-      "--one-line-on-crash", "thread backtrace all",
+      "--source-on-crash", crash_commands,
       "--",
       file.path(R.home("bin"), "exec", "R"),
       "--vanilla",
       "-f", script
-    )
+    ),
+    timeout = 180
   )
   quit(save = "no", status = status, runLast = FALSE)
 }
