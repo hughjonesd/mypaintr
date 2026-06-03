@@ -44,8 +44,8 @@ set_hand(human_hand())
 rect(5, 5, 9, 9, col = "darkgreen", density = 5)
 
 dev.off()
-#> agg_record_1dd2b046bf2 
-#>                      2 
+#> agg_record_1dd0692982d8 
+#>                       2 
 img <- png::readPNG(ex_file)
 grid::grid.raster(img)
 ```
