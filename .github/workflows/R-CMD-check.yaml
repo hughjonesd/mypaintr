@@ -66,3 +66,28 @@ jobs:
         with:
           upload-snapshots: always
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      - name: Collect macOS crash reports
+        if: failure() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          mkdir -p macos-crash-reports
+          for dir in "$HOME/Library/Logs/DiagnosticReports" "/Library/Logs/DiagnosticReports"; do
+            if [ -d "$dir" ]; then
+              find "$dir" -maxdepth 1 -type f \( \
+                -name '*R*.crash' -o \
+                -name '*R*.ips' -o \
+                -name '*Rscript*.crash' -o \
+                -name '*Rscript*.ips' \
+              \) -print -exec cp {} macos-crash-reports/ \;
+            fi
+          done
+          ls -la macos-crash-reports || true
+
+      - name: Upload macOS crash reports
+        if: failure() && runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-${{ runner.arch }}-r${{ matrix.config.r }}-${{ matrix.config.os }}-crash-reports
+          path: macos-crash-reports
+          if-no-files-found: ignore

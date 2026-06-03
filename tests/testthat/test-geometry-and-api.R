@@ -2,19 +2,18 @@ test_that("rough geometry helpers return finite seeded output", {
   h <- human_hand(seed = 11)
   arrow_geom <- local({
     # rough_arrows() computes arrowhead geometry from the active device aspect
-    # ratio, so use an explicit temporary device rather than creating Rplots.pdf.
-    path <- tempfile(fileext = ".png")
-    grDevices::png(
-      filename = path,
+    # ratio, so use an explicit vector device rather than creating Rplots.pdf.
+    path <- tempfile(fileext = ".pdf")
+    grDevices::pdf(
+      file = path,
       width = 4,
       height = 3,
-      units = "in",
-      res = 96,
-      pointsize = 10,
-      bg = "white",
-      type = "cairo"
+      pointsize = 10
     )
-    on.exit(grDevices::dev.off(), add = TRUE)
+    on.exit({
+      grDevices::dev.off()
+      unlink(path)
+    }, add = TRUE)
     setup_plot_window()
     rough_arrows(1, 1, 9, 8, hand = h)
   })
