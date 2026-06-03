@@ -2025,7 +2025,7 @@ static SEXP mypaintr_capabilities(SEXP cap) {
   SET_CAPABILITY(R_GE_capability_masks, 0);
   SET_CAPABILITY(R_GE_capability_compositing, 0);
   SET_CAPABILITY(R_GE_capability_transformations, 0);
-  SET_CAPABILITY(R_GE_capability_paths, 1);
+  SET_CAPABILITY(R_GE_capability_paths, 0);
 #ifdef R_GE_capability_glyphs
   SET_CAPABILITY(R_GE_capability_glyphs, 0);
 #endif
@@ -2090,6 +2090,26 @@ static void mypaintr_use_group(SEXP ref, SEXP trans, pDevDesc dd) {
 
 static void mypaintr_release_group(SEXP ref, pDevDesc dd) {
   (void) ref;
+  (void) dd;
+}
+
+static void mypaintr_stroke(SEXP path, const pGEcontext gc, pDevDesc dd) {
+  (void) path;
+  (void) gc;
+  (void) dd;
+}
+
+static void mypaintr_fill(SEXP path, int rule, const pGEcontext gc, pDevDesc dd) {
+  (void) path;
+  (void) rule;
+  (void) gc;
+  (void) dd;
+}
+
+static void mypaintr_fill_stroke(SEXP path, int rule, const pGEcontext gc, pDevDesc dd) {
+  (void) path;
+  (void) rule;
+  (void) gc;
   (void) dd;
 }
 
@@ -2170,6 +2190,9 @@ static void init_dev_desc(pDevDesc dd, MypaintrDevice *dev) {
   dd->defineGroup = mypaintr_define_group;
   dd->useGroup = mypaintr_use_group;
   dd->releaseGroup = mypaintr_release_group;
+  dd->stroke = mypaintr_stroke;
+  dd->fill = mypaintr_fill;
+  dd->fillStroke = mypaintr_fill_stroke;
   dd->capabilities = mypaintr_capabilities;
 }
 
