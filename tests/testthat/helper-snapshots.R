@@ -4,6 +4,15 @@ can_run_visual_snapshots <- function() {
     requireNamespace("png", quietly = TRUE)
 }
 
+ci_trace <- function(...) {
+  if (!identical(Sys.getenv("GITHUB_ACTIONS"), "true")) {
+    return(invisible(NULL))
+  }
+  cat("mypaintr-ci:", ..., "\n", file = stderr())
+  flush(stderr())
+  invisible(NULL)
+}
+
 skip_visual_snapshot_file <- function() {
   testthat::skip_if_not(
     can_run_visual_snapshots(),
