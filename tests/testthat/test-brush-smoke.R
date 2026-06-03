@@ -12,11 +12,6 @@ smoke_only_brushes <- c(
 )
 
 test_that("non-gating representative brushes remain smoke-covered", {
-  testthat::skip_if(
-    Sys.getenv("RUNNER_OS") == "macOS",
-    "diagnosing macOS graphics state corruption"
-  )
-
   available <- brushes()
   for (brush in smoke_only_brushes) {
     testthat::skip_if_not(brush %in% available, paste("brush is unavailable:", brush))

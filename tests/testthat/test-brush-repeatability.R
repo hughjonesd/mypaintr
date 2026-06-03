@@ -16,7 +16,6 @@ for (file in paste0("brush-", gsub("[^A-Za-z0-9]+", "-", snapshot_brushes), "-my
 }
 
 test_that("representative brushes render repeatably on the canonical snapshot platform", {
-  testthat::skip_if(identical(Sys.getenv("RUNNER_OS"), "macOS"), "diagnosing macOS crash before ggplot load")
   if (!can_run_visual_snapshots()) {
     return(invisible(NULL))
   }
@@ -34,7 +33,6 @@ test_that("representative brushes render repeatably on the canonical snapshot pl
 })
 
 test_that("stable brush snapshots cover a representative brush matrix", {
-  testthat::skip_if(identical(Sys.getenv("RUNNER_OS"), "macOS"), "diagnosing macOS crash before ggplot load")
   available <- brushes()
   for (brush in snapshot_brushes) {
     testthat::skip_if_not(brush %in% available, paste("brush is unavailable:", brush))

@@ -12,7 +12,6 @@ for (file in c(
 skip_visual_snapshot_file()
 
 test_that("base graphics functions snapshot on mypaint device", {
-  testthat::skip_if(identical(Sys.getenv("RUNNER_OS"), "macOS"), "diagnosing macOS crash before ggplot load")
   expect_mypaintr_snapshot("base-graphics-polygons", "mypaint", brush = deterministic_brush("classic/pen"), {
     setup_plot_window()
     graphics::rect(0.5, 0.5, 9.5, 9.5, col = "#f8f3df", border = NA)
@@ -31,7 +30,6 @@ test_that("base graphics functions snapshot on mypaint device", {
 })
 
 test_that("mypaint device snapshots cover brush switching with base graphics lines", {
-  testthat::skip_if(identical(Sys.getenv("RUNNER_OS"), "macOS"), "diagnosing macOS crash before ggplot load")
   expect_mypaintr_snapshot("base-graphics-brushes", "mypaint", {
     setup_striped_plot_window()
     brushes <- list(
@@ -50,7 +48,6 @@ test_that("mypaint device snapshots cover brush switching with base graphics lin
 })
 
 test_that("mypaint device snapshots default NULL brush and default rough hand", {
-  testthat::skip_if(identical(Sys.getenv("RUNNER_OS"), "macOS"), "diagnosing macOS crash before ggplot load")
   expect_mypaintr_snapshot("default-null-hand-brush", "mypaint", brush = NULL, {
     setup_plot_window()
     graphics::rect(1, 1, 9, 9, col = "#f8f3df", border = NA)

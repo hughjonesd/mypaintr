@@ -4,6 +4,45 @@ can_run_visual_snapshots <- function() {
     requireNamespace("png", quietly = TRUE)
 }
 
+can_open_base_png_device <- local({
+  ok <- NULL
+
+  function() {
+    if (!is.null(ok)) {
+      return(ok)
+    }
+
+    path <- tempfile(fileext = ".png")
+    start_device <- grDevices::dev.cur()
+    ok <<- isTRUE(tryCatch({
+      suppressWarnings(grDevices::png(
+        filename = path,
+        width = 1,
+        height = 1,
+        units = "in",
+        res = 72,
+        pointsize = 10,
+        bg = "white",
+        type = "cairo"
+      ))
+      if (identical(unname(grDevices::dev.cur()), unname(start_device))) {
+        stop("base PNG device did not open", call. = FALSE)
+      }
+      graphics::plot.new()
+      grDevices::dev.off()
+      file.exists(path)
+    }, error = function(e) {
+      FALSE
+    }))
+
+    while (!identical(unname(grDevices::dev.cur()), unname(start_device))) {
+      grDevices::dev.off()
+    }
+    unlink(path)
+    ok
+  }
+})
+
 skip_visual_snapshot_file <- function() {
   testthat::skip_if_not(
     can_run_visual_snapshots(),
@@ -39,6 +78,10 @@ render_mypaintr_png <- function(device = c("base", "mypaint"),
   device <- match.arg(device)
   path <- tempfile(fileext = ".png")
   if (identical(device, "base")) {
+    testthat::skip_if_not(
+      can_open_base_png_device(),
+      "base PNG snapshots require a working Cairo PNG device"
+    )
     grDevices::png(
       filename = path,
       width = width,
@@ -80,6 +123,12 @@ expect_mypaintr_snapshot <- function(name,
   testthat::announce_snapshot_file(name = name)
   if (!can_run_visual_snapshots()) {
     return(invisible(NULL))
+  }
+  if (identical(device, "base")) {
+    testthat::skip_if_not(
+      can_open_base_png_device(),
+      "base PNG snapshots require a working Cairo PNG device"
+    )
   }
   path <- render_mypaintr_png(
     device = device,
