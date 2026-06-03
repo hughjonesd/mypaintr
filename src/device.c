@@ -2001,19 +2001,38 @@ static SEXP mypaintr_cap(pDevDesc dd) {
 }
 
 static SEXP mypaintr_capabilities(SEXP cap) {
-  SEXP out = PROTECT(allocVector(LGLSXP, XLENGTH(cap)));
-  R_xlen_t i;
-  for (i = 0; i < XLENGTH(cap); ++i) {
-    int what = INTEGER(cap)[i];
-    LOGICAL(out)[i] = 0;
-    if (what == R_GE_capability_semiTransparency ||
-        what == R_GE_capability_transparentBackground ||
-        what == R_GE_capability_rasterImage ||
-        what == R_GE_capability_capture ||
-        what == R_GE_capability_paths) {
-      LOGICAL(out)[i] = 1;
-    }
+  SEXP out = PROTECT(duplicate(cap));
+
+  if (TYPEOF(out) != VECSXP) {
+    UNPROTECT(1);
+    return cap;
   }
+
+#define SET_CAPABILITY(which, value) do { \
+  if (XLENGTH(out) > (which)) { \
+    SET_VECTOR_ELT(out, (which), ScalarInteger(value)); \
+  } \
+} while (0)
+
+  SET_CAPABILITY(R_GE_capability_semiTransparency, 1);
+  SET_CAPABILITY(R_GE_capability_transparentBackground, 1);
+  SET_CAPABILITY(R_GE_capability_rasterImage, 1);
+  SET_CAPABILITY(R_GE_capability_capture, 1);
+  SET_CAPABILITY(R_GE_capability_patterns, 0);
+  SET_CAPABILITY(R_GE_capability_clippingPaths, 0);
+  SET_CAPABILITY(R_GE_capability_masks, 0);
+  SET_CAPABILITY(R_GE_capability_compositing, 0);
+  SET_CAPABILITY(R_GE_capability_transformations, 0);
+  SET_CAPABILITY(R_GE_capability_paths, 1);
+#ifdef R_GE_capability_glyphs
+  SET_CAPABILITY(R_GE_capability_glyphs, 0);
+#endif
+#ifdef R_GE_capability_variableFonts
+  SET_CAPABILITY(R_GE_capability_variableFonts, 0);
+#endif
+
+#undef SET_CAPABILITY
+
   UNPROTECT(1);
   return out;
 }
