@@ -93,6 +93,29 @@ test_that("pressure profiles snapshot on mypaint device", {
   })
 })
 
+test_that("rough draw helpers apply pressure profiles on mypaint device", {
+  render_stroke <- function(draw, pressure) {
+    render_mypaintr_png("mypaint", brush = deterministic_brush("classic/pen"), {
+      setup_plot_window()
+      graphics::rect(0, 0, 10, 10, col = "white", border = NA)
+      draw(hand(seed = 901, pressure = pressure_flat(pressure)))
+    })
+  }
+
+  draws <- list(
+    function(hand) draw_rough_lines(c(1, 9), c(5, 5), hand = hand, col = "black", lwd = 2),
+    function(hand) draw_rough_segments(1, 5, 9, 5, hand = hand, col = "black", lwd = 2),
+    function(hand) draw_rough_arrows(1, 5, 9, 5, hand = hand, col = "black", lwd = 2),
+    function(hand) draw_rough_points(5, 5, hand = hand, col = "black", pch = 1, cex = 5, lwd = 2)
+  )
+
+  for (draw in draws) {
+    zero_pressure <- render_stroke(draw, 0)
+    full_pressure <- render_stroke(draw, 1)
+    expect_false(compare_png_stable(zero_pressure, full_pressure))
+  }
+})
+
 test_that("speed profiles snapshot on mypaint device", {
   speed_brush <- deterministic_brush("experimental/fur")
   expect_mypaintr_snapshot("speed-profiles", "mypaint", brush = speed_brush, {
