@@ -1,5 +1,7 @@
 # Changelog
 
+## mypaintr (development version)
+
 ## mypaintr 0.1.0
 
 - [`hand()`](https://hughjonesd.github.io/mypaintr/reference/hand.md)
@@ -19,6 +21,7 @@
 - Updated libmypaint to vendor the whole source and fix build problems.
 - We now have tests including many snapshot tests. I guess that means
   this is a real package…
+- Added a new vignette, reimplementing some ggplot2 examples.
 
 ## mypaintr 0.0.1
 
