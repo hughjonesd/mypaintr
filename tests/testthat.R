@@ -17,18 +17,18 @@ if (identical(Sys.getenv("MYPAINTR_LLDB_TESTTHAT"), "true") &&
   }
   script <- normalizePath(script, mustWork = TRUE)
 
+  Sys.setenv(MYPAINTR_UNDER_LLDB = "true")
   status <- system2(
     "lldb",
     c(
       "--batch",
-      "-o", "run",
-      "-k", "thread backtrace all",
+      "--one-line", "run",
+      "--one-line-on-crash", "thread backtrace all",
       "--",
       file.path(R.home("bin"), "exec", "R"),
       "--vanilla",
       "-f", script
-    ),
-    env = "MYPAINTR_UNDER_LLDB=true"
+    )
   )
   quit(save = "no", status = status, runLast = FALSE)
 }
