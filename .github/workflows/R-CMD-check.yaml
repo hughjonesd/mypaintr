@@ -62,6 +62,10 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      - name: Smoke load ggplot2 on macOS
+        if: runner.os == 'macOS'
+        run: R -q -e 'requireNamespace("ggplot2", quietly = TRUE)'
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: always
