@@ -63,6 +63,12 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
+        env:
+          MallocScribble: ${{ runner.os == 'macOS' && '1' || '' }}
+          MallocPreScribble: ${{ runner.os == 'macOS' && '1' || '' }}
+          MallocGuardEdges: ${{ runner.os == 'macOS' && '1' || '' }}
+          MallocCheckHeapStart: ${{ runner.os == 'macOS' && '1' || '' }}
+          MallocCheckHeapEach: ${{ runner.os == 'macOS' && '1' || '' }}
         with:
           upload-snapshots: always
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
