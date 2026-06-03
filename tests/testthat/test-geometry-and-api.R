@@ -1,9 +1,9 @@
-testthat::skip_if(
-  Sys.getenv("RUNNER_OS") == "macOS",
-  "diagnosing macOS graphics state corruption"
-)
-
 test_that("rough geometry helpers return finite seeded output", {
+  testthat::skip_if(
+    Sys.getenv("RUNNER_OS") == "macOS",
+    "diagnosing macOS graphics state corruption"
+  )
+
   h <- human_hand(seed = 11)
   arrow_geom <- local({
     # rough_arrows() computes arrowhead geometry from the active device aspect
