@@ -10,6 +10,9 @@ for (file in c(
   testthat::announce_snapshot_file(name = file)
 }
 skip_visual_snapshot_file()
+if (can_run_visual_snapshots()) {
+  suppressPackageStartupMessages(requireNamespace("ggplot2", quietly = TRUE))
+}
 
 test_that("base graphics functions snapshot on mypaint device", {
   expect_mypaintr_snapshot("base-graphics-polygons", "mypaint", brush = deterministic_brush("classic/pen"), {
