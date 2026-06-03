@@ -19,12 +19,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
           - {os: ubuntu-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'oldrel-1'}
-
           - {os: macos-26,        r: 'release'}
 
     env:
@@ -50,7 +48,9 @@ jobs:
 
       - name: Install system dependencies on macOS
         if: runner.os == 'macOS'
-        run: brew install cairo json-c pkg-config
+        run: |
+          brew install --cask xquartz
+          brew install cairo json-c pkg-config
 
       - name: Install system dependencies on Windows
         if: runner.os == 'Windows'
