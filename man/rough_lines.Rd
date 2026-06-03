@@ -23,6 +23,14 @@ polyline geometry for each connected run.
 \description{
 Compute or draw rough connected lines
 }
+\section{Rough geometry layer}{
+
+On standard graphics devices, \verb{draw_rough_*()} helpers render paths generated
+by the same rough geometry layer as their \verb{rough_*()} counterparts. On
+\code{\link[=mypaint_device]{mypaint_device()}} outputs, they pass clean graphics primitives to the native
+renderer so brush strokes and path roughening are handled by the device.
+}
+
 \examples{
 y <- c(2, 5, 4, 7, 6, 8)
 plot(1:6, y, type = "n")
