@@ -30,8 +30,6 @@ enum {
 };
 
 #define MYPAINTR_MAGIC 0x6d797074U
-#define MYPAINTR_TILE_GUARD_VALUES 64U
-
 typedef struct {
   MyPaintBrush *brush;
   double base_radius_log;
@@ -83,7 +81,6 @@ typedef struct {
   int tile_size;
   int tile_cols;
   int tile_rows;
-  size_t tile_stride;
   guint16 *tile_cache;
   unsigned char *tile_valid;
   double res;
@@ -798,7 +795,7 @@ static void tile_request_start(MyPaintTiledSurface2 *surface, MyPaintTileRequest
   int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
   size_t tile_idx = cached ? tile_cache_index(dev, request->tx, request->ty) : 0;
   guint16 *buffer = cached ?
-    dev->tile_cache + tile_idx * dev->tile_stride :
+    dev->tile_cache + tile_idx * (size_t) tile_size * (size_t) tile_size * 4U :
     (guint16 *) calloc((size_t) tile_size * (size_t) tile_size * 4U, sizeof(guint16));
 
   if (!buffer) {
@@ -842,7 +839,7 @@ static void tile_request_end(MyPaintTiledSurface2 *surface, MyPaintTileRequest *
   int base_y = request->ty * tile_size;
   int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
   guint16 *buffer = cached ?
-    dev->tile_cache + tile_cache_index(dev, request->tx, request->ty) * dev->tile_stride :
+    dev->tile_cache + tile_cache_index(dev, request->tx, request->ty) * (size_t) tile_size * (size_t) tile_size * 4U :
     (guint16 *) request->context;
   int dirty_left = dev->width;
   int dirty_right = -1;
@@ -1650,13 +1647,13 @@ static void destroy_device_state(MypaintrDevice *dev) {
   if (!dev) {
     return;
   }
+  mypaint_tiled_surface2_destroy(&dev->surface);
+  if (dev->stroke.brush) mypaint_brush_unref(dev->stroke.brush);
+  if (dev->fill.brush) mypaint_brush_unref(dev->fill.brush);
   if (dev->stroke_spec && dev->stroke_spec != R_NilValue) R_ReleaseObject(dev->stroke_spec);
   if (dev->fill_spec && dev->fill_spec != R_NilValue) R_ReleaseObject(dev->fill_spec);
   if (dev->stroke_hand_spec && dev->stroke_hand_spec != R_NilValue) R_ReleaseObject(dev->stroke_hand_spec);
   if (dev->fill_hand_spec && dev->fill_hand_spec != R_NilValue) R_ReleaseObject(dev->fill_hand_spec);
-  if (dev->stroke.brush) mypaint_brush_unref(dev->stroke.brush);
-  if (dev->fill.brush) mypaint_brush_unref(dev->fill.brush);
-  mypaint_tiled_surface2_destroy(&dev->surface);
   if (dev->cr) cairo_destroy(dev->cr);
   if (dev->image_surface) cairo_surface_destroy(dev->image_surface);
   free(dev->tile_cache);
@@ -2233,9 +2230,8 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
 
   dev->data = cairo_image_surface_get_data(dev->image_surface);
   dev->stride = cairo_image_surface_get_stride(dev->image_surface);
-  dev->tile_stride = (size_t) dev->tile_size * (size_t) dev->tile_size * 4U + MYPAINTR_TILE_GUARD_VALUES;
   dev->tile_cache = (guint16 *) calloc(
-    (size_t) dev->tile_cols * (size_t) dev->tile_rows * dev->tile_stride,
+    (size_t) dev->tile_cols * (size_t) dev->tile_rows * (size_t) dev->tile_size * (size_t) dev->tile_size * 4U,
     sizeof(guint16)
   );
   dev->tile_valid = (unsigned char *) calloc((size_t) dev->tile_cols * (size_t) dev->tile_rows, sizeof(unsigned char));
