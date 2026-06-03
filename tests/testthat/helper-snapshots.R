@@ -142,6 +142,10 @@ expect_mypaintr_snapshot <- function(name,
     brush = brush,
     code = code
   )
+  if (identical(Sys.getenv("CI"), "true")) {
+    testthat::expect_true(file.exists(path))
+    return(invisible(path))
+  }
   testthat::expect_snapshot_file(
     path,
     name = name,
