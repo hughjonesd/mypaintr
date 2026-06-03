@@ -22,6 +22,7 @@ NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Config/Needs/website: pkgdown
 Suggests: 
+    hexbin,
     knitr,
     png,
     rmarkdown,
