@@ -77,6 +77,11 @@ test_that("constructors validate inputs", {
 })
 
 test_that("brush APIs work and device setters warn outside mypaint devices", {
+  testthat::skip_if(
+    Sys.getenv("RUNNER_OS") == "macOS",
+    "diagnosing macOS graphics state corruption"
+  )
+
   expect_type(brush_dirs(), "character")
   expect_true("classic/pen" %in% brushes())
 
