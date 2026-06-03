@@ -30,6 +30,7 @@ enum {
 };
 
 #define MYPAINTR_MAGIC 0x6d797074U
+#define MYPAINTR_TILE_GUARD_VALUES 64U
 
 typedef struct {
   MyPaintBrush *brush;
@@ -82,6 +83,7 @@ typedef struct {
   int tile_size;
   int tile_cols;
   int tile_rows;
+  size_t tile_stride;
   guint16 *tile_cache;
   unsigned char *tile_valid;
   double res;
@@ -796,7 +798,7 @@ static void tile_request_start(MyPaintTiledSurface2 *surface, MyPaintTileRequest
   int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
   size_t tile_idx = cached ? tile_cache_index(dev, request->tx, request->ty) : 0;
   guint16 *buffer = cached ?
-    dev->tile_cache + tile_idx * (size_t) tile_size * (size_t) tile_size * 4U :
+    dev->tile_cache + tile_idx * dev->tile_stride :
     (guint16 *) calloc((size_t) tile_size * (size_t) tile_size * 4U, sizeof(guint16));
 
   if (!buffer) {
@@ -840,7 +842,7 @@ static void tile_request_end(MyPaintTiledSurface2 *surface, MyPaintTileRequest *
   int base_y = request->ty * tile_size;
   int cached = request->tx >= 0 && request->tx < dev->tile_cols && request->ty >= 0 && request->ty < dev->tile_rows;
   guint16 *buffer = cached ?
-    dev->tile_cache + tile_cache_index(dev, request->tx, request->ty) * (size_t) tile_size * (size_t) tile_size * 4U :
+    dev->tile_cache + tile_cache_index(dev, request->tx, request->ty) * dev->tile_stride :
     (guint16 *) request->context;
   int dirty_left = dev->width;
   int dirty_right = -1;
@@ -2231,8 +2233,9 @@ static MypaintrDevice *make_device(const char *filename, int width, int height, 
 
   dev->data = cairo_image_surface_get_data(dev->image_surface);
   dev->stride = cairo_image_surface_get_stride(dev->image_surface);
+  dev->tile_stride = (size_t) dev->tile_size * (size_t) dev->tile_size * 4U + MYPAINTR_TILE_GUARD_VALUES;
   dev->tile_cache = (guint16 *) calloc(
-    (size_t) dev->tile_cols * (size_t) dev->tile_rows * (size_t) dev->tile_size * (size_t) dev->tile_size * 4U,
+    (size_t) dev->tile_cols * (size_t) dev->tile_rows * dev->tile_stride,
     sizeof(guint16)
   );
   dev->tile_valid = (unsigned char *) calloc((size_t) dev->tile_cols * (size_t) dev->tile_rows, sizeof(unsigned char));
