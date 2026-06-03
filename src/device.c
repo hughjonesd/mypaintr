@@ -2293,7 +2293,7 @@ SEXP mypaintr_device_open(SEXP filename, SEXP width, SEXP height, SEXP res, SEXP
     fill_hand
   );
 
-  dd = (pDevDesc) calloc(1, sizeof(DevDesc));
+  dd = GEcreateDD();
   if (!dd) {
     destroy_device_state(dev);
     error("failed to allocate device descriptor");
