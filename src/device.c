@@ -2143,7 +2143,7 @@ static void init_dev_desc(pDevDesc dd, MypaintrDevice *dev) {
   dd->startfont = 1;
   dd->startgamma = 1.0;
   dd->deviceSpecific = dev;
-  dd->displayListOn = TRUE;
+  dd->displayListOn = FALSE;
   dd->canGenMouseDown = FALSE;
   dd->canGenMouseMove = FALSE;
   dd->canGenMouseUp = FALSE;
