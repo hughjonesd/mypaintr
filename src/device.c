@@ -2115,8 +2115,6 @@ static void mypaintr_fill_stroke(SEXP path, int rule, const pGEcontext gc, pDevD
 }
 
 static void init_dev_desc(pDevDesc dd, MypaintrDevice *dev) {
-  memset(dd, 0, sizeof(*dd));
-
   dd->left = 0.0;
   dd->right = dev->width;
   dd->bottom = 0.0;
