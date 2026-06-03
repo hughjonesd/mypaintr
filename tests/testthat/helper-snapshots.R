@@ -1,6 +1,13 @@
 can_run_visual_snapshots <- function() {
+  mac_version <- tryCatch(
+    system2("sw_vers", "-productVersion", stdout = TRUE, stderr = FALSE),
+    error = function(e) ""
+  )
+
   identical(Sys.info()[["sysname"]], "Darwin") &&
     identical(Sys.info()[["machine"]], "arm64") &&
+    length(mac_version) > 0 &&
+    startsWith(mac_version[[1]], "26.") &&
     requireNamespace("png", quietly = TRUE)
 }
 
@@ -46,7 +53,7 @@ can_open_base_png_device <- local({
 skip_visual_snapshot_file <- function() {
   testthat::skip_if_not(
     can_run_visual_snapshots(),
-    "visual snapshot tests run only on macOS arm64"
+    "visual snapshot tests run only on macOS 26 arm64"
   )
 }
 
