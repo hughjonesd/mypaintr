@@ -1984,19 +1984,27 @@ static double mypaintr_str_width_utf8(const char *str, const pGEcontext gc, pDev
 
 static SEXP mypaintr_cap(pDevDesc dd) {
   MypaintrDevice *dev = (MypaintrDevice *) dd->deviceSpecific;
-  SEXP out = PROTECT(allocMatrix(INTSXP, dev->height, dev->width));
+  SEXP out = PROTECT(allocVector(INTSXP, dev->height * dev->width));
   int row, col;
 
   cairo_surface_flush(dev->image_surface);
   for (row = 0; row < dev->height; ++row) {
     for (col = 0; col < dev->width; ++col) {
       unsigned char *px = dev->data + (size_t) row * (size_t) dev->stride + (size_t) col * 4U;
-      int idx = row + dev->height * col;
+      int idx = col + dev->width * row;
       INTEGER(out)[idx] = R_RGBA(px[2], px[1], px[0], px[3]);
     }
   }
+  SEXP dims = PROTECT(Rf_allocVector(INTSXP, 2));
+  INTEGER(dims)[0] = dev->height;
+  INTEGER(dims)[1] = dev->width;
+  Rf_setAttrib(out, R_DimSymbol, dims);
 
-  UNPROTECT(1);
+  SEXP page = PROTECT(Rf_ScalarInteger(dev->page));
+  Rf_setAttrib(out, Rf_install("page"), page);
+
+  UNPROTECT(3);
+
   return out;
 }
 
